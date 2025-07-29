@@ -407,6 +407,155 @@ gkyl_gr_mhd_inv_spatial_metric(const double q[74], double ***inv_spatial_metric)
   }
 }
 
+void
+gkyl_gr_mhd_stress_energy_tensor(double gas_gamma, const double q[74], double ***stress_energy)
+{
+  double v[74] = { 0.0 };
+  gkyl_gr_mhd_prim_vars(gas_gamma, q, v);
+  double rho = v[0];
+  double vx = v[1];
+  double vy = v[2];
+  double vz = v[3];
+  double p = v[4];
+
+  double mag_x = v[5];
+  double mag_y = v[6];
+  double mag_z = v[7];
+
+  double lapse = v[8];
+  double shift_x = v[9];
+  double shift_y = v[10];
+  double shift_z = v[11];
+
+  double spatial_metric[3][3];
+  spatial_metric[0][0] = v[12]; spatial_metric[0][1] = v[13]; spatial_metric[0][2] = v[14];
+  spatial_metric[1][0] = v[15]; spatial_metric[1][1] = v[16]; spatial_metric[1][2] = v[17];
+  spatial_metric[2][0] = v[18]; spatial_metric[2][1] = v[19]; spatial_metric[2][2] = v[20];
+
+  double **inv_spatial_metric = gkyl_malloc(sizeof(double*[3]));
+  for (int i = 0; i < 3; i++) {
+    inv_spatial_metric[i] = gkyl_malloc(sizeof(double[3]));
+  }
+
+  gkyl_gr_mhd_inv_spatial_metric(q, &inv_spatial_metric);
+
+  bool in_excision_region = false;
+  if (v[30] < pow(10.0, -8.0)) {
+    in_excision_region = true;
+  }
+
+  if (!in_excision_region) {
+    double vel[3];
+    double v_sq = 0.0;
+    vel[0] = vx; vel[1] = vy; vel[2] = vz;
+
+    for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 3; j++) {
+        v_sq += spatial_metric[i][j] * vel[i] * vel[j];
+      }
+    }
+
+    double W = 1.0 / sqrt(1.0 - v_sq);
+    if (v_sq > 1.0 - pow(10.0, -8.0)) {
+      W = 1.0 / sqrt(pow(10.0, -8.0));
+    }
+
+    double mag[3];
+    mag[0] = mag_x; mag[1] = mag_y; mag[2] = mag_z;
+
+    double cov_mag[3];
+    for (int i = 0; i < 3; i++) {
+      cov_mag[i] = 0.0;
+
+      for (int j = 0; j < 3; j++) {
+        cov_mag[i] += spatial_metric[i][j] * mag[j];
+      }
+    }
+
+    double cov_vel[3];
+    for (int i = 0; i < 3; i++) {
+      cov_vel[i] = 0.0;
+
+      for (int j = 0; j < 3; j++) {
+        cov_vel[i] += spatial_metric[i][j] * vel[j];
+      }
+    }
+    
+    double b0 = 0.0;
+    for (int i = 0; i < 3; i++) {
+      b0 += W * mag[i] * (cov_vel[i] / lapse);
+    }
+
+    double shift[3];
+    shift[0] = shift_x; shift[1] = shift_y; shift[2] = shift_z;
+
+    double spacetime_vel[4];
+    spacetime_vel[0] = W / lapse;
+    for (int i = 0; i < 3; i++) {
+      spacetime_vel[i + 1] = (W * vel[i]) - (shift[i] * (W / lapse));
+    }
+
+    double b[3];
+    for (int i = 0; i < 3; i++) {
+      b[i] = (mag[i] + (lapse * b0 * spacetime_vel[i + 1])) / W;
+    }
+
+    double b_sq = 0.0;
+    for (int i = 0; i < 3; i++) {
+      b_sq += (mag[i] * cov_mag[i]) / (W * W);
+    }
+    b_sq += ((lapse * lapse) * (b0 * b0)) / (W * W);
+
+    double cov_b[3];
+    for (int i = 0; i < 3; i++) {
+      cov_b[i] = 0.0;
+
+      for (int j = 0; j < 3; j++) {
+        cov_b[i] += spatial_metric[i][j] * b[j];
+      }
+    }
+
+    double h_star = 1.0 + ((p / rho) * (gas_gamma / (gas_gamma - 1.0))) + (b_sq / rho);
+    double p_star = p + (0.5 * b_sq);
+
+    double inv_spacetime_metric[4][4];
+    inv_spacetime_metric[0][0] = - (1.0 / (lapse * lapse));
+    for (int i = 0; i < 3; i++) {
+      inv_spacetime_metric[0][i] = (1.0 / (lapse * lapse)) * shift[i];
+      inv_spacetime_metric[i][0] = (1.0 / (lapse * lapse)) * shift[i];
+    }
+    for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 3; j++) {
+        inv_spacetime_metric[i][j] = inv_spatial_metric[i][j] - ((1.0 / (lapse * lapse)) * shift[i] * shift[j]);
+      }
+    }
+
+    double spacetime_b[4];
+    spacetime_b[0] = b0;
+    for (int i = 0; i < 3; i++) {
+      spacetime_b[i + 1] = b[i];
+    }
+
+    for (int i = 0; i < 4; i++) {
+      for (int j = 0; j < 4; j++) {
+        (*stress_energy)[i][j] = (rho * h_star * spacetime_vel[i] * spacetime_vel[j]) + (p_star * inv_spacetime_metric[i][j]) - (spacetime_b[i] * spacetime_b[j]);
+      }
+    }
+  }
+  else {
+    for (int i = 0; i < 4; i++) {
+      for (int j = 0; j < 4; j++) {
+        (*stress_energy)[i][j] = 0.0;
+      }
+    }
+  }
+
+  for (int i = 0; i < 3; i++) {
+    gkyl_free(inv_spatial_metric[i]);
+  }
+  gkyl_free(inv_spatial_metric);
+}
+
 static inline void
 cons_to_riem(const struct gkyl_wv_eqn* eqn, const double* qstate, const double* qin, double* wout)
 {
