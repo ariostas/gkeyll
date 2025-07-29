@@ -269,8 +269,8 @@ gkyl_gr_mhd_prim_vars(double gas_gamma, const double q[74], double v[74])
       rho = D / W;
       double h = z / (W * W * rho);
 
-      //p_new = rho * (h - 1.0) * ((gas_gamma - 1.0) / gas_gamma);
-      p_new = rho * (h - 1.0);
+      p_new = rho * (h - 1.0) * ((gas_gamma - 1.0) / gas_gamma);
+      //p_new = rho * (h - 1.0);
 
       if (fabs(p_guess - p_new) < pow(10.0, -15.0)) {
         iter = 100;
@@ -279,6 +279,13 @@ gkyl_gr_mhd_prim_vars(double gas_gamma, const double q[74], double v[74])
         iter += 1;
         p_guess = p_new;
       }
+    }
+
+    if (p_new < pow(10.0, -8.0)) {
+      p_new = pow(10.0, -8.0);
+    }
+    if (rho < pow(10.0, -8.0)) {
+      rho = pow(10.0, -8.0);
     }
 
     double vel[3];
@@ -295,7 +302,7 @@ gkyl_gr_mhd_prim_vars(double gas_gamma, const double q[74], double v[74])
     v[1] = vel[0];
     v[2] = vel[1];
     v[3] = vel[2];
-    v[4] = p_new * ((gas_gamma - 1.0) / gas_gamma);
+    v[4] = p_new; //* ((gas_gamma - 1.0) / gas_gamma);
 
     v[5] = mag_x;
     v[6] = mag_y;
@@ -556,6 +563,132 @@ gkyl_gr_mhd_stress_energy_tensor(double gas_gamma, const double q[74], double **
   gkyl_free(inv_spatial_metric);
 }
 
+static inline double
+gkyl_gr_mhd_max_abs_speed(double gas_gamma, const double q[74])
+{
+  double v[74] = { 0.0 };
+  gkyl_gr_mhd_prim_vars(gas_gamma, q, v);
+  double rho =  v[0];
+  double vx = v[1];
+  double vy = v[2];
+  double vz = v[3];
+  double p = v[4];
+
+  double mag_x = v[5];
+  double mag_y = v[6];
+  double mag_z = v[7];
+
+  double lapse = v[8];
+  double shift_x = v[9];
+  double shift_y = v[10];
+  double shift_z = v[11];
+
+  double spatial_metric[3][3];
+  spatial_metric[0][0] = v[12]; spatial_metric[0][1] = v[13]; spatial_metric[0][2] = v[14];
+  spatial_metric[1][0] = v[15]; spatial_metric[1][1] = v[16]; spatial_metric[1][2] = v[17];
+  spatial_metric[2][0] = v[18]; spatial_metric[2][1] = v[19]; spatial_metric[2][2] = v[20];
+
+  bool in_excision_region = false;
+  if (v[30] < pow(10.0, -8.0)) {
+    in_excision_region = true;
+  }
+
+  if (!in_excision_region) {
+    double vel[3];
+    double v_sq = 0.0;
+    vel[0] = vx; vel[1] = vy; vel[2] = vz;
+
+    for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 3; j++) {
+        v_sq += spatial_metric[i][j] * vel[i] * vel[j];
+      }
+    }
+
+    double W = 1.0 / sqrt(1.0 - v_sq);
+    if (v_sq > 1.0 - pow(10.0, -8.0)) {
+      W = 1.0 / sqrt(pow(10.0, -8.0));
+    }
+
+    double mag[3];
+    mag[0] = mag_x; mag[1] = mag_y; mag[2] = mag_z;
+
+    double cov_mag[3];
+    for (int i = 0; i < 3; i++) {
+      cov_mag[i] = 0.0;
+
+      for (int j = 0; j < 3; j++) {
+        cov_mag[i] += spatial_metric[i][j] * mag[j];
+      }
+    }
+
+    double cov_vel[3];
+    for (int i = 0; i < 3; i++) {
+      cov_vel[i] = 0.0;
+
+      for (int j = 0; j < 3; j++) {
+        cov_vel[i] += spatial_metric[i][j] * vel[j];
+      }
+    }
+    
+    double b0 = 0.0;
+    for (int i = 0; i < 3; i++) {
+      b0 += W * mag[i] * (cov_vel[i] / lapse);
+    }
+
+    double shift[3];
+    shift[0] = shift_x; shift[1] = shift_y; shift[2] = shift_z;
+
+    double spacetime_vel[4];
+    spacetime_vel[0] = W / lapse;
+    for (int i = 0; i < 3; i++) {
+      spacetime_vel[i + 1] = (W * vel[i]) - (shift[i] * (W / lapse));
+    }
+
+    double b[3];
+    for (int i = 0; i < 3; i++) {
+      b[i] = (mag[i] + (lapse * b0 * spacetime_vel[i + 1])) / W;
+    }
+
+    double b_sq = 0.0;
+    for (int i = 0; i < 3; i++) {
+      b_sq += (mag[i] * cov_mag[i]) / (W * W);
+    }
+    b_sq += ((lapse * lapse) * (b0 * b0)) / (W * W);
+
+    double h = 1.0 + ((p / rho) * (gas_gamma / (gas_gamma - 1.0)));
+    double C = (rho * h) + b_sq;
+
+    double entropy_eigs[3];
+    double fast_alfven_eigs[3];
+    double slow_alfven_eigs[3];
+
+    for (int i = 0; i < 3; i++) {
+      entropy_eigs[i] = (lapse * vel[i] - shift[i]);
+
+      fast_alfven_eigs[i] = (b[i] + (sqrt(C) * spacetime_vel[i + 1])) / (b0 + (sqrt(C) * spacetime_vel[0]));
+      slow_alfven_eigs[i] = (b[i] - (sqrt(C) * spacetime_vel[i + 1])) / (b0 - (sqrt(C) * spacetime_vel[0]));
+    }
+
+    double max_eig = 0.0;
+    for (int i = 0; i < 3; i++) {
+      if (fabs(entropy_eigs[i]) > max_eig) {
+        max_eig = fabs(entropy_eigs[i]);
+      }
+      if (fabs(fast_alfven_eigs[i]) > max_eig) {
+        max_eig = fabs(fast_alfven_eigs[i]);
+      }
+      if (fabs(slow_alfven_eigs[i]) > max_eig) {
+        max_eig = fabs(slow_alfven_eigs[i]);
+      }
+    }
+
+    return fabs(v_sq) + max_eig;
+  }
+  else {
+    return pow(10.0, -8.0);
+  }
+}
+
 static inline void
 cons_to_riem(const struct gkyl_wv_eqn* eqn, const double* qstate, const double* qin, double* wout)
 {
@@ -571,6 +704,31 @@ riem_to_cons(const struct gkyl_wv_eqn* eqn, const double* qstate, const double* 
   // TODO: This should use a proper L matrix.
   for (int i = 0; i < 74; i++) {
     qout[i] = win[i];
+  }
+}
+
+static void
+gr_mhd_wall(const struct gkyl_wv_eqn* eqn, double t, int nc, const double* skin, double* GKYL_RESTRICT ghost, void* ctx)
+{
+  for (int i = 0; i < 74; i++) {
+    ghost[i] = skin[i];
+  }
+
+  ghost[1] = -ghost[1];
+}
+
+static void
+gr_mhd_no_slip(const struct gkyl_wv_eqn* eqn, double t, int nc, const double* skin, double* GKYL_RESTRICT ghost, void* ctx)
+{
+  for (int i = 1; i < 4; i++) {
+    ghost[i] = -skin[i];
+  }
+
+  ghost[0] = skin[0];
+  ghost[4] = skin[4];
+
+  for (int i = 5; i < 74; i++) {
+    ghost[i] = skin[i];
   }
 }
 
@@ -1072,6 +1230,147 @@ rot_to_global(const struct gkyl_wv_eqn* eqn, const double* tau1, const double* t
   qglobal[73] = (qlocal[71] * norm[2]) + (qlocal[72] * tau1[2]) + (qlocal[73] * tau2[2]);
 }
 
+static double
+wave_lax(const struct gkyl_wv_eqn* eqn, const double* delta, const double* ql, const double* qr, double* waves, double* s)
+{
+  const struct wv_gr_mhd *gr_mhd = container_of(eqn, struct wv_gr_mhd, eqn);
+  double gas_gamma = gr_mhd->gas_gamma;
+
+  double sl = gkyl_gr_mhd_max_abs_speed(gas_gamma, ql);
+  double sr = gkyl_gr_mhd_max_abs_speed(gas_gamma, qr);
+  double amax = fmax(sl, sr);
+
+  double fl[74], fr[74];
+  gkyl_gr_mhd_flux(gas_gamma, ql, fl);
+  gkyl_gr_mhd_flux(gas_gamma, qr, fr);
+
+  bool in_excision_region_l = false;
+  if (ql[30] < pow(10.0, -8.0)) {
+    in_excision_region_l = true;
+  }
+
+  bool in_excision_region_r = false;
+  if (qr[30] < pow(10.0, -8.0)) {
+    in_excision_region_r = true;
+  }
+
+  double *w0 = &waves[0], *w1 = &waves[74];
+  if (!in_excision_region_l && !in_excision_region_r) {
+    for (int i = 0; i < 74; i++) {
+      w0[i] = 0.5 * ((qr[i] - ql[i]) - (fr[i] - fl[i]) / amax);
+      w1[i] = 0.5 * ((qr[i] - ql[i]) + (fr[i] - fl[i]) / amax);
+    }
+  }
+  else {
+    for (int i = 0; i < 74; i++) {
+      w0[i] = 0.0;
+      w1[i] = 0.0;
+    }
+  }
+
+  s[0] = -amax;
+  s[1] = amax;
+
+  return s[1];
+}
+
+static void
+qfluct_lax(const struct gkyl_wv_eqn* eqn, const double* ql, const double* qr, const double* waves, const double* s, double* amdq, double* apdq)
+{
+  const double *w0 = &waves[0], *w1 = &waves[74];
+  double s0m = fmin(0.0, s[0]), s1m = fmin(0.0, s[1]);
+  double s0p = fmax(0.0, s[0]), s1p = fmax(0.0, s[1]);
+
+  for (int i = 0; i < 74; i++) {
+    amdq[i] = (s0m * w0[i]) + (s1m * w1[i]);
+    apdq[i] = (s0p * w0[i]) + (s1p * w1[i]);
+  }
+}
+
+static double
+wave_lax_l(const struct gkyl_wv_eqn* eqn, enum gkyl_wv_flux_type type, const double* delta, const double* ql, const double* qr, double* waves, double* s)
+{
+  return wave_lax(eqn, delta, ql, qr, waves, s);
+}
+
+static void
+qfluct_lax_l(const struct gkyl_wv_eqn* eqn, enum gkyl_wv_flux_type type, const double* ql, const double* qr, const double* waves, const double* s,
+  double* amdq, double* apdq)
+{
+  return qfluct_lax(eqn, ql, qr, waves, s, amdq, apdq);
+}
+
+static double
+flux_jump(const struct gkyl_wv_eqn* eqn, const double* ql, const double* qr, double* flux_jump)
+{
+  const struct wv_gr_mhd *gr_mhd = container_of(eqn, struct wv_gr_mhd, eqn);
+  double gas_gamma = gr_mhd->gas_gamma;
+
+  double fr[74], fl[74];
+  gkyl_gr_mhd_flux(gas_gamma, ql, fl);
+  gkyl_gr_mhd_flux(gas_gamma, qr, fr);
+
+  bool in_excision_region_l = false;
+  if (ql[30] < pow(10.0, -8.0)) {
+    in_excision_region_l = true;
+  }
+
+  bool in_excision_region_r = false;
+  if (qr[30] < pow(10.0, -8.0)) {
+    in_excision_region_r = true;
+  }
+
+  if (!in_excision_region_l && !in_excision_region_r) {
+    for (int m = 0; m < 74; m++) {
+      flux_jump[m] = fr[m] - fl[m];
+    }
+  }
+  else {
+    for (int m = 0; m < 74; m++) {
+      flux_jump[m] = 0.0;
+    }
+  }
+
+  double amaxl = gkyl_gr_mhd_max_abs_speed(gas_gamma, ql);
+  double amaxr = gkyl_gr_mhd_max_abs_speed(gas_gamma, qr);
+
+  return fmax(amaxl, amaxr);
+}
+
+static bool
+check_inv(const struct gkyl_wv_eqn* eqn, const double* q)
+{
+  const struct wv_gr_mhd *gr_mhd = container_of(eqn, struct wv_gr_mhd, eqn);
+  double gas_gamma = gr_mhd->gas_gamma;
+
+  double v[74] = { 0.0 };
+  gkyl_gr_mhd_prim_vars(gas_gamma, q, v);
+
+  if (v[0] < 0.0 || v[4] < 0.0) {
+    return false;
+  }
+  else {
+    return true;
+  }
+}
+
+static double
+max_speed(const struct gkyl_wv_eqn* eqn, const double* q)
+{
+  const struct wv_gr_mhd *gr_mhd = container_of(eqn, struct wv_gr_mhd, eqn);
+  double gas_gamma = gr_mhd->gas_gamma;
+
+  return gkyl_gr_mhd_max_abs_speed(gas_gamma, q);
+}
+
+static inline void
+gr_mhd_cons_to_diag(const struct gkyl_wv_eqn* eqn, const double* qin, double* diag)
+{
+  for (int i = 0; i < 8; i++) {
+    diag[i] = qin[i];
+  }
+}
+
 void
 gkyl_gr_mhd_free(const struct gkyl_ref_count* ref)
 {
@@ -1108,18 +1407,32 @@ gkyl_wv_gr_mhd_inew(const struct gkyl_wv_gr_mhd_inp* inp)
 
   gr_mhd->eqn.type = GKYL_EQN_GR_MHD;
   gr_mhd->eqn.num_equations = 74;
-  gr_mhd->eqn.num_diag = 5;
+  gr_mhd->eqn.num_diag = 8;
 
   gr_mhd->gas_gamma = inp->gas_gamma;
   gr_mhd->spacetime_gauge = inp->spacetime_gauge;
   gr_mhd->reinit_freq = inp->reinit_freq;
   gr_mhd->spacetime = inp->spacetime;
 
+  if (inp->rp_type == WV_GR_MHD_RP_LAX) {
+    gr_mhd->eqn.num_waves = 2;
+    gr_mhd->eqn.waves_func = wave_lax_l;
+    gr_mhd->eqn.qfluct_func = qfluct_lax_l;
+  }
+
+  gr_mhd->eqn.flux_jump = flux_jump;
+  gr_mhd->eqn.check_inv_func = check_inv;
+  gr_mhd->eqn.max_speed_func = max_speed;
   gr_mhd->eqn.rotate_to_local_func = rot_to_local;
   gr_mhd->eqn.rotate_to_global_func = rot_to_global;
 
+  gr_mhd->eqn.wall_bc_func = gr_mhd_wall;
+  gr_mhd->eqn.no_slip_bc_func = gr_mhd_no_slip;
+
   gr_mhd->eqn.cons_to_riem = cons_to_riem;
   gr_mhd->eqn.riem_to_cons = riem_to_cons;
+
+  gr_mhd->eqn.cons_to_diag = gr_mhd_cons_to_diag;
 
   gr_mhd->eqn.flags = 0;
   GKYL_CLEAR_CU_ALLOC(gr_mhd->eqn.flags);

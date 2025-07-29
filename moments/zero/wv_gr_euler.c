@@ -33,7 +33,7 @@ gkyl_gr_euler_flux(double gas_gamma, const double q[71], double flux[71])
   if (v[27] < pow(10.0, -8.0)) {
     in_excision_region = true;
   }
-
+  
   if (!in_excision_region) {
     double vel[3];
     double v_sq = 0.0;
