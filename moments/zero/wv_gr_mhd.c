@@ -118,7 +118,7 @@ gkyl_gr_mhd_prim_vars(double gas_gamma, const double q[74], double v[74])
       tau_star += (mag[i] * cov_mom[i]) / sqrt(spatial_det);
     }
 
-    double p_guess = 0.0;
+    double p_guess = 0.0, p_new = 0.0, rho = 0.0, z = 0.0;
     int iter = 0;
 
     while (iter < 100) {
@@ -127,16 +127,17 @@ gkyl_gr_mhd_prim_vars(double gas_gamma, const double q[74], double v[74])
 
       double phi = acos((1.0 / a) * sqrt((27.0 * d) / (4.0 * a)));
       double epsilon1 = (1.0 / 3.0) - ((2.0 / 3.0) * a * cos(((2.0 / 3.0) * phi) + ((2.0 / 3.0) * M_PI)));
-      double z = epsilon1 - mag_sq;
+      z = epsilon1 - mag_sq;
 
       double v_sq = ((M_sq * (z * z)) + ((tau_star * tau_star) * (mag_sq + (2.0 * z)))) / ((z * z) * (mag_sq + z) * (mag_sq + z));
-      double W = sqrt(1.0 / sqrt(1 - v_sq));
-      double rho = D / W;
+      double W = 1.0 / sqrt(1.0 - v_sq);
+      rho = D / W;
       double h = z / (W * W * rho);
 
-      double p_new = rho * (h - 1.0) * ((gas_gamma - 1.0) / gas_gamma);
+      //p_new = rho * (h - 1.0) * ((gas_gamma - 1.0) / gas_gamma);
+      p_new = rho * (h - 1.0);
 
-      if (fabs(p_guess - p_new) < pow(10.0, -8.0)) {
+      if (fabs(p_guess - p_new) < pow(10.0, -15.0)) {
         iter = 100;
       }
       else {
@@ -144,6 +145,26 @@ gkyl_gr_mhd_prim_vars(double gas_gamma, const double q[74], double v[74])
         p_guess = p_new;
       }
     }
+
+    double vel[3];
+    for (int i = 0; i < 3; i++) {
+      vel[i] = 0.0;
+
+      for (int j = 0; j < 3; j++) {
+        vel[i] += (inv_spatial_metric[i][j] * cov_mom[j]) / (z + mag_sq);
+        vel[i] += ((mag[j] * cov_mom[j]) * mag[i]) / (z * (z + mag_sq));
+      }
+    }
+
+    v[0] = rho;
+    v[1] = vel[0];
+    v[2] = vel[1];
+    v[3] = vel[2];
+    v[4] = p_new * ((gas_gamma - 1.0) / gas_gamma);
+
+    v[5] = magx;
+    v[6] = magy;
+    v[7] = magz;
 
     v[8] = lapse;
     v[9] = shift_x;
