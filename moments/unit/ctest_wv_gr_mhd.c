@@ -21,7 +21,7 @@ test_gr_mhd_basic_minkowski()
       double y = 0.1 * y_ind;
 
       double rho = 1.0, u = 0.1, v = 0.2, w = 0.3, p = 1.5;
-      double magx = 0.3, magy = 0.2, magz = 0.1;
+      double mag_x = 0.3, mag_y = 0.2, mag_z = 0.1;
 
       double spatial_det, lapse;
       double *shift = gkyl_malloc(sizeof(double[3]));
@@ -77,7 +77,7 @@ test_gr_mhd_basic_minkowski()
       double W = 1.0 / sqrt(1.0 - v_sq);
 
       double *mag = gkyl_malloc(sizeof(double[3]));
-      mag[0] = magx; mag[1] = magy; mag[2] = magz;
+      mag[0] = mag_x; mag[1] = mag_y; mag[2] = mag_z;
 
       double *cov_mag = gkyl_malloc(sizeof(double[3]));
       for (int i = 0; i < 3; i++) {
@@ -138,9 +138,9 @@ test_gr_mhd_basic_minkowski()
       q[3] = sqrt(spatial_det) * ((rho * h_star * (W * W) * cov_vel[2]) - (lapse * b0 * cov_b[2]));
       q[4] = sqrt(spatial_det) * ((rho * h_star * (W * W)) - p_star - ((lapse * lapse) * (b0 * b0)) - (rho * W));
 
-      q[5] = sqrt(spatial_det) * magx;
-      q[6] = sqrt(spatial_det) * magy;
-      q[7] = sqrt(spatial_det) * magz;
+      q[5] = sqrt(spatial_det) * mag_x;
+      q[6] = sqrt(spatial_det) * mag_y;
+      q[7] = sqrt(spatial_det) * mag_z;
 
       q[8] = lapse;
       q[9] = shift[0]; q[10] = shift[1]; q[11] = shift[2];
@@ -184,9 +184,89 @@ test_gr_mhd_basic_minkowski()
       TEST_CHECK( gkyl_compare(prims[3], w, 1e-1) );
       TEST_CHECK( gkyl_compare(prims[4], p, 1e-1) );
 
-      TEST_CHECK( gkyl_compare(prims[5], magx, 1e-1) );
-      TEST_CHECK( gkyl_compare(prims[6], magy, 1e-1) );
-      TEST_CHECK( gkyl_compare(prims[7], magz, 1e-1) );
+      TEST_CHECK( gkyl_compare(prims[5], mag_x, 1e-1) );
+      TEST_CHECK( gkyl_compare(prims[6], mag_y, 1e-1) );
+      TEST_CHECK( gkyl_compare(prims[7], mag_z, 1e-1) );
+
+      double D = rho * W;
+      double Sx = (rho * h_star * (W * W) * cov_vel[0]) - (lapse * b0 * cov_b[0]);
+      double Sy = (rho * h_star * (W * W) * cov_vel[1]) - (lapse * b0 * cov_b[1]);
+      double Sz = (rho * h_star * (W * W) * cov_vel[2]) - (lapse * b0 * cov_b[2]);
+      double Etot = (rho * h_star * (W * W)) - p_star - ((lapse * lapse) * (b0 * b0)) - (rho * W);
+
+      double fluxes[3][8] = {
+        { (lapse * sqrt(spatial_det)) * (D * (vel[0] - (shift[0] / lapse))),
+          (lapse * sqrt(spatial_det)) * ((Sx * (vel[0] - (shift[0] / lapse))) + p_star - ((cov_b[0] * mag[0]) / W)),
+          (lapse * sqrt(spatial_det)) * ((Sy * (vel[0] - (shift[0] / lapse))) - ((cov_b[1] * mag[0]) / W)),
+          (lapse * sqrt(spatial_det)) * ((Sz * (vel[0] - (shift[0] / lapse))) - ((cov_b[2] * mag[0]) / W)),
+          (lapse * sqrt(spatial_det)) * ((Etot * (vel[0] - (shift[0] / lapse))) + (p_star * vel[0]) - ((lapse * b0 * mag[0]) / W)),
+          (lapse * sqrt(spatial_det)) * (((vel[0] - (shift[0] / lapse)) * mag[0]) - ((vel[0] - (shift[0] / lapse)) * mag[0])),
+          (lapse * sqrt(spatial_det)) * (((vel[0] - (shift[0] / lapse)) * mag[1]) - ((vel[1] - (shift[1] / lapse)) * mag[0])),
+          (lapse * sqrt(spatial_det)) * (((vel[0] - (shift[0] / lapse)) * mag[2]) - ((vel[2] - (shift[2] / lapse)) * mag[0])) },
+        { (lapse * sqrt(spatial_det)) * (D * (vel[1] - (shift[1] / lapse))),
+          (lapse * sqrt(spatial_det)) * ((Sx * (vel[1] - (shift[1] / lapse))) - ((cov_b[0] * mag[1]) / W)),
+          (lapse * sqrt(spatial_det)) * ((Sy * (vel[1] - (shift[1] / lapse))) + p_star - ((cov_b[1] * mag[1]) / W)),
+          (lapse * sqrt(spatial_det)) * ((Sz * (vel[1] - (shift[1] / lapse))) - ((cov_b[2] * mag[1]) / W)),
+          (lapse * sqrt(spatial_det)) * ((Etot * (vel[1] - (shift[1] / lapse))) + (p_star * vel[1]) - ((lapse * b0 * mag[1]) / W)),
+          (lapse * sqrt(spatial_det)) * (((vel[1] - (shift[1] / lapse)) * mag[0]) - ((vel[0] - (shift[0] / lapse)) * mag[1])),
+          (lapse * sqrt(spatial_det)) * (((vel[1] - (shift[1] / lapse)) * mag[1]) - ((vel[1] - (shift[1] / lapse)) * mag[1])),
+          (lapse * sqrt(spatial_det)) * (((vel[1] - (shift[1] / lapse)) * mag[2]) - ((vel[2] - (shift[2] / lapse)) * mag[1])) },
+        { (lapse * sqrt(spatial_det)) * (D * (vel[2] - (shift[2] / lapse))),
+          (lapse * sqrt(spatial_det)) * ((Sx * (vel[2] - (shift[2] / lapse))) - ((cov_b[0] * mag[2]) / W)),
+          (lapse * sqrt(spatial_det)) * ((Sy * (vel[2] - (shift[2] / lapse))) - ((cov_b[1] * mag[2]) / W)),
+          (lapse * sqrt(spatial_det)) * ((Sz * (vel[2] - (shift[2] / lapse))) + p_star - ((cov_b[2] * mag[2]) / W)),
+          (lapse * sqrt(spatial_det)) * ((Etot * (vel[2] - (shift[2] / lapse))) + (p_star * vel[2]) - ((lapse * b0 * mag[2]) / W)),
+          (lapse * sqrt(spatial_det)) * (((vel[2] - (shift[2] / lapse)) * mag[0]) - ((vel[0] - (shift[0] / lapse)) * mag[2])),
+          (lapse * sqrt(spatial_det)) * (((vel[2] - (shift[2] / lapse)) * mag[1]) - ((vel[1] - (shift[1] / lapse)) * mag[2])),
+          (lapse * sqrt(spatial_det)) * (((vel[2] - (shift[2] / lapse)) * mag[2]) - ((vel[2] - (shift[2] / lapse)) * mag[2])) },
+      };
+
+      double norm[3][3] = {
+        { 1.0, 0.0, 0.0 },
+        { 0.0, 1.0, 0.0 },
+        { 0.0, 0.0, 1.0 },
+      };
+
+      double tau1[3][3] = {
+        { 0.0, 1.0, 0.0 },
+        { 1.0, 0.0, 0.0 },
+        { 1.0, 0.0, 0.0 },
+      };
+
+      double tau2[3][3] = {
+        { 0.0, 0.0, 1.0 },
+        { 0.0, 0.0, -1.0 },
+        { 0.0, 1.0, 0.0 },
+      };
+
+      double q_local[74], flux_local[74], flux[74];
+      for (int d = 0; d < 3; d++) {
+        gr_mhd->rotate_to_local_func(gr_mhd, tau1[d], tau2[d], norm[d], q, q_local);
+        gkyl_gr_mhd_flux(gas_gamma, q_local, flux_local);
+        gr_mhd->rotate_to_global_func(gr_mhd, tau1[d], tau2[d], norm[d], flux_local, flux);
+
+        for (int i = 0; i < 8; i++) {
+          TEST_CHECK( gkyl_compare(flux[i], fluxes[d][i], 1e-1) );
+        }
+      }
+
+      double q_l[74], q_g[74];
+      for (int d = 0; d < 3; d++) {
+        gkyl_wv_eqn_rotate_to_local(gr_mhd, tau1[d], tau2[d], norm[d], q, q_l);
+        gkyl_wv_eqn_rotate_to_global(gr_mhd, tau1[d], tau2[d], norm[d], q_l, q_g);
+
+        for (int i = 0; i < 8; i++) {
+          TEST_CHECK( gkyl_compare(q[i], q_g[i], 1e-16) );
+        }
+
+        double w1[74], q1[74];
+        gr_mhd->cons_to_riem(gr_mhd, q_local, q_local, w1);
+        gr_mhd->riem_to_cons(gr_mhd, q_local, w1, q1);
+
+        for (int i = 0; i < 8; i++) {
+          TEST_CHECK( gkyl_compare(q_local[i], q1[i], 1e-16) );
+        }
+      }
 
       for (int i = 0; i < 3; i++) {
         gkyl_free(spatial_metric[i]);
