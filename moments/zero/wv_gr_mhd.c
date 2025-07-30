@@ -587,6 +587,13 @@ gkyl_gr_mhd_max_abs_speed(double gas_gamma, const double q[74])
   spatial_metric[1][0] = v[15]; spatial_metric[1][1] = v[16]; spatial_metric[1][2] = v[17];
   spatial_metric[2][0] = v[18]; spatial_metric[2][1] = v[19]; spatial_metric[2][2] = v[20];
 
+  double **inv_spatial_metric = gkyl_malloc(sizeof(double*[3]));
+  for (int i = 0; i < 3; i++) {
+    inv_spatial_metric[i] = gkyl_malloc(sizeof(double[3]));
+  }
+
+  gkyl_gr_mhd_inv_spatial_metric(q, &inv_spatial_metric);
+
   bool in_excision_region = false;
   if (v[30] < pow(10.0, -8.0)) {
     in_excision_region = true;
@@ -657,15 +664,79 @@ gkyl_gr_mhd_max_abs_speed(double gas_gamma, const double q[74])
     double h = 1.0 + ((p / rho) * (gas_gamma / (gas_gamma - 1.0)));
     double C = (rho * h) + b_sq;
 
+    double num = (gas_gamma * p) / rho;
+    double den = 1.0 + ((p / rho) * (gas_gamma) / (gas_gamma - 1.0));
+    double c_s = sqrt(num / den);
+
+    /*
+    double guess[3];
+    guess[0] = 0.1; guess[1] = 0.1; guess[2] = 0.1;
+    int iter = 0;
+
+    while (iter < 100) {
+      double a_star[3], a_star_deriv[3];
+      for (int i = 0; i < 3; i++) {
+        a_star[i] = (W / lapse) * (-guess[i] + (lapse * vel[i]) - shift[i]);
+        a_star_deriv[i] = -W / lapse;
+      }
+      
+      double B_star[3], B_star_deriv[3];
+      for (int i = 0; i < 3; i++) {
+        B_star[i] = b[i] - (b0 * guess[i]);
+        B_star_deriv[i] = -b0;
+      }
+
+      double G_star[3], G_star_deriv[3];
+      for (int i = 0; i < 3; i++) {
+        G_star[i] = (1.0 / (lapse * lapse)) * (-((guess[i] + shift[i]) * (guess[i] * shift[i])) + ((lapse * lapse) * inv_spatial_metric[i][i]));
+        G_star_deriv[i] = -(2.0 * (shift[i] + guess[i])) / (lapse * lapse);
+      }
+
+      double poly[3];
+      double poly_deriv[3];
+      double guess_new[3];
+      for (int i = 0; i < 3; i++) {
+        poly[i] = rho * h * ((1.0 / (c_s * c_s)) - 1.0) * (a_star[i] * a_star[i] * a_star[i] * a_star[i]);
+        poly[i] -= ((rho * h) + (b_sq / (c_s * c_s))) * (a_star[i] * a_star[i]) * G_star[i];
+        poly[i] += (B_star[i] * B_star[i]) * G_star[i];
+
+        poly_deriv[i] = (4.0 * rho * h * ((1.0 / (c_s * c_s)) - 1.0) * (a_star[i] * a_star[i] * a_star[i])) * a_star_deriv[i];
+
+        poly_deriv[i] -= (2.0 * ((rho * h) + (b_sq / (c_s * c_s))) * a_star[i] * G_star[i]) * a_star_deriv[i];
+        poly_deriv[i] -= ((rho * h) + (b_sq / (c_s * c_s))) * (a_star[i] * a_star[i]) * G_star_deriv[i];
+
+        poly_deriv[i] += 2.0 * B_star[i] * G_star[i] * B_star_deriv[i];
+        poly_deriv[i] += (B_star[i] * B_star[i]) * G_star_deriv[i];
+
+        guess_new[i] = guess[i] - (poly[i] / poly_deriv[i]);
+      }
+
+      if (fabs(guess[0] - guess_new[0]) < pow(10.0, -8.0) && fabs(guess[1] - guess_new[1]) < pow(10.0, -8.0) && fabs(guess[2] - guess_new[2]) < pow(10.0, -8.0)) {
+        iter = 100;
+      }
+      else {
+        iter += 1;
+        for (int i = 0; i < 3; i++) {
+          guess[i] = guess_new[i];
+        }
+      }
+    }
+    */
+
     double entropy_eigs[3];
     double fast_alfven_eigs[3];
     double slow_alfven_eigs[3];
+    double fast_magnetosonic_eigs[3];
+    double slow_magnetosonic_eigs[3];
 
     for (int i = 0; i < 3; i++) {
       entropy_eigs[i] = (lapse * vel[i] - shift[i]);
 
       fast_alfven_eigs[i] = (b[i] + (sqrt(C) * spacetime_vel[i + 1])) / (b0 + (sqrt(C) * spacetime_vel[0]));
       slow_alfven_eigs[i] = (b[i] - (sqrt(C) * spacetime_vel[i + 1])) / (b0 - (sqrt(C) * spacetime_vel[0]));
+
+      fast_magnetosonic_eigs[i] = sqrt((fast_alfven_eigs[i] * fast_alfven_eigs[i]) + ((c_s * c_s) * (1.0 - (fast_alfven_eigs[i] * fast_alfven_eigs[i]))));
+      slow_magnetosonic_eigs[i] = sqrt((slow_alfven_eigs[i] * slow_alfven_eigs[i]) + ((c_s * c_s) * (1.0 - (slow_alfven_eigs[i] * slow_alfven_eigs[i]))));
     }
 
     double max_eig = 0.0;
@@ -679,15 +750,27 @@ gkyl_gr_mhd_max_abs_speed(double gas_gamma, const double q[74])
       if (fabs(slow_alfven_eigs[i]) > max_eig) {
         max_eig = fabs(slow_alfven_eigs[i]);
       }
+      if (fabs(fast_magnetosonic_eigs[i]) > max_eig) {
+        max_eig = fabs(fast_magnetosonic_eigs[i]);
+      }
+      if (fabs(slow_magnetosonic_eigs[i]) > max_eig) {
+        max_eig = fabs(slow_magnetosonic_eigs[i]);
+      }
     }
 
-    double num = (gas_gamma * p) / rho;
-    double den = 1.0 + ((p / rho) * (gas_gamma) / (gas_gamma - 1.0));
-    double c_s = sqrt(num / den);
+    for (int i = 0; i < 3; i++) {
+      gkyl_free(inv_spatial_metric[i]);
+    }
+    gkyl_free(inv_spatial_metric);
 
-    return fabs(v_sq) + c_s;
+    return fabs(v_sq) + max_eig;
   }
   else {
+    for (int i = 0; i < 3; i++) {
+      gkyl_free(inv_spatial_metric[i]);
+    }
+    gkyl_free(inv_spatial_metric);
+
     return pow(10.0, -8.0);
   }
 }

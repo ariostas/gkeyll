@@ -598,7 +598,7 @@ void
 test_gr_mhd_basic_kerr()
 {
   double gas_gamma = 5.0 / 3.0;
-  struct gkyl_gr_spacetime *spacetime = gkyl_gr_blackhole_new(false, 0.1, 0.8, 0.0, 0.0, 0.0);
+  struct gkyl_gr_spacetime *spacetime = gkyl_gr_blackhole_new(false, 0.1, 0.9, 0.0, 0.0, 0.0);
   struct gkyl_wv_eqn *gr_mhd = gkyl_wv_gr_mhd_new(gas_gamma, GKYL_STATIC_GAUGE, 0, spacetime, false);
 
   TEST_CHECK( gr_mhd->num_equations == 74 );

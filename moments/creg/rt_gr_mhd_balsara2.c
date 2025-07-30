@@ -18,7 +18,7 @@
 
 #include <rt_arg_parse.h>
 
-struct mhd_balsara1_ctx
+struct mhd_balsara2_ctx
 {
   // Physical constants (using normalized code units).
   double gas_gamma; // Adiabatic index.
@@ -29,6 +29,7 @@ struct mhd_balsara1_ctx
 
   double Bxl; // Left fluid magnetic field (x-direction).
   double Byl; // Left fluid magnetic field (y-direction).
+  double Bzl; // Left fluid magnetic field (z-direction).
 
   double rhor; // Right fluid mass density.
   double ur; // Right fluid velocity.
@@ -36,6 +37,7 @@ struct mhd_balsara1_ctx
 
   double Bxr; // Right fluid magnetic field (x-direction).
   double Byr; // Right fluid magnetic field (y-direction).
+  double Bzr; // Right fluid magnetic field (z-direction).
 
   // Pointer to spacetime metric.
   struct gkyl_gr_spacetime *spacetime;
@@ -56,25 +58,27 @@ struct mhd_balsara1_ctx
   int num_failures_max; // Maximum allowable number of consecutive small time-steps.
 };
 
-struct mhd_balsara1_ctx
+struct mhd_balsara2_ctx
 create_ctx(void)
 {
   // Physical constants (using normalized code units).
-  double gas_gamma = 2.0; // Adiabatic index.
+  double gas_gamma = 5.0 / 3.0; // Adiabatic index.
 
   double rhol = 1.0; // Left fluid mass density.
   double ul = 0.0; // Left fluid velocity.
-  double pl = 1.0; // Left fluid pressure.
+  double pl = 30.0; // Left fluid pressure.
 
-  double Bxl = 0.5; // Left fluid magnetic field (x-direction).
-  double Byl = 1.0; // Left fluid magnetic field (y-direction).
+  double Bxl = 5.0; // Left fluid magnetic field (x-direction).
+  double Byl = 6.0; // Left fluid magnetic field (y-direction).
+  double Bzl = 6.0; // Left fluid magnetic field (z-direction).
 
-  double rhor = 0.125; // Right fluid mass density.
+  double rhor = 1.0; // Right fluid mass density.
   double ur = 0.0; // Right fluid velocity.
-  double pr = 0.1; // Right fluid pressure.
+  double pr = 1.0; // Right fluid pressure.
 
-  double Bxr = 0.5; // Right fluid magnetic field (x-direction).
-  double Byr = -1.0; // Right fluid magnetic field (y-direction).
+  double Bxr = 5.0; // Right fluid magnetic field (x-direction).
+  double Byr = 0.7; // Right fluid magnetic field (y-direction).
+  double Bzr = 0.7; // Right fluid magnetic field (z-direction).
 
   // Pointer to spacetime metric.
   struct gkyl_gr_spacetime *spacetime = gkyl_gr_minkowski_new(false);
@@ -94,18 +98,20 @@ create_ctx(void)
   double dt_failure_tol = 1.0e-4; // Minimum allowable fraction of initial time-step.
   int num_failures_max = 20; // Maximum allowable number of consecutive small time-steps.
   
-  struct mhd_balsara1_ctx ctx = {
+  struct mhd_balsara2_ctx ctx = {
     .gas_gamma = gas_gamma,
     .rhol = rhol,
     .ul = ul,
     .pl = pl,
     .Bxl = Bxl,
     .Byl = Byl,
+    .Bzl = Bzl,
     .rhor = rhor,
     .ur = ur,
     .pr = pr,
     .Bxr = Bxr,
     .Byr = Byr,
+    .Bzr = Bzr,
     .spacetime = spacetime,
     .Nx = Nx,
     .Lx = Lx,
@@ -127,7 +133,7 @@ void
 evalGRMHDInit(double t, const double* GKYL_RESTRICT xn, double* GKYL_RESTRICT fout, void* ctx)
 {
   double x = xn[0];
-  struct mhd_balsara1_ctx *app = ctx;
+  struct mhd_balsara2_ctx *app = ctx;
 
   double gas_gamma = app->gas_gamma;
 
@@ -137,6 +143,7 @@ evalGRMHDInit(double t, const double* GKYL_RESTRICT xn, double* GKYL_RESTRICT fo
 
   double Bxl = app->Bxl;
   double Byl = app->Byl;
+  double Bzl = app->Bzl;
 
   double rhor = app->rhor;
   double ur = app->ur;
@@ -144,6 +151,7 @@ evalGRMHDInit(double t, const double* GKYL_RESTRICT xn, double* GKYL_RESTRICT fo
 
   double Bxr = app->Bxr;
   double Byr = app->Byr;
+  double Bzr = app->Bzr;
 
   double rho = 0.0;
   double u = 0.0;
@@ -151,6 +159,7 @@ evalGRMHDInit(double t, const double* GKYL_RESTRICT xn, double* GKYL_RESTRICT fo
 
   double Bx = 0.0;
   double By = 0.0;
+  double Bz = 0.0;
 
   struct gkyl_gr_spacetime *spacetime = app->spacetime;
 
@@ -161,6 +170,7 @@ evalGRMHDInit(double t, const double* GKYL_RESTRICT xn, double* GKYL_RESTRICT fo
 
     Bx = Bxl; // Fluid magnetic field (x-direction, left).
     By = Byl; // Fluid magnetic field (y-direction, left).
+    Bz = Bzl; // Fluid magnetic field (z-direction, left).
   }
   else {
     rho = rhor; // Fluid mass density (right).
@@ -169,6 +179,7 @@ evalGRMHDInit(double t, const double* GKYL_RESTRICT xn, double* GKYL_RESTRICT fo
 
     Bx = Bxr; // Fluid magnetic field (x-direction, right).
     By = Byr; // Fluid magnetic field (y-direction, right).
+    Bz = Bzr; // Fluid magnetic field (z-direction, right).
   }
 
   double spatial_det, lapse;
@@ -228,7 +239,7 @@ evalGRMHDInit(double t, const double* GKYL_RESTRICT xn, double* GKYL_RESTRICT fo
   }
 
   double *mag = gkyl_malloc(sizeof(double[3]));
-  mag[0] = Bx; mag[1] = By; mag[2] = 0.0;
+  mag[0] = Bx; mag[1] = By; mag[2] = Bz;
 
   double *cov_mag = gkyl_malloc(sizeof(double[3]));
   for (int i = 0; i < 3; i++) {
@@ -285,12 +296,12 @@ evalGRMHDInit(double t, const double* GKYL_RESTRICT xn, double* GKYL_RESTRICT fo
   double rho_rel = sqrt(spatial_det) * rho * W; // Fluid relativistic mass density.
   double mom_x = sqrt(spatial_det) * ((rho * h_star * (W * W) * cov_vel[0]) - (lapse * b0 * cov_b[0])); // Fluid momentum density (x-direction).
   double mom_y = sqrt(spatial_det) * ((rho * h_star * (W * W) * cov_vel[1]) - (lapse * b0 * cov_b[1])); // Fluid momentum density (y-direction).
-  double mom_z = 0.0; // Fluid momentum density (z-direction).
+  double mom_z = sqrt(spatial_det) * ((rho * h_star * (W * W) * cov_vel[2]) - (lapse * b0 * cov_b[2])); // Fluid momentum density (z-direction).
   double Etot = sqrt(spatial_det) * ((rho * h_star * (W * W)) - p_star - ((lapse * lapse) * (b0 * b0)) - (rho * W)); // Fluid total energy density.
 
   double Bx_rel = sqrt(spatial_det) * Bx; // Fluid relativistic magnetic field (x-direction).
   double By_rel = sqrt(spatial_det) * By; // Fluid relativistic magnetic field (y-direction).
-  double Bz_rel = 0.0; // Fluid relativistic magnetic field (z-direction).
+  double Bz_rel = sqrt(spatial_det) * Bz; // Fluid relativistic magnetic field (z-direction).
 
   // Set fluid relativistic mass density.
   fout[0] = rho_rel;
@@ -425,7 +436,7 @@ main(int argc, char **argv)
     gkyl_mem_debug_set(true);
   }
 
-  struct mhd_balsara1_ctx ctx = create_ctx(); // Context for initialization functions.
+  struct mhd_balsara2_ctx ctx = create_ctx(); // Context for initialization functions.
 
   int NX = APP_ARGS_CHOOSE(app_args.xcells[0], ctx.Nx);
 
@@ -511,7 +522,7 @@ main(int argc, char **argv)
 
   // Moment app.
   struct gkyl_moment app_inp = {
-    .name = "gr_mhd_balsara1",
+    .name = "gr_mhd_balsara2",
 
     .ndim = 1,
     .lower = { 0.0 },
