@@ -179,15 +179,15 @@ test_gr_mhd_basic_minkowski()
       double prims[74];
       gkyl_gr_mhd_prim_vars(gas_gamma, q, prims);
       
-      TEST_CHECK( gkyl_compare(prims[0], rho, 1e-1) );
-      TEST_CHECK( gkyl_compare(prims[1], u, 1e-1) );
-      TEST_CHECK( gkyl_compare(prims[2], v, 1e-1) );
-      TEST_CHECK( gkyl_compare(prims[3], w, 1e-1) );
-      TEST_CHECK( gkyl_compare(prims[4], p, 1e-1) );
+      TEST_CHECK( gkyl_compare(prims[0], rho, 1e-8) );
+      TEST_CHECK( gkyl_compare(prims[1], u, 1e-8) );
+      TEST_CHECK( gkyl_compare(prims[2], v, 1e-8) );
+      TEST_CHECK( gkyl_compare(prims[3], w, 1e-8) );
+      TEST_CHECK( gkyl_compare(prims[4], p, 1e-8) );
 
-      TEST_CHECK( gkyl_compare(prims[5], mag_x, 1e-1) );
-      TEST_CHECK( gkyl_compare(prims[6], mag_y, 1e-1) );
-      TEST_CHECK( gkyl_compare(prims[7], mag_z, 1e-1) );
+      TEST_CHECK( gkyl_compare(prims[5], mag_x, 1e-8) );
+      TEST_CHECK( gkyl_compare(prims[6], mag_y, 1e-8) );
+      TEST_CHECK( gkyl_compare(prims[7], mag_z, 1e-8) );
 
       double D = rho * W;
       double Sx = (rho * h_star * (W * W) * cov_vel[0]) - (lapse * b0 * cov_b[0]);
@@ -247,7 +247,7 @@ test_gr_mhd_basic_minkowski()
         gr_mhd->rotate_to_global_func(gr_mhd, tau1[d], tau2[d], norm[d], flux_local, flux);
 
         for (int i = 0; i < 8; i++) {
-          TEST_CHECK( gkyl_compare(flux[i], fluxes[d][i], 1e-1) );
+          TEST_CHECK( gkyl_compare(flux[i], fluxes[d][i], 1e-8) );
         }
       }
 
@@ -479,9 +479,9 @@ test_gr_mhd_basic_schwarzschild()
         TEST_CHECK( gkyl_compare(prims[3], w, 1e-1) );
         TEST_CHECK( gkyl_compare(prims[4], p, 1e-1) );
 
-        TEST_CHECK( gkyl_compare(prims[5], mag_x, 1e-1) );
-        TEST_CHECK( gkyl_compare(prims[6], mag_y, 1e-1) );
-        TEST_CHECK( gkyl_compare(prims[7], mag_z, 1e-1) );
+        TEST_CHECK( gkyl_compare(prims[5], mag_x, 1e-8) );
+        TEST_CHECK( gkyl_compare(prims[6], mag_y, 1e-8) );
+        TEST_CHECK( gkyl_compare(prims[7], mag_z, 1e-8) );
 
         double D = rho * W;
         double Sx = (rho * h_star * (W * W) * cov_vel[0]) - (lapse * b0 * cov_b[0]);
@@ -774,9 +774,9 @@ test_gr_mhd_basic_kerr()
         TEST_CHECK( gkyl_compare(prims[3], w, 1e-1) );
         TEST_CHECK( gkyl_compare(prims[4], p, 1e-1) );
 
-        TEST_CHECK( gkyl_compare(prims[5], mag_x, 1e-1) );
-        TEST_CHECK( gkyl_compare(prims[6], mag_y, 1e-1) );
-        TEST_CHECK( gkyl_compare(prims[7], mag_z, 1e-1) );
+        TEST_CHECK( gkyl_compare(prims[5], mag_x, 1e-8) );
+        TEST_CHECK( gkyl_compare(prims[6], mag_y, 1e-8) );
+        TEST_CHECK( gkyl_compare(prims[7], mag_z, 1e-8) );
 
         double D = rho * W;
         double Sx = (rho * h_star * (W * W) * cov_vel[0]) - (lapse * b0 * cov_b[0]);

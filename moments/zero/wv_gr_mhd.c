@@ -228,7 +228,7 @@ gkyl_gr_mhd_prim_vars(double gas_gamma, const double q[74], double v[74])
 
     double M_sq = 0.0;
     for (int i = 0; i < 3; i++) {
-      M_sq += (mom[i] * cov_mom[i]) / sqrt(spatial_det);
+      M_sq += (mom[i] * cov_mom[i]);
     }
 
     double mag[3];
@@ -250,7 +250,7 @@ gkyl_gr_mhd_prim_vars(double gas_gamma, const double q[74], double v[74])
 
     double tau_star = 0.0;
     for (int i = 0; i < 3; i++) {
-      tau_star += (mag[i] * cov_mom[i]) / sqrt(spatial_det);
+      tau_star += (mag[i] * cov_mom[i]);
     }
 
     double p_guess = 0.0, p_new = 0.0, rho = 0.0, z = 0.0;
@@ -261,7 +261,7 @@ gkyl_gr_mhd_prim_vars(double gas_gamma, const double q[74], double v[74])
       double d = 0.5 * ((M_sq * mag_sq) - (tau_star * tau_star));
 
       double phi = acos((1.0 / a) * sqrt((27.0 * d) / (4.0 * a)));
-      double epsilon1 = (1.0 / 3.0) - ((2.0 / 3.0) * a * cos(((2.0 / 3.0) * phi) + ((2.0 / 3.0) * M_PI)));
+      double epsilon1 = ((1.0 / 3.0) * a) - ((2.0 / 3.0) * a * cos(((2.0 / 3.0) * phi) + ((2.0 / 3.0) * M_PI)));
       z = epsilon1 - mag_sq;
 
       double v_sq = ((M_sq * (z * z)) + ((tau_star * tau_star) * (mag_sq + (2.0 * z)))) / ((z * z) * (mag_sq + z) * (mag_sq + z));
@@ -270,7 +270,6 @@ gkyl_gr_mhd_prim_vars(double gas_gamma, const double q[74], double v[74])
       double h = z / (W * W * rho);
 
       p_new = rho * (h - 1.0) * ((gas_gamma - 1.0) / gas_gamma);
-      //p_new = rho * (h - 1.0);
 
       if (fabs(p_guess - p_new) < pow(10.0, -15.0)) {
         iter = 100;
@@ -302,7 +301,7 @@ gkyl_gr_mhd_prim_vars(double gas_gamma, const double q[74], double v[74])
     v[1] = vel[0];
     v[2] = vel[1];
     v[3] = vel[2];
-    v[4] = p_new; //* ((gas_gamma - 1.0) / gas_gamma);
+    v[4] = p_new;
 
     v[5] = mag_x;
     v[6] = mag_y;
@@ -682,7 +681,11 @@ gkyl_gr_mhd_max_abs_speed(double gas_gamma, const double q[74])
       }
     }
 
-    return fabs(v_sq) + max_eig;
+    double num = (gas_gamma * p) / rho;
+    double den = 1.0 + ((p / rho) * (gas_gamma) / (gas_gamma - 1.0));
+    double c_s = sqrt(num / den);
+
+    return fabs(v_sq) + c_s;
   }
   else {
     return pow(10.0, -8.0);

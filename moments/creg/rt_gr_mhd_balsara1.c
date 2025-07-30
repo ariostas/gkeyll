@@ -60,7 +60,7 @@ struct mhd_balsara1_ctx
 create_ctx(void)
 {
   // Physical constants (using normalized code units).
-  double gas_gamma = 5.0 / 3.0; // Adiabatic index.
+  double gas_gamma = 2.0; // Adiabatic index.
 
   double rhol = 1.0; // Left fluid mass density.
   double ul = 0.0; // Left fluid velocity.
@@ -80,9 +80,9 @@ create_ctx(void)
   struct gkyl_gr_spacetime *spacetime = gkyl_gr_minkowski_new(false);
 
   // Simulation parameters.
-  int Nx = 512; // Cell count (x-direction).
+  int Nx = 4096; // Cell count (x-direction).
   double Lx = 1.0; // Domain size (x-direction).
-  double cfl_frac = 0.95; // CFL coefficient.
+  double cfl_frac = 0.5; // CFL coefficient.
 
   enum gkyl_spacetime_gauge spacetime_gauge = GKYL_STATIC_GAUGE; // Spacetime gauge choice.
   int reinit_freq = 100; // Spacetime reinitialization frequency.
@@ -438,12 +438,11 @@ main(int argc, char **argv)
     
     .init = evalGRMHDInit,
     .force_low_order_flux = true, // Use Lax fluxes.
-    .limiter = GKYL_ZERO,
     .ctx = &ctx,
 
     .bcx = { GKYL_SPECIES_COPY, GKYL_SPECIES_COPY },
   };
-
+  
   int nrank = 1; // Number of processes in simulation.
 #ifdef GKYL_HAVE_MPI
   if (app_args.use_mpi) {
