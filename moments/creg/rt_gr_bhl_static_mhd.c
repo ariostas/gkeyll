@@ -93,8 +93,8 @@ create_ctx(void)
   struct gkyl_gr_spacetime *spacetime = gkyl_gr_blackhole_new(false, mass, spin, pos_x, pos_y, pos_z);
 
   // Simulation parameters.
-  int Nx = 256; // Cell count (x-direction).
-  int Ny = 256; // Cell count (y-direction).
+  int Nx = 512; // Cell count (x-direction).
+  int Ny = 512; // Cell count (y-direction).
   double Lx = 5.0; // Domain size (x-direction).
   double Ly = 5.0; // Domain size (y-direction).
   double cfl_frac = 0.95; // CFL coefficient.
@@ -394,6 +394,12 @@ evalGRMHDInit(double t, const double* GKYL_RESTRICT xn, double* GKYL_RESTRICT fo
   gkyl_free(extrinsic_curvature);
   gkyl_free(shift);
   gkyl_free(vel);
+  gkyl_free(mag);
+  gkyl_free(cov_mag);
+  gkyl_free(cov_vel);
+  gkyl_free(spacetime_vel);
+  gkyl_free(b);
+  gkyl_free(cov_b);
   gkyl_free(lapse_der);
   gkyl_free(shift_der);
   gkyl_free(spatial_metric_der);

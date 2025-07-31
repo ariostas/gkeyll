@@ -384,6 +384,12 @@ evalGRMHDInit(double t, const double* GKYL_RESTRICT xn, double* GKYL_RESTRICT fo
   gkyl_free(extrinsic_curvature);
   gkyl_free(shift);
   gkyl_free(vel);
+  gkyl_free(mag);
+  gkyl_free(cov_mag);
+  gkyl_free(cov_vel);
+  gkyl_free(spacetime_vel);
+  gkyl_free(b);
+  gkyl_free(cov_b);
   gkyl_free(lapse_der);
   gkyl_free(shift_der);
   gkyl_free(spatial_metric_der);
