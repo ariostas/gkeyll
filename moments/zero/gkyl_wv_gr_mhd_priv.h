@@ -328,6 +328,17 @@ static inline void
 gr_mhd_cons_to_diag(const struct gkyl_wv_eqn* eqn, const double* qin, double* diag);
 
 /**
+* Compute forcing/source term vector from conserved variables.
+*
+* @param eqn Base equation object.
+* @param qin Conserved variable vector (input).
+* @param sout Forcing/source term vector (output).
+*/
+GKYL_CU_DH
+static inline void
+gr_mhd_source(const struct gkyl_wv_eqn* eqn, const double* qin, double* sout);
+
+/**
 * Free general relativistic magnetohydrodynamics equations object with ideal gas equation of state.
 *
 * @param ref Reference counter for general relativistic magnetohydrodynamics equations with ideal gas equation of state.

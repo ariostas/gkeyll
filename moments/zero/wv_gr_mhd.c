@@ -1701,6 +1701,195 @@ gr_mhd_cons_to_diag(const struct gkyl_wv_eqn* eqn, const double* qin, double* di
   }
 }
 
+static inline void
+gr_mhd_source(const struct gkyl_wv_eqn* eqn, const double* qin, double* sout)
+{
+  const struct wv_gr_mhd *gr_mhd = container_of(eqn, struct wv_gr_mhd, eqn);
+  double gas_gamma = gr_mhd->gas_gamma;
+
+  double v[74] = { 0.0 };
+  gkyl_gr_mhd_prim_vars(gas_gamma, qin, v);
+  double rho = v[0];
+  double vx = v[1];
+  double vy = v[2];
+  double vz = v[3];
+  double p = v[4];
+
+  double mag_x = v[5];
+  double mag_y = v[6];
+  double mag_z = v[7];
+
+  double lapse = v[8];
+  double shift_x = v[9];
+  double shift_y = v[10];
+  double shift_z = v[11];
+
+  double spatial_metric[3][3];
+  spatial_metric[0][0] = v[12]; spatial_metric[0][1] = v[13]; spatial_metric[0][2] = v[14];
+  spatial_metric[1][0] = v[15]; spatial_metric[1][1] = v[16]; spatial_metric[1][2] = v[17];
+  spatial_metric[2][0] = v[18]; spatial_metric[2][1] = v[19]; spatial_metric[2][2] = v[20];
+
+  double extrinsic_curvature[3][3];
+  extrinsic_curvature[0][0] = v[21]; extrinsic_curvature[0][1] = v[22]; extrinsic_curvature[0][2] = v[23];
+  extrinsic_curvature[1][0] = v[24]; extrinsic_curvature[1][1] = v[25]; extrinsic_curvature[1][2] = v[26];
+  extrinsic_curvature[2][0] = v[27]; extrinsic_curvature[2][1] = v[28]; extrinsic_curvature[2][2] = v[29];
+
+  double lapse_der[3];
+  lapse_der[0] = v[31];
+  lapse_der[1] = v[32];
+  lapse_der[2] = v[33];
+
+  double shift_der[3][3];
+  shift_der[0][0] = v[34]; shift_der[0][1] = v[35]; shift_der[0][2] = v[36];
+  shift_der[1][0] = v[37]; shift_der[1][1] = v[38]; shift_der[1][2] = v[39];
+  shift_der[2][0] = v[40]; shift_der[2][1] = v[41]; shift_der[2][2] = v[42];
+
+  double spatial_metric_der[3][3][3];
+  spatial_metric_der[0][0][0] = v[43]; spatial_metric_der[0][0][1] = v[44]; spatial_metric_der[0][0][2] = v[45];
+  spatial_metric_der[0][1][0] = v[46]; spatial_metric_der[0][1][1] = v[47]; spatial_metric_der[0][1][2] = v[48];
+  spatial_metric_der[0][2][0] = v[49]; spatial_metric_der[0][2][1] = v[50]; spatial_metric_der[0][2][2] = v[51];
+
+  spatial_metric_der[1][0][0] = v[52]; spatial_metric_der[1][0][1] = v[53]; spatial_metric_der[1][0][2] = v[54];
+  spatial_metric_der[1][1][0] = v[55]; spatial_metric_der[1][1][1] = v[56]; spatial_metric_der[1][1][2] = v[57];
+  spatial_metric_der[1][2][0] = v[58]; spatial_metric_der[1][2][1] = v[59]; spatial_metric_der[1][2][2] = v[60];
+
+  spatial_metric_der[0][0][0] = v[61]; spatial_metric_der[0][0][1] = v[62]; spatial_metric_der[0][0][2] = v[63];
+  spatial_metric_der[0][1][0] = v[64]; spatial_metric_der[0][1][1] = v[65]; spatial_metric_der[0][1][2] = v[66];
+  spatial_metric_der[0][2][0] = v[67]; spatial_metric_der[0][2][1] = v[68]; spatial_metric_der[0][2][2] = v[69];
+
+  double **stress_energy = gkyl_malloc(sizeof(double*[4]));
+  for (int i = 0; i < 4; i++) {
+    stress_energy[i] = gkyl_malloc(sizeof(double[4]));
+  }
+
+  gkyl_gr_mhd_stress_energy_tensor(gas_gamma, qin, &stress_energy);
+
+  bool in_excision_region = false;
+  if (v[30] < pow(10.0, -8.0)) {
+    in_excision_region = true;
+  }
+
+  if (!in_excision_region) {
+    double vel[3];
+    double v_sq = 0.0;
+    vel[0] = vx; vel[1] = vy; vel[2] = vz;
+
+    for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 3; j++) {
+        v_sq += spatial_metric[i][j] * vel[i] * vel[j];
+      }
+    }
+
+    double W = 1.0 / (sqrt(1.0 - v_sq));
+    if (v_sq > 1.0 - pow(10.0, -8.0)) {
+      W = 1.0 / sqrt(pow(10.0, -8.0));
+    }
+
+    double mag[3];
+    mag[0] = mag_x; mag[1] = mag_y; mag[2] = mag_z;
+
+    double cov_mag[3];
+    for (int i = 0; i < 3; i++) {
+      cov_mag[i] = 0.0;
+
+      for (int j = 0; j < 3; j++) {
+        cov_mag[i] += spatial_metric[i][j] * mag[j];
+      }
+    }
+
+    double cov_vel[3];
+    for (int i = 0; i < 3; i++) {
+      cov_vel[i] = 0.0;
+
+      for (int j = 0; j < 3; j++) {
+        cov_vel[i] += spatial_metric[i][j] * vel[j];
+      }
+    }
+    
+    double b0 = 0.0;
+    for (int i = 0; i < 3; i++) {
+      b0 += W * mag[i] * (cov_vel[i] / lapse);
+    }
+
+    double shift[3];
+    shift[0] = shift_x; shift[1] = shift_y; shift[2] = shift_z;
+
+    double spacetime_vel[4];
+    spacetime_vel[0] = W / lapse;
+    for (int i = 0; i < 3; i++) {
+      spacetime_vel[i + 1] = (W * vel[i]) - (shift[i] * (W / lapse));
+    }
+
+    double b[3];
+    for (int i = 0; i < 3; i++) {
+      b[i] = (mag[i] + (lapse * b0 * spacetime_vel[i + 1])) / W;
+    }
+
+    double b_sq = 0.0;
+    for (int i = 0; i < 3; i++) {
+      b_sq += (mag[i] * cov_mag[i]) / (W * W);
+    }
+    b_sq += ((lapse * lapse) * (b0 * b0)) / (W * W);
+
+    double cov_b[3];
+    for (int i = 0; i < 3; i++) {
+      cov_b[i] = 0.0;
+
+      for (int j = 0; j < 3; j++) {
+        cov_b[i] += spatial_metric[i][j] * b[j];
+      }
+    }
+
+    double h_star = 1.0 + ((p / rho) * (gas_gamma / (gas_gamma - 1.0))) + (b_sq / rho);
+
+    double mom[3];
+    for (int i = 0; i < 3; i++) {
+      mom[i] = (rho * h_star * (W * W) * cov_vel[i]) - (lapse * b0 * cov_b[i]);
+    }
+
+    // Energy density source.
+    sout[4] = 0.0;
+    for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 3; j++) {
+        sout[4] += stress_energy[0][0] * shift[i] * shift[j] * extrinsic_curvature[i][j];
+        sout[4] += 2.0 * stress_energy[0][i + 1] * shift[j] * extrinsic_curvature[i][j];
+        sout[4] += stress_energy[i + 1][j + 1] * extrinsic_curvature[i][j];
+      }
+
+      sout[4] -= stress_energy[0][0] * shift[i] * lapse_der[i];
+      sout[4] -= stress_energy[0][i + 1] * lapse_der[i];
+    }
+
+    // Momentum density sources.
+    for (int j = 0; j < 3; j++) {
+      sout[1 + j] = -stress_energy[0][0] * lapse * lapse_der[j];
+
+      for (int k = 0; k < 3; k++) {
+        for (int l = 0; l < 3; l++) {
+          sout[1 + j] += 0.5 * stress_energy[0][0] * shift[k] * shift[l] * spatial_metric_der[j][k][l];
+          sout[1 + j] += 0.5 * stress_energy[k + 1][l + 1] * spatial_metric_der[j][k][l];
+        }
+
+        sout[1 + j] += (mom[k] / lapse) * shift_der[j][k];
+
+        for (int i = 0; i < 3; i++) {
+          sout[1 + j] += stress_energy[0][i + 1] * shift[k] * spatial_metric_der[j][i][k];
+        }
+      }
+    }
+  }
+  else {
+    for (int i = 0; i < 74; i++) {
+      sout[i] = 0.0;
+    }
+  }
+
+  for (int i = 0; i < 4; i++) {
+    gkyl_free(stress_energy[i]);
+  }
+  gkyl_free(stress_energy);
+}
+
 void
 gkyl_gr_mhd_free(const struct gkyl_ref_count* ref)
 {
@@ -1768,6 +1957,8 @@ gkyl_wv_gr_mhd_inew(const struct gkyl_wv_gr_mhd_inp* inp)
   gr_mhd->eqn.riem_to_cons = riem_to_cons;
 
   gr_mhd->eqn.cons_to_diag = gr_mhd_cons_to_diag;
+
+  gr_mhd->eqn.source_func = gr_mhd_source;
 
   gr_mhd->eqn.flags = 0;
   GKYL_CLEAR_CU_ALLOC(gr_mhd->eqn.flags);
