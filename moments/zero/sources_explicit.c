@@ -2285,29 +2285,29 @@ explicit_gr_mhd_source_update_euler(const gkyl_moment_em_coupling* mom_em, const
     // Energy density source.
     for (int i = 0; i < 3; i++) {
       for (int j = 0; j < 3; j++) {
-        fluid_new[4] += dt * (stress_energy[0][0] * shift[i] * shift[j] * extrinsic_curvature[i][j]);
-        fluid_new[4] += dt * (2.0 * stress_energy[0][i + 1] * shift[j] * extrinsic_curvature[i][j]);
-        fluid_new[4] += dt * (stress_energy[i + 1][j + 1] * extrinsic_curvature[i][j]);
+        fluid_new[4] += dt * (lapse * sqrt(spatial_det)) * (stress_energy[0][0] * shift[i] * shift[j] * extrinsic_curvature[i][j]);
+        fluid_new[4] += dt * (lapse * sqrt(spatial_det)) * (2.0 * stress_energy[0][i + 1] * shift[j] * extrinsic_curvature[i][j]);
+        fluid_new[4] += dt * (lapse * sqrt(spatial_det)) * (stress_energy[i + 1][j + 1] * extrinsic_curvature[i][j]);
       }
 
-      fluid_new[4] -= dt * (stress_energy[0][0] * shift[i] * lapse_der[i]);
-      fluid_new[4] -= dt * (stress_energy[0][i + 1] * lapse_der[i]);
+      fluid_new[4] -= dt * (lapse * sqrt(spatial_det)) * (stress_energy[0][0] * shift[i] * lapse_der[i]);
+      fluid_new[4] -= dt * (lapse * sqrt(spatial_det)) * (stress_energy[0][i + 1] * lapse_der[i]);
     }
 
     // Momentum density sources.
     for (int j = 0; j < 3; j++) {
-      fluid_new[1 + j] -= dt * (stress_energy[0][0] * lapse * lapse_der[j]);
+      fluid_new[1 + j] -= dt * (lapse * sqrt(spatial_det)) * (stress_energy[0][0] * lapse * lapse_der[j]);
 
       for (int k = 0; k < 3; k++) {
         for (int l = 0; l < 3; l++) {
-          fluid_new[1 + j] += dt * (0.5 * stress_energy[0][0] * shift[k] * shift[l] * spatial_metric_der[j][k][l]);
-          fluid_new[1 + j] += dt * (0.5 * stress_energy[k + 1][l + 1] * spatial_metric_der[j][k][l]);
+          fluid_new[1 + j] += dt * (lapse * sqrt(spatial_det)) * (0.5 * stress_energy[0][0] * shift[k] * shift[l] * spatial_metric_der[j][k][l]);
+          fluid_new[1 + j] += dt * (lapse * sqrt(spatial_det)) * (0.5 * stress_energy[k + 1][l + 1] * spatial_metric_der[j][k][l]);
         }
 
-        fluid_new[1 + j] += dt * ((mom[k] / lapse) * shift_der[j][k]);
+        fluid_new[1 + j] += dt * (lapse * sqrt(spatial_det)) * ((mom[k] / lapse) * shift_der[j][k]);
 
         for (int i = 0; i < 3; i++) {
-          fluid_new[1 + j] += dt * (stress_energy[0][i + 1] * shift[k] * spatial_metric_der[j][i][k]);
+          fluid_new[1 + j] += dt * (lapse * sqrt(spatial_det)) * (stress_energy[0][i + 1] * shift[k] * spatial_metric_der[j][i][k]);
         }
       }
     }
