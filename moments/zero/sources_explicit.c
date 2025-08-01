@@ -2278,7 +2278,7 @@ explicit_gr_mhd_source_update_euler(const gkyl_moment_em_coupling* mom_em, const
     spatial_metric_der[2][1][0] = fluid_old[64]; spatial_metric_der[2][1][1] = fluid_old[65]; spatial_metric_der[2][1][2] = fluid_old[66];
     spatial_metric_der[2][2][0] = fluid_old[67]; spatial_metric_der[2][2][1] = fluid_old[68]; spatial_metric_der[2][2][2] = fluid_old[69];
 
-    for (int i = 0; i < 74; i++) {
+    for (int i = 0; i < 75; i++) {
       fluid_new[i] = fluid_old[i];
     }
 
@@ -2311,9 +2311,29 @@ explicit_gr_mhd_source_update_euler(const gkyl_moment_em_coupling* mom_em, const
         }
       }
     }
+
+    // Begin Powell et al. divergence constraint correction.
+    double divB = fluid_old[74];
+
+    for (int i = 0; i < 3; i++) {
+      fluid_new[1 + i] -= dt * 0.1 * (lapse * divB) * (cov_mag[i] / (W * W));
+
+      for (int j = 0; j < 3; j++) {
+        fluid_new[1 + i] -= dt * 0.1 * (lapse * divB) * (cov_vel[i] * mag[j] * cov_vel[j]);
+      }
+    }
+
+    for (int i = 0; i < 3; i++) {
+      fluid_new[4] -= dt * 0.1 * (lapse * divB) * (mag[i] * cov_vel[i]);
+    }
+
+    for (int i = 0; i < 3; i++) {
+      fluid_new[5 + i] -= dt * 0.1 * (lapse * divB) * (vel[i] - (shift[i] / lapse));
+    }
+    // End Powell et al. divergence constraint correction.
   }
   else {
-    for (int i = 0; i < 74; i++) {
+    for (int i = 0; i < 75; i++) {
       fluid_new[i] = fluid_old[i];
     }
   }
@@ -2329,24 +2349,24 @@ explicit_gr_mhd_source_update(const gkyl_moment_em_coupling* mom_em, double t_cu
   for (int i = 0; i < nfluids; i++) {
     double *f = fluid_s[i];
 
-    double f_new[74], f_stage1[74], f_stage2[74], f_old[74];
+    double f_new[75], f_stage1[75], f_stage2[75], f_old[75];
 
-    for (int j = 0; j < 74; j++) {
+    for (int j = 0; j < 75; j++) {
       f_old[j] = f[j];
     }
 
     explicit_gr_mhd_source_update_euler(mom_em, gas_gamma, t_curr, dt, f_old, f_new);
-    for (int j = 0; j < 74; j++) {
+    for (int j = 0; j < 75; j++) {
       f_stage1[j] = f_new[j];
     }
 
     explicit_gr_mhd_source_update_euler(mom_em, gas_gamma, t_curr + dt, dt, f_stage1, f_new);
-    for (int j = 0; j < 74; j++) {
+    for (int j = 0; j < 75; j++) {
       f_stage2[j] = (0.75 * f_old[j]) + (0.25 * f_new[j]);
     }
 
     explicit_gr_mhd_source_update_euler(mom_em, gas_gamma, t_curr + (0.5 * dt), dt, f_stage2, f_new);
-    for (int j = 0; j < 74; j++) {
+    for (int j = 0; j < 75; j++) {
       f[j] = ((1.0 / 3.0) * f_old[j]) + ((2.0 / 3.0) * f_new[j]);
     }
   }

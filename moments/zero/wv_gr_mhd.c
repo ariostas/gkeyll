@@ -7,9 +7,9 @@
 #include <gkyl_wv_gr_mhd_priv.h>
 
 void
-gkyl_gr_mhd_flux(double gas_gamma, const double q[74], double flux[74])
+gkyl_gr_mhd_flux(double gas_gamma, const double q[75], double flux[75])
 {
-  double v[74] = { 0.0 };
+  double v[75] = { 0.0 };
   gkyl_gr_mhd_prim_vars(gas_gamma, q, v);
   double rho = v[0];
   double vx = v[1];
@@ -130,19 +130,19 @@ gkyl_gr_mhd_flux(double gas_gamma, const double q[74], double flux[74])
     flux[6] = (lapse * sqrt(spatial_det)) * (((vx - (shift_x / lapse)) * mag_y) - ((vy - (shift_y / lapse)) * mag_x));
     flux[7] = (lapse * sqrt(spatial_det)) * (((vx - (shift_x / lapse)) * mag_z) - ((vz - (shift_z / lapse)) * mag_x));
 
-    for (int i = 8; i < 74; i++) {
+    for (int i = 8; i < 75; i++) {
       flux[i] = 0.0;
     }
   }
   else {
-    for (int i = 0; i < 74; i++) {
+    for (int i = 0; i < 75; i++) {
       flux[i] = 0.0;
     }
   }
 }
 
 void
-gkyl_gr_mhd_prim_vars(double gas_gamma, const double q[74], double v[74])
+gkyl_gr_mhd_prim_vars(double gas_gamma, const double q[75], double v[75])
 {
   double lapse = q[8];
   double shift_x = q[9];
@@ -348,7 +348,7 @@ gkyl_gr_mhd_prim_vars(double gas_gamma, const double q[74], double v[74])
     v[73] = z;
   }
   else {
-    for (int i = 0; i < 74; i++) {
+    for (int i = 0; i < 75; i++) {
       v[i] = 0.0;
     }
     
@@ -362,7 +362,7 @@ gkyl_gr_mhd_prim_vars(double gas_gamma, const double q[74], double v[74])
 }
 
 void 
-gkyl_gr_mhd_inv_spatial_metric(const double q[74], double ***inv_spatial_metric)
+gkyl_gr_mhd_inv_spatial_metric(const double q[75], double ***inv_spatial_metric)
 {
   double spatial_metric[3][3];
   spatial_metric[0][0] = q[12]; spatial_metric[0][1] = q[13]; spatial_metric[0][2] = q[14];
@@ -419,9 +419,9 @@ gkyl_gr_mhd_inv_spatial_metric(const double q[74], double ***inv_spatial_metric)
 }
 
 void
-gkyl_gr_mhd_stress_energy_tensor(double gas_gamma, const double q[74], double ***stress_energy)
+gkyl_gr_mhd_stress_energy_tensor(double gas_gamma, const double q[75], double ***stress_energy)
 {
-  double v[74] = { 0.0 };
+  double v[75] = { 0.0 };
   gkyl_gr_mhd_prim_vars(gas_gamma, q, v);
   double rho = v[0];
   double vx = v[1];
@@ -568,9 +568,9 @@ gkyl_gr_mhd_stress_energy_tensor(double gas_gamma, const double q[74], double **
 }
 
 static inline double
-gkyl_gr_mhd_max_abs_speed(double gas_gamma, const double q[74])
+gkyl_gr_mhd_max_abs_speed(double gas_gamma, const double q[75])
 {
-  double v[74] = { 0.0 };
+  double v[75] = { 0.0 };
   gkyl_gr_mhd_prim_vars(gas_gamma, q, v);
   double rho = v[0];
   double vx = v[1];
@@ -729,7 +729,7 @@ static inline void
 cons_to_riem(const struct gkyl_wv_eqn* eqn, const double* qstate, const double* qin, double* wout)
 {
   // TODO: This should use a proper L matrix.
-  for (int i = 0; i < 74; i++) {
+  for (int i = 0; i < 75; i++) {
     wout[i] = qin[i];
   }
 }
@@ -738,7 +738,7 @@ static inline void
 riem_to_cons(const struct gkyl_wv_eqn* eqn, const double* qstate, const double* win, double* qout)
 {
   // TODO: This should use a proper L matrix.
-  for (int i = 0; i < 74; i++) {
+  for (int i = 0; i < 75; i++) {
     qout[i] = win[i];
   }
 }
@@ -746,7 +746,7 @@ riem_to_cons(const struct gkyl_wv_eqn* eqn, const double* qstate, const double* 
 static void
 gr_mhd_wall(const struct gkyl_wv_eqn* eqn, double t, int nc, const double* skin, double* GKYL_RESTRICT ghost, void* ctx)
 {
-  for (int i = 0; i < 74; i++) {
+  for (int i = 0; i < 75; i++) {
     ghost[i] = skin[i];
   }
 
@@ -763,7 +763,7 @@ gr_mhd_no_slip(const struct gkyl_wv_eqn* eqn, double t, int nc, const double* sk
   ghost[0] = skin[0];
   ghost[4] = skin[4];
 
-  for (int i = 5; i < 74; i++) {
+  for (int i = 5; i < 75; i++) {
     ghost[i] = skin[i];
   }
 }
@@ -1276,7 +1276,7 @@ wave_lax(const struct gkyl_wv_eqn* eqn, const double* delta, const double* ql, c
   double sr = gkyl_gr_mhd_max_abs_speed(gas_gamma, qr);
   double amax = fmax(sl, sr);
 
-  double fl[74], fr[74];
+  double fl[75], fr[75];
   gkyl_gr_mhd_flux(gas_gamma, ql, fl);
   gkyl_gr_mhd_flux(gas_gamma, qr, fr);
 
@@ -1290,15 +1290,15 @@ wave_lax(const struct gkyl_wv_eqn* eqn, const double* delta, const double* ql, c
     in_excision_region_r = true;
   }
 
-  double *w0 = &waves[0], *w1 = &waves[74];
+  double *w0 = &waves[0], *w1 = &waves[75];
   if (!in_excision_region_l && !in_excision_region_r) {
-    for (int i = 0; i < 74; i++) {
+    for (int i = 0; i < 75; i++) {
       w0[i] = 0.5 * ((qr[i] - ql[i]) - (fr[i] - fl[i]) / amax);
       w1[i] = 0.5 * ((qr[i] - ql[i]) + (fr[i] - fl[i]) / amax);
     }
   }
   else {
-    for (int i = 0; i < 74; i++) {
+    for (int i = 0; i < 75; i++) {
       w0[i] = 0.0;
       w1[i] = 0.0;
     }
@@ -1313,11 +1313,11 @@ wave_lax(const struct gkyl_wv_eqn* eqn, const double* delta, const double* ql, c
 static void
 qfluct_lax(const struct gkyl_wv_eqn* eqn, const double* ql, const double* qr, const double* waves, const double* s, double* amdq, double* apdq)
 {
-  const double *w0 = &waves[0], *w1 = &waves[74];
+  const double *w0 = &waves[0], *w1 = &waves[75];
   double s0m = fmin(0.0, s[0]), s1m = fmin(0.0, s[1]);
   double s0p = fmax(0.0, s[0]), s1p = fmax(0.0, s[1]);
 
-  for (int i = 0; i < 74; i++) {
+  for (int i = 0; i < 75; i++) {
     amdq[i] = (s0m * w0[i]) + (s1m * w1[i]);
     apdq[i] = (s0p * w0[i]) + (s1p * w1[i]);
   }
@@ -1342,7 +1342,7 @@ wave_hll(const struct gkyl_wv_eqn* eqn, const double* delta, const double* ql, c
   const struct wv_gr_mhd *gr_mhd = container_of(eqn, struct wv_gr_mhd, eqn);
   double gas_gamma = gr_mhd->gas_gamma;
 
-  double vl[74], vr[74];
+  double vl[75], vr[75];
   gkyl_gr_mhd_prim_vars(gas_gamma, ql, vl);
   gkyl_gr_mhd_prim_vars(gas_gamma, qr, vr);
 
@@ -1568,24 +1568,24 @@ wave_hll(const struct gkyl_wv_eqn* eqn, const double* delta, const double* ql, c
   double sl = (vx_avg - max_eig_avg) / (1.0 - (vx_avg * max_eig_avg));
   double sr = (vx_avg + max_eig_avg) / (1.0 + (vx_avg * max_eig_avg));
 
-  double fl[74], fr[74];
+  double fl[75], fr[75];
   gkyl_gr_mhd_flux(gas_gamma, ql, fl);
   gkyl_gr_mhd_flux(gas_gamma, qr, fr);
 
-  double qm[74];
-  for (int i = 0; i < 74; i++) {
+  double qm[75];
+  for (int i = 0; i < 75; i++) {
     qm[i] = ((sr * qr[i]) - (sl * ql[i]) + (fl[i] - fr[i])) / (sr - sl);
   }
 
-  double *w0 = &waves[0], *w1 = &waves[74];
+  double *w0 = &waves[0], *w1 = &waves[75];
   if (!in_excision_region_l && !in_excision_region_r) {
-    for (int i = 0; i < 74; i++) {
+    for (int i = 0; i < 75; i++) {
       w0[i] = qm[i] - ql[i];
       w1[i] = qr[i] - qm[i];
     }
   }
   else {
-    for (int i = 0; i < 74; i++) {
+    for (int i = 0; i < 75; i++) {
       w0[i] = 0.0;
       w1[i] = 0.0;
     }
@@ -1607,11 +1607,11 @@ wave_hll(const struct gkyl_wv_eqn* eqn, const double* delta, const double* ql, c
 static void
 qfluct_hll(const struct gkyl_wv_eqn* eqn, const double* ql, const double* qr, const double* waves, const double* s, double* amdq, double* apdq)
 {
-  const double *w0 = &waves[0], *w1 = &waves[74];
+  const double *w0 = &waves[0], *w1 = &waves[75];
   double s0m = fmin(0.0, s[0]), s1m = fmin(0.0, s[1]);
   double s0p = fmax(0.0, s[0]), s1p = fmax(0.0, s[1]);
 
-  for (int i = 0; i < 74; i++) {
+  for (int i = 0; i < 75; i++) {
     amdq[i] = (s0m * w0[i]) + (s1m * w1[i]);
     apdq[i] = (s0p * w0[i]) + (s1p * w1[i]);
   }
@@ -1648,7 +1648,7 @@ flux_jump(const struct gkyl_wv_eqn* eqn, const double* ql, const double* qr, dou
   const struct wv_gr_mhd *gr_mhd = container_of(eqn, struct wv_gr_mhd, eqn);
   double gas_gamma = gr_mhd->gas_gamma;
 
-  double fr[74], fl[74];
+  double fr[75], fl[75];
   gkyl_gr_mhd_flux(gas_gamma, ql, fl);
   gkyl_gr_mhd_flux(gas_gamma, qr, fr);
 
@@ -1663,12 +1663,12 @@ flux_jump(const struct gkyl_wv_eqn* eqn, const double* ql, const double* qr, dou
   }
 
   if (!in_excision_region_l && !in_excision_region_r) {
-    for (int m = 0; m < 74; m++) {
+    for (int m = 0; m < 75; m++) {
       flux_jump[m] = fr[m] - fl[m];
     }
   }
   else {
-    for (int m = 0; m < 74; m++) {
+    for (int m = 0; m < 75; m++) {
       flux_jump[m] = 0.0;
     }
   }
@@ -1685,7 +1685,7 @@ check_inv(const struct gkyl_wv_eqn* eqn, const double* q)
   const struct wv_gr_mhd *gr_mhd = container_of(eqn, struct wv_gr_mhd, eqn);
   double gas_gamma = gr_mhd->gas_gamma;
 
-  double v[74] = { 0.0 };
+  double v[75] = { 0.0 };
   gkyl_gr_mhd_prim_vars(gas_gamma, q, v);
 
   if (v[0] < 0.0 || v[4] < 0.0) {
@@ -1719,7 +1719,7 @@ gr_mhd_source(const struct gkyl_wv_eqn* eqn, const double* qin, double* sout)
   const struct wv_gr_mhd *gr_mhd = container_of(eqn, struct wv_gr_mhd, eqn);
   double gas_gamma = gr_mhd->gas_gamma;
 
-  double v[74] = { 0.0 };
+  double v[75] = { 0.0 };
   gkyl_gr_mhd_prim_vars(gas_gamma, qin, v);
   double rho = v[0];
   double vx = v[1];
@@ -1895,7 +1895,7 @@ gr_mhd_source(const struct gkyl_wv_eqn* eqn, const double* qin, double* sout)
     }
   }
   else {
-    for (int i = 0; i < 74; i++) {
+    for (int i = 0; i < 75; i++) {
       sout[i] = 0.0;
     }
   }
@@ -1941,7 +1941,7 @@ gkyl_wv_gr_mhd_inew(const struct gkyl_wv_gr_mhd_inp* inp)
   struct wv_gr_mhd *gr_mhd = gkyl_malloc(sizeof(struct wv_gr_mhd));
 
   gr_mhd->eqn.type = GKYL_EQN_GR_MHD;
-  gr_mhd->eqn.num_equations = 74;
+  gr_mhd->eqn.num_equations = 75;
   gr_mhd->eqn.num_diag = 8;
 
   gr_mhd->gas_gamma = inp->gas_gamma;

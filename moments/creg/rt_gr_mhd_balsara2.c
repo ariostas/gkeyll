@@ -362,6 +362,8 @@ evalGRMHDInit(double t, const double* GKYL_RESTRICT xn, double* GKYL_RESTRICT fo
   // Set spatial coordinates.
   fout[71] = x; fout[72] = 0.0; fout[73] = 0.0;
 
+  fout[74] = 0.0;
+
   if (in_excision_region) {
     for (int i = 0; i < 70; i++) {
       fout[i] = 0.0;

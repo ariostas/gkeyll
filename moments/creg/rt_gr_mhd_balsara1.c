@@ -80,7 +80,7 @@ create_ctx(void)
   struct gkyl_gr_spacetime *spacetime = gkyl_gr_minkowski_new(false);
 
   // Simulation parameters.
-  int Nx = 4096; // Cell count (x-direction).
+  int Nx = 512; // Cell count (x-direction).
   double Lx = 1.0; // Domain size (x-direction).
   double cfl_frac = 0.65; // CFL coefficient.
 
@@ -93,7 +93,7 @@ create_ctx(void)
   int integrated_mom_calcs = INT_MAX; // Number of times to calculate integrated moments.
   double dt_failure_tol = 1.0e-4; // Minimum allowable fraction of initial time-step.
   int num_failures_max = 20; // Maximum allowable number of consecutive small time-steps.
-  
+
   struct mhd_balsara1_ctx ctx = {
     .gas_gamma = gas_gamma,
     .rhol = rhol,
@@ -351,6 +351,8 @@ evalGRMHDInit(double t, const double* GKYL_RESTRICT xn, double* GKYL_RESTRICT fo
   // Set spatial coordinates.
   fout[71] = x; fout[72] = 0.0; fout[73] = 0.0;
 
+  fout[74] = 0.0;
+
   if (in_excision_region) {
     for (int i = 0; i < 70; i++) {
       fout[i] = 0.0;
@@ -446,13 +448,13 @@ main(int argc, char **argv)
     .force_low_order_flux = false, // Use HLL fluxes.
     .limiter = GKYL_MIN_MOD,
     .ctx = &ctx,
-
+    
     .has_gr_mhd = true,
     .gr_mhd_gas_gamma = ctx.gas_gamma,
 
     .bcx = { GKYL_SPECIES_COPY, GKYL_SPECIES_COPY },
   };
-  
+
   int nrank = 1; // Number of processes in simulation.
 #ifdef GKYL_HAVE_MPI
   if (app_args.use_mpi) {

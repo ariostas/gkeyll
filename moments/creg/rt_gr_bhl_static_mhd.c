@@ -93,14 +93,14 @@ create_ctx(void)
   struct gkyl_gr_spacetime *spacetime = gkyl_gr_blackhole_new(false, mass, spin, pos_x, pos_y, pos_z);
 
   // Simulation parameters.
-  int Nx = 512; // Cell count (x-direction).
-  int Ny = 512; // Cell count (y-direction).
+  int Nx = 256; // Cell count (x-direction).
+  int Ny = 256; // Cell count (y-direction).
   double Lx = 5.0; // Domain size (x-direction).
   double Ly = 5.0; // Domain size (y-direction).
   double cfl_frac = 0.95; // CFL coefficient.
 
   enum gkyl_spacetime_gauge spacetime_gauge = GKYL_STATIC_GAUGE; // Spacetime gauge choice.
-  int reinit_freq = 10; // Spacetime reinitialization frequency.
+  int reinit_freq = 100; // Spacetime reinitialization frequency.
 
   double t_end = 15.0; // Final simulation time.
   int num_frames = 100; // Number of output frames.
@@ -110,7 +110,7 @@ create_ctx(void)
   int num_failures_max = 20; // Maximum allowable number of consecutive small time-steps.
 
   double x_loc = 1.0; // Shock location (x-direction).
-
+  
   struct bhl_static_mhd_ctx ctx = {
     .gas_gamma = gas_gamma,
     .rhol = rhol,
@@ -368,9 +368,11 @@ evalGRMHDInit(double t, const double* GKYL_RESTRICT xn, double* GKYL_RESTRICT fo
 
   // Set evolution parameter.
   fout[70] = 0.0;
-
+  
   // Set spatial coordinates.
   fout[71] = x; fout[72] = y; fout[73] = 0.0;
+
+  fout[74] = 0.0;
 
   if (in_excision_region) {
     for (int i = 0; i < 70; i++) {

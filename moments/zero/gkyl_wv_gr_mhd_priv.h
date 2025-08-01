@@ -28,7 +28,7 @@ struct wv_gr_mhd {
 */
 GKYL_CU_D
 void
-gkyl_gr_mhd_flux(double gas_gamma, const double q[74], double flux[74]);
+gkyl_gr_mhd_flux(double gas_gamma, const double q[75], double flux[75]);
 
 /**
 * Compute primitive variables given the conserved variables.
@@ -39,7 +39,7 @@ gkyl_gr_mhd_flux(double gas_gamma, const double q[74], double flux[74]);
 */
 GKYL_CU_D
 void
-gkyl_gr_mhd_prim_vars(double gas_gamma, const double q[74], double v[74]);
+gkyl_gr_mhd_prim_vars(double gas_gamma, const double q[75], double v[75]);
 
 /**
 * Compute inverse spatial metric tensor (in covariant component form) given the conserved variables.
@@ -49,7 +49,7 @@ gkyl_gr_mhd_prim_vars(double gas_gamma, const double q[74], double v[74]);
 */
 GKYL_CU_D
 void
-gkyl_gr_mhd_inv_spatial_metric(const double q[74], double ***inv_spatial_metric);
+gkyl_gr_mhd_inv_spatial_metric(const double q[75], double ***inv_spatial_metric);
 
 /**
 * Compute ideal magnetohydrodynamic stress-energy tensor (in contravariant component form) given the conserved variables.
@@ -60,7 +60,7 @@ gkyl_gr_mhd_inv_spatial_metric(const double q[74], double ***inv_spatial_metric)
 */
 GKYL_CU_D
 void
-gkyl_gr_mhd_stress_energy_tensor(double gas_gamma, const double q[74], double ***stress_energy);
+gkyl_gr_mhd_stress_energy_tensor(double gas_gamma, const double q[75], double ***stress_energy);
 
 /**
 * Compute maximum absolute wave speed.
@@ -71,7 +71,7 @@ gkyl_gr_mhd_stress_energy_tensor(double gas_gamma, const double q[74], double **
 */
 GKYL_CU_D
 static inline double
-gkyl_gr_mhd_max_abs_speed(double gas_gamma, const double q[74]);
+gkyl_gr_mhd_max_abs_speed(double gas_gamma, const double q[75]);
 
 /**
 * Compute Riemann variables given the conserved variables.

@@ -1327,6 +1327,38 @@ gr_mhd_impose_gauge(gkyl_wave_prop *wv, const struct gkyl_range *update_range, i
       else {
         qnew[70] += 1.0;
       }
+
+      // Begin Powell et al. divergence constraint correction.
+      double divB = 0.0;
+      bool boundary_cell = false;
+
+      for (int d = 0; d < wv->grid.ndim; d++) {
+        if (idxl[d] < 2 || idxl[d] > wv->grid.cells[d] - 2) {
+          boundary_cell = true;
+        }
+
+        idxl[d] -= 1;
+        double *ql = gkyl_array_fetch(qout, gkyl_range_idx(update_range, idxl));
+        idxl[d] += 2;
+        double *qr = gkyl_array_fetch(qout, gkyl_range_idx(update_range, idxl));
+        idxl[d] -= 1;
+
+        double dx = wv->grid.dx[d];
+
+        divB += (qr[5 + d] - ql[5 + d]) / (2.0 * dx);
+
+        if (qr[30] < pow(10.0, -8.0) || ql[30] < pow(10.0, -8.0)) {
+          boundary_cell = true;
+        }
+      }
+
+      if (qnew[30] < pow(10.0, -8.0) || boundary_cell) {
+        qnew[74] = 0.0;
+      }
+      else {
+        qnew[74] = divB;
+      }
+      // End Powell et al. divergence constraint correction.
     }
   }
 }
