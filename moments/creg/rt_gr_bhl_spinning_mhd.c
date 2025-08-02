@@ -19,7 +19,7 @@
 
 #include <rt_arg_parse.h>
 
-struct bhl_static_mhd_ctx
+struct bhl_spinning_mhd_ctx
 {
   // Physical constants (using normalized code units).
   double gas_gamma; // Adiabatic index.
@@ -68,7 +68,7 @@ struct bhl_static_mhd_ctx
   double x_loc; // Shock location (x-direction).
 };
 
-struct bhl_static_mhd_ctx
+struct bhl_spinning_mhd_ctx
 create_ctx(void)
 {
   // Physical constants (using normalized code units).
@@ -89,7 +89,7 @@ create_ctx(void)
 
   // Spacetime parameters (using geometric units).
   double mass = 0.3; // Mass of the black hole.
-  double spin = 0.0; // Spin of the black hole.
+  double spin = -0.9; // Spin of the black hole.
 
   double pos_x = 2.5; // Position of the black hole (x-direction).
   double pos_y = 2.5; // Position of the black hole (y-direction).
@@ -117,7 +117,7 @@ create_ctx(void)
 
   double x_loc = 1.0; // Shock location (x-direction).
   
-  struct bhl_static_mhd_ctx ctx = {
+  struct bhl_spinning_mhd_ctx ctx = {
     .gas_gamma = gas_gamma,
     .rhol = rhol,
     .ul = ul,
@@ -158,7 +158,7 @@ void
 evalGRMHDInit(double t, const double* GKYL_RESTRICT xn, double* GKYL_RESTRICT fout, void* ctx)
 {
   double x = xn[0], y = xn[1];
-  struct bhl_static_mhd_ctx *app = ctx;
+  struct bhl_spinning_mhd_ctx *app = ctx;
 
   double gas_gamma = app->gas_gamma;
 
@@ -462,7 +462,7 @@ main(int argc, char **argv)
     gkyl_mem_debug_set(true);
   }
 
-  struct bhl_static_mhd_ctx ctx = create_ctx(); // Context for initialization functions.
+  struct bhl_spinning_mhd_ctx ctx = create_ctx(); // Context for initialization functions.
 
   int NX = APP_ARGS_CHOOSE(app_args.xcells[0], ctx.Nx);
   int NY = APP_ARGS_CHOOSE(app_args.xcells[1], ctx.Ny);
@@ -553,7 +553,7 @@ main(int argc, char **argv)
 
   // Moment app.
   struct gkyl_moment app_inp = {
-    .name = "gr_bhl_static_mhd",
+    .name = "gr_bhl_spinning_mhd",
 
     .ndim = 2,
     .lower = { 0.0, 0.0 },
