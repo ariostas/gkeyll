@@ -12,6 +12,9 @@ enum gkyl_wv_gr_mhd_rp {
 // Input context, packaged as a struct.
 struct gkyl_wv_gr_mhd_inp {
   double gas_gamma; // Adiabatic index.
+  double light_speed; // Speed of light.
+  double b_fact; // Factor of speed of light for magnetic field correction.
+
   enum gkyl_spacetime_gauge spacetime_gauge; // Spacetime gauge choice.
   int reinit_freq; // Spacetime reinitialization frequency.
   struct gkyl_gr_spacetime *spacetime; // Pointer to base spacetime object.
@@ -24,6 +27,8 @@ struct gkyl_wv_gr_mhd_inp {
 * Create a new general relativistic magnetohydrodynamics equations object with ideal gas equation of state.
 *
 * @param gas_gamma Adiabatic index.
+* @param light_speed Speed of light.
+* @param b_fact Factor of speed of light for magnetic field correction.
 * @param spacetime_gauge Spacetime gauge choice.
 * @param reinit_freq Spacetime reinitialization frequency.
 * @param spacetime Pointer to base spacetime object.
@@ -31,7 +36,8 @@ struct gkyl_wv_gr_mhd_inp {
 * @return Pointer to the general relativistic magnetohydrodynamics equations object with ideal gas equation of state.
 */
 struct gkyl_wv_eqn*
-gkyl_wv_gr_mhd_new(double gas_gamma, enum gkyl_spacetime_gauge spacetime_gauge, int reinit_freq, struct gkyl_gr_spacetime* spacetime, bool use_gpu);
+gkyl_wv_gr_mhd_new(double gas_gamma, double light_speed, double b_fact, enum gkyl_spacetime_gauge spacetime_gauge, int reinit_freq,
+  struct gkyl_gr_spacetime* spacetime, bool use_gpu);
 
 /**
 * Create a new general relativistic magnetohydrodynamics equations object with ideal gas equation of state, from an input context struct.
@@ -50,6 +56,24 @@ gkyl_wv_gr_mhd_inew(const struct gkyl_wv_gr_mhd_inp* inp);
 */
 double
 gkyl_wv_gr_mhd_gas_gamma(const struct gkyl_wv_eqn* eqn);
+
+/**
+* Get speed of light.
+*
+* @param eqn General relativistic magnetohydrodynamics equations object with ideal gas equation of state.
+* @return Speed of light.
+*/
+double
+gkyl_wv_gr_mhd_light_speed(const struct gkyl_wv_eqn* eqn);
+
+/**
+* Get factor of speed of light for magnetic field correction.
+*
+* @param eqn General relativistic magnetohydrodynamics equations object with ideal gas equation of state.
+* @return Factor of speed of light for magnetic field correction.
+*/
+double
+gkyl_wv_gr_mhd_b_fact(const struct gkyl_wv_eqn* eqn);
 
 /**
 * Get spacetime gauge choice.

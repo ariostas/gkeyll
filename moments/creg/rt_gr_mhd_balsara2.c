@@ -39,6 +39,9 @@ struct mhd_balsara2_ctx
   double Byr; // Right fluid magnetic field (y-direction).
   double Bzr; // Right fluid magnetic field (z-direction).
 
+  double light_speed; // Speed of light.
+  double b_fact; // Factor of speed of light for magnetic field correction.
+
   // Pointer to spacetime metric.
   struct gkyl_gr_spacetime *spacetime;
 
@@ -80,6 +83,9 @@ create_ctx(void)
   double Byr = 0.7; // Right fluid magnetic field (y-direction).
   double Bzr = 0.7; // Right fluid magnetic field (z-direction).
 
+  double light_speed = 1.0; // Speed of light.
+  double b_fact = 0.8; // Factor of speed of light for magnetic field correction.
+
   // Pointer to spacetime metric.
   struct gkyl_gr_spacetime *spacetime = gkyl_gr_minkowski_new(false);
 
@@ -112,6 +118,8 @@ create_ctx(void)
     .Bxr = Bxr,
     .Byr = Byr,
     .Bzr = Bzr,
+    .light_speed = light_speed,
+    .b_fact = b_fact,
     .spacetime = spacetime,
     .Nx = Nx,
     .Lx = Lx,
@@ -312,63 +320,63 @@ evalGRMHDInit(double t, const double* GKYL_RESTRICT xn, double* GKYL_RESTRICT fo
 
   // Set fluid relativistic magnetic field.
   fout[5] = Bx_rel; fout[6] = By_rel; fout[7] = Bz_rel;
+  // Set correction potential.
+  fout[8] = 0.0;
 
   // Set lapse gauge variable.
-  fout[8] = lapse;
+  fout[9] = lapse;
   // Set shift gauge variables.
-  fout[9] = shift[0]; fout[10] = shift[1]; fout[11] = shift[2];
+  fout[10] = shift[0]; fout[11] = shift[1]; fout[12] = shift[2];
 
   // Set spatial metric tensor.
-  fout[12] = spatial_metric[0][0]; fout[13] = spatial_metric[0][1]; fout[14] = spatial_metric[0][2];
-  fout[15] = spatial_metric[1][0]; fout[16] = spatial_metric[1][1]; fout[17] = spatial_metric[1][2];
-  fout[18] = spatial_metric[2][0]; fout[19] = spatial_metric[2][1]; fout[20] = spatial_metric[2][2];
+  fout[13] = spatial_metric[0][0]; fout[14] = spatial_metric[0][1]; fout[15] = spatial_metric[0][2];
+  fout[16] = spatial_metric[1][0]; fout[17] = spatial_metric[1][1]; fout[18] = spatial_metric[1][2];
+  fout[19] = spatial_metric[2][0]; fout[20] = spatial_metric[2][1]; fout[21] = spatial_metric[2][2];
 
   // Set extrinsic curvature tensor.
-  fout[21] = extrinsic_curvature[0][0]; fout[22] = extrinsic_curvature[0][1]; fout[23] = extrinsic_curvature[0][2];
-  fout[24] = extrinsic_curvature[1][0]; fout[25] = extrinsic_curvature[1][1]; fout[26] = extrinsic_curvature[1][2];
-  fout[27] = extrinsic_curvature[2][0]; fout[28] = extrinsic_curvature[2][1]; fout[29] = extrinsic_curvature[2][2];
+  fout[22] = extrinsic_curvature[0][0]; fout[23] = extrinsic_curvature[0][1]; fout[24] = extrinsic_curvature[0][2];
+  fout[25] = extrinsic_curvature[1][0]; fout[26] = extrinsic_curvature[1][1]; fout[27] = extrinsic_curvature[1][2];
+  fout[28] = extrinsic_curvature[2][0]; fout[29] = extrinsic_curvature[2][1]; fout[30] = extrinsic_curvature[2][2];
 
   // Set excision boundary conditions.
   if (in_excision_region) {
-    fout[30] = -1.0;
+    fout[31] = -1.0;
   }
   else {
-    fout[30] = 1.0;
+    fout[31] = 1.0;
   }
 
   // Set lapse function derivatives.
-  fout[31] = lapse_der[0]; fout[32] = lapse_der[1]; fout[33] = lapse_der[2];
+  fout[32] = lapse_der[0]; fout[33] = lapse_der[1]; fout[34] = lapse_der[2];
   // Set shift vector derivatives.
-  fout[34] = shift_der[0][0]; fout[35] = shift_der[0][1]; fout[36] = shift_der[0][2];
-  fout[37] = shift_der[1][0]; fout[38] = shift_der[1][1]; fout[39] = shift_der[1][2];
-  fout[40] = shift_der[2][0]; fout[41] = shift_der[2][1]; fout[42] = shift_der[2][2];
+  fout[35] = shift_der[0][0]; fout[36] = shift_der[0][1]; fout[37] = shift_der[0][2];
+  fout[38] = shift_der[1][0]; fout[39] = shift_der[1][1]; fout[40] = shift_der[1][2];
+  fout[41] = shift_der[2][0]; fout[42] = shift_der[2][1]; fout[43] = shift_der[2][2];
 
   // Set spatial metric tensor derivatives.
-  fout[43] = spatial_metric_der[0][0][0]; fout[44] = spatial_metric_der[0][0][1]; fout[45] = spatial_metric_der[0][0][2];
-  fout[46] = spatial_metric_der[0][1][0]; fout[47] = spatial_metric_der[0][1][1]; fout[48] = spatial_metric_der[0][1][2];
-  fout[49] = spatial_metric_der[0][2][0]; fout[50] = spatial_metric_der[0][2][1]; fout[51] = spatial_metric_der[0][2][2];
+  fout[44] = spatial_metric_der[0][0][0]; fout[45] = spatial_metric_der[0][0][1]; fout[46] = spatial_metric_der[0][0][2];
+  fout[47] = spatial_metric_der[0][1][0]; fout[48] = spatial_metric_der[0][1][1]; fout[49] = spatial_metric_der[0][1][2];
+  fout[50] = spatial_metric_der[0][2][0]; fout[51] = spatial_metric_der[0][2][1]; fout[52] = spatial_metric_der[0][2][2];
 
-  fout[52] = spatial_metric_der[1][0][0]; fout[53] = spatial_metric_der[1][0][1]; fout[54] = spatial_metric_der[1][0][2];
-  fout[55] = spatial_metric_der[1][1][0]; fout[56] = spatial_metric_der[1][1][1]; fout[57] = spatial_metric_der[1][1][2];
-  fout[58] = spatial_metric_der[1][2][0]; fout[59] = spatial_metric_der[1][2][1]; fout[60] = spatial_metric_der[1][2][2];
+  fout[53] = spatial_metric_der[1][0][0]; fout[54] = spatial_metric_der[1][0][1]; fout[55] = spatial_metric_der[1][0][2];
+  fout[56] = spatial_metric_der[1][1][0]; fout[57] = spatial_metric_der[1][1][1]; fout[58] = spatial_metric_der[1][1][2];
+  fout[59] = spatial_metric_der[1][2][0]; fout[60] = spatial_metric_der[1][2][1]; fout[61] = spatial_metric_der[1][2][2];
 
-  fout[61] = spatial_metric_der[2][0][0]; fout[62] = spatial_metric_der[2][0][1]; fout[63] = spatial_metric_der[2][0][2];
-  fout[64] = spatial_metric_der[2][1][0]; fout[65] = spatial_metric_der[2][1][1]; fout[66] = spatial_metric_der[2][1][2];
-  fout[67] = spatial_metric_der[2][2][0]; fout[68] = spatial_metric_der[2][2][1]; fout[69] = spatial_metric_der[2][2][2];
+  fout[62] = spatial_metric_der[2][0][0]; fout[63] = spatial_metric_der[2][0][1]; fout[64] = spatial_metric_der[2][0][2];
+  fout[65] = spatial_metric_der[2][1][0]; fout[66] = spatial_metric_der[2][1][1]; fout[67] = spatial_metric_der[2][1][2];
+  fout[68] = spatial_metric_der[2][2][0]; fout[69] = spatial_metric_der[2][2][1]; fout[70] = spatial_metric_der[2][2][2];
 
   // Set evolution parameter.
-  fout[70] = 0.0;
+  fout[71] = 0.0;
 
   // Set spatial coordinates.
-  fout[71] = x; fout[72] = 0.0; fout[73] = 0.0;
-
-  fout[74] = 0.0;
+  fout[72] = x; fout[73] = 0.0; fout[74] = 0.0;
 
   if (in_excision_region) {
-    for (int i = 0; i < 70; i++) {
+    for (int i = 0; i < 71; i++) {
       fout[i] = 0.0;
     }
-    fout[30] = -1.0;
+    fout[31] = -1.0;
   }
 
   // Free all tensorial quantities.
@@ -449,7 +457,7 @@ main(int argc, char **argv)
   int NX = APP_ARGS_CHOOSE(app_args.xcells[0], ctx.Nx);
 
   // Fluid equations.
-  struct gkyl_wv_eqn *gr_mhd = gkyl_wv_gr_mhd_new(ctx.gas_gamma, ctx.spacetime_gauge, ctx.reinit_freq, ctx.spacetime, app_args.use_gpu);
+  struct gkyl_wv_eqn *gr_mhd = gkyl_wv_gr_mhd_new(ctx.gas_gamma, ctx.light_speed, ctx.b_fact, ctx.spacetime_gauge, ctx.reinit_freq, ctx.spacetime, app_args.use_gpu);
 
   struct gkyl_moment_species fluid = {
     .name = "gr_mhd",

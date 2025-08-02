@@ -2017,15 +2017,15 @@ void
 explicit_gr_mhd_source_update_euler(const gkyl_moment_em_coupling* mom_em, const double gas_gamma, double t_curr, const double dt,
   double* fluid_old, double* fluid_new)
 {
-  double lapse = fluid_old[8];
-  double shift_x = fluid_old[9];
-  double shift_y = fluid_old[10];
-  double shift_z = fluid_old[11];
+  double lapse = fluid_old[9];
+  double shift_x = fluid_old[10];
+  double shift_y = fluid_old[11];
+  double shift_z = fluid_old[12];
 
   double spatial_metric[3][3];
-  spatial_metric[0][0] = fluid_old[12]; spatial_metric[0][1] = fluid_old[13]; spatial_metric[0][2] = fluid_old[14];
-  spatial_metric[1][0] = fluid_old[15]; spatial_metric[1][1] = fluid_old[16]; spatial_metric[1][2] = fluid_old[17];
-  spatial_metric[2][0] = fluid_old[18]; spatial_metric[2][1] = fluid_old[19]; spatial_metric[2][2] = fluid_old[20];
+  spatial_metric[0][0] = fluid_old[13]; spatial_metric[0][1] = fluid_old[14]; spatial_metric[0][2] = fluid_old[15];
+  spatial_metric[1][0] = fluid_old[16]; spatial_metric[1][1] = fluid_old[17]; spatial_metric[1][2] = fluid_old[18];
+  spatial_metric[2][0] = fluid_old[19]; spatial_metric[2][1] = fluid_old[20]; spatial_metric[2][2] = fluid_old[21];
 
   double inv_spatial_metric[3][3];
   double spatial_det = (spatial_metric[0][0] * ((spatial_metric[1][1] * spatial_metric[2][2]) - (spatial_metric[2][1] * spatial_metric[1][2]))) -
@@ -2077,12 +2077,12 @@ explicit_gr_mhd_source_update_euler(const gkyl_moment_em_coupling* mom_em, const
   }
 
   double extrinsic_curvature[3][3];
-  extrinsic_curvature[0][0] = fluid_old[21]; extrinsic_curvature[0][1] = fluid_old[22]; extrinsic_curvature[0][2] = fluid_old[23];
-  extrinsic_curvature[1][0] = fluid_old[24]; extrinsic_curvature[1][1] = fluid_old[25]; extrinsic_curvature[1][2] = fluid_old[26];
-  extrinsic_curvature[2][0] = fluid_old[27]; extrinsic_curvature[2][1] = fluid_old[28]; extrinsic_curvature[2][2] = fluid_old[29];
+  extrinsic_curvature[0][0] = fluid_old[22]; extrinsic_curvature[0][1] = fluid_old[23]; extrinsic_curvature[0][2] = fluid_old[24];
+  extrinsic_curvature[1][0] = fluid_old[25]; extrinsic_curvature[1][1] = fluid_old[26]; extrinsic_curvature[1][2] = fluid_old[27];
+  extrinsic_curvature[2][0] = fluid_old[28]; extrinsic_curvature[2][1] = fluid_old[29]; extrinsic_curvature[2][2] = fluid_old[30];
 
   bool in_excision_region = false;
-  if (fluid_old[30] < pow(10.0, -8.0)) {
+  if (fluid_old[31] < pow(10.0, -8.0)) {
     in_excision_region = true;
   }
 
@@ -2256,27 +2256,27 @@ explicit_gr_mhd_source_update_euler(const gkyl_moment_em_coupling* mom_em, const
     }
 
     double lapse_der[3];
-    lapse_der[0] = fluid_old[31];
-    lapse_der[1] = fluid_old[32];
-    lapse_der[2] = fluid_old[33];
+    lapse_der[0] = fluid_old[32];
+    lapse_der[1] = fluid_old[33];
+    lapse_der[2] = fluid_old[34];
 
     double shift_der[3][3];
-    shift_der[0][0] = fluid_old[34]; shift_der[0][1] = fluid_old[35]; shift_der[0][2] = fluid_old[36];
-    shift_der[1][0] = fluid_old[37]; shift_der[1][1] = fluid_old[38]; shift_der[1][2] = fluid_old[39];
-    shift_der[2][0] = fluid_old[40]; shift_der[2][1] = fluid_old[41]; shift_der[2][2] = fluid_old[42];
+    shift_der[0][0] = fluid_old[35]; shift_der[0][1] = fluid_old[36]; shift_der[0][2] = fluid_old[37];
+    shift_der[1][0] = fluid_old[38]; shift_der[1][1] = fluid_old[39]; shift_der[1][2] = fluid_old[40];
+    shift_der[2][0] = fluid_old[41]; shift_der[2][1] = fluid_old[42]; shift_der[2][2] = fluid_old[43];
 
     double spatial_metric_der[3][3][3];
-    spatial_metric_der[0][0][0] = fluid_old[43]; spatial_metric_der[0][0][1] = fluid_old[44]; spatial_metric_der[0][0][2] = fluid_old[45];
-    spatial_metric_der[0][1][0] = fluid_old[46]; spatial_metric_der[0][1][1] = fluid_old[47]; spatial_metric_der[0][1][2] = fluid_old[48];
-    spatial_metric_der[0][2][0] = fluid_old[49]; spatial_metric_der[0][2][1] = fluid_old[50]; spatial_metric_der[0][2][2] = fluid_old[51];
+    spatial_metric_der[0][0][0] = fluid_old[44]; spatial_metric_der[0][0][1] = fluid_old[45]; spatial_metric_der[0][0][2] = fluid_old[46];
+    spatial_metric_der[0][1][0] = fluid_old[47]; spatial_metric_der[0][1][1] = fluid_old[48]; spatial_metric_der[0][1][2] = fluid_old[49];
+    spatial_metric_der[0][2][0] = fluid_old[50]; spatial_metric_der[0][2][1] = fluid_old[51]; spatial_metric_der[0][2][2] = fluid_old[52];
 
-    spatial_metric_der[1][0][0] = fluid_old[52]; spatial_metric_der[1][0][1] = fluid_old[53]; spatial_metric_der[1][0][2] = fluid_old[54];
-    spatial_metric_der[1][1][0] = fluid_old[55]; spatial_metric_der[1][1][1] = fluid_old[56]; spatial_metric_der[1][1][2] = fluid_old[57];
-    spatial_metric_der[1][2][0] = fluid_old[58]; spatial_metric_der[1][2][1] = fluid_old[59]; spatial_metric_der[1][2][2] = fluid_old[60];
+    spatial_metric_der[1][0][0] = fluid_old[53]; spatial_metric_der[1][0][1] = fluid_old[54]; spatial_metric_der[1][0][2] = fluid_old[55];
+    spatial_metric_der[1][1][0] = fluid_old[56]; spatial_metric_der[1][1][1] = fluid_old[57]; spatial_metric_der[1][1][2] = fluid_old[58];
+    spatial_metric_der[1][2][0] = fluid_old[59]; spatial_metric_der[1][2][1] = fluid_old[60]; spatial_metric_der[1][2][2] = fluid_old[61];
 
-    spatial_metric_der[2][0][0] = fluid_old[61]; spatial_metric_der[2][0][1] = fluid_old[62]; spatial_metric_der[2][0][2] = fluid_old[63];
-    spatial_metric_der[2][1][0] = fluid_old[64]; spatial_metric_der[2][1][1] = fluid_old[65]; spatial_metric_der[2][1][2] = fluid_old[66];
-    spatial_metric_der[2][2][0] = fluid_old[67]; spatial_metric_der[2][2][1] = fluid_old[68]; spatial_metric_der[2][2][2] = fluid_old[69];
+    spatial_metric_der[2][0][0] = fluid_old[62]; spatial_metric_der[2][0][1] = fluid_old[63]; spatial_metric_der[2][0][2] = fluid_old[64];
+    spatial_metric_der[2][1][0] = fluid_old[65]; spatial_metric_der[2][1][1] = fluid_old[66]; spatial_metric_der[2][1][2] = fluid_old[67];
+    spatial_metric_der[2][2][0] = fluid_old[68]; spatial_metric_der[2][2][1] = fluid_old[69]; spatial_metric_der[2][2][2] = fluid_old[70];
 
     for (int i = 0; i < 75; i++) {
       fluid_new[i] = fluid_old[i];
@@ -2311,26 +2311,6 @@ explicit_gr_mhd_source_update_euler(const gkyl_moment_em_coupling* mom_em, const
         }
       }
     }
-
-    // Begin Powell et al. divergence constraint correction.
-    double divB = fluid_old[74];
-
-    for (int i = 0; i < 3; i++) {
-      fluid_new[1 + i] -= dt * 0.1 * (lapse * divB) * (cov_mag[i] / (W * W));
-
-      for (int j = 0; j < 3; j++) {
-        fluid_new[1 + i] -= dt * 0.1 * (lapse * divB) * (cov_vel[i] * mag[j] * cov_vel[j]);
-      }
-    }
-
-    for (int i = 0; i < 3; i++) {
-      fluid_new[4] -= dt * 0.1 * (lapse * divB) * (mag[i] * cov_vel[i]);
-    }
-
-    for (int i = 0; i < 3; i++) {
-      fluid_new[5 + i] -= dt * 0.1 * (lapse * divB) * (vel[i] - (shift[i] / lapse));
-    }
-    // End Powell et al. divergence constraint correction.
   }
   else {
     for (int i = 0; i < 75; i++) {

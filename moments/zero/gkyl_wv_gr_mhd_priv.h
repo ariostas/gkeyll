@@ -13,7 +13,10 @@
 struct wv_gr_mhd {
   struct gkyl_wv_eqn eqn; // Base equation object.
   struct gkyl_gr_spacetime *spacetime; // Pointer to base spacetime object.
+
   double gas_gamma; // Adiabatic index.
+  double light_speed; // Speed of light.
+  double b_fact; // Factor of speed of light for magnetic field correction.
 
   enum gkyl_spacetime_gauge spacetime_gauge; // Spacetime gauge choice.
   int reinit_freq; // Spacetime reinitialization frequency.
@@ -23,12 +26,14 @@ struct wv_gr_mhd {
 * Compute flux vector. Assumes rotation to local coordinate system.
 *
 * @param gas_gamma Adiabatic index.
+* @param light_speed Speed of light.
+* @param b_fact Factor of speed of light for magnetic field correction.
 * @param q Conserved variable vector.
 * @param flux Flux vector in direction 'dir' (output).
 */
 GKYL_CU_D
 void
-gkyl_gr_mhd_flux(double gas_gamma, const double q[75], double flux[75]);
+gkyl_gr_mhd_flux(double gas_gamma, double light_speed, double b_fact, const double q[75], double flux[75]);
 
 /**
 * Compute primitive variables given the conserved variables.
