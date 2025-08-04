@@ -27,12 +27,12 @@ struct bhl_spinning_mhd_ctx
   double rhol; // Left fluid mass density.
   double ul; // Left fluid velocity.
   double pl; // Left fluid pressure.
-  double Bl; // Left fluid magnetic field strength.
 
   double rhor; // Right fluid mass density.
   double ur; // Right fluid velocity.
   double pr; // Right fluid pressure.
-  double Br; // Right fluid magnetic field strength.
+
+  double B0; // Reference magnetic field strength.
 
   double light_speed; // Speed of light.
   double b_fact; // Factor of speed of light for magnetic field correction.
@@ -77,12 +77,12 @@ create_ctx(void)
   double rhol = 3.0; // Left fluid mass density.
   double ul = 0.3; // Left fluid velocity.
   double pl = 0.05; // Left fluid pressure.
-  double Bl = 1.0; // Left fluid magnetic field strength.
 
   double rhor = 0.01; // Right fluid mass density.
   double ur = 0.0; // Right fluid velocity.
   double pr = 0.01; // Right fluid pressure.
-  double Br = 0.0; // Right fluid magnetic field strength.
+
+  double B0 = 0.03; // Reference magnetic field strength.
 
   double light_speed = 1.0; // Speed of light.
   double b_fact = 0.8; // Factor of speed of light for magnetic field correction.
@@ -108,7 +108,7 @@ create_ctx(void)
   enum gkyl_spacetime_gauge spacetime_gauge = GKYL_STATIC_GAUGE; // Spacetime gauge choice.
   int reinit_freq = 100; // Spacetime reinitialization frequency.
 
-  double t_end = 5.0; // Final simulation time.
+  double t_end = 15.0; // Final simulation time.
   int num_frames = 1; // Number of output frames.
   int field_energy_calcs = INT_MAX; // Number of times to calculate field energy.
   int integrated_mom_calcs = INT_MAX; // Number of times to calculate integrated moments.
@@ -122,11 +122,10 @@ create_ctx(void)
     .rhol = rhol,
     .ul = ul,
     .pl = pl,
-    .Bl = Bl,
     .rhor = rhor,
     .ur = ur,
     .pr = pr,
-    .Br = Br,
+    .B0 = B0,
     .light_speed = light_speed,
     .b_fact = b_fact,
     .mass = mass,
@@ -165,12 +164,12 @@ evalGRMHDInit(double t, const double* GKYL_RESTRICT xn, double* GKYL_RESTRICT fo
   double rhol = app->rhol;
   double ul = app->ul;
   double pl = app->pl;
-  double Bl = app->Bl;
 
   double rhor = app->rhor;
   double ur = app->ur;
   double pr = app->pr;
-  double Br = app->Br;
+
+  double B0 = app->B0;
 
   struct gkyl_gr_spacetime *spacetime = app->spacetime;
 
@@ -183,21 +182,15 @@ evalGRMHDInit(double t, const double* GKYL_RESTRICT xn, double* GKYL_RESTRICT fo
   double u = 0.0;
   double p = 0.0;
 
-  double Bz = 0.0;
-
   if (x < x_loc) {
     rho = rhol; // Fluid mass density (left).
     u = ul; // Fluid velocity (left).
     p = pl; // Fluid pressure (left).
-
-    Bz = Bl; // Fluid magnetic field (z-direction, left).
   }
   else {
     rho = rhor; // Fluid mass density (right).
     u = ur; // Fluid velocity (right).
     p = pr; // Fluid pressure (right).
-
-    Bz = Br; // Fluid magnetic field (z-direction, right).
   }
   
   double spatial_det, lapse;
@@ -257,7 +250,7 @@ evalGRMHDInit(double t, const double* GKYL_RESTRICT xn, double* GKYL_RESTRICT fo
   }
 
   double *mag = gkyl_malloc(sizeof(double[3]));
-  mag[0] = 0.0; mag[1] = Bz; mag[2] = 0.0;
+  mag[0] = 0.0; mag[1] = B0; mag[2] = 0.0;
 
   double *cov_mag = gkyl_malloc(sizeof(double[3]));
   for (int i = 0; i < 3; i++) {
@@ -318,7 +311,7 @@ evalGRMHDInit(double t, const double* GKYL_RESTRICT xn, double* GKYL_RESTRICT fo
   double Etot = sqrt(spatial_det) * ((rho * h_star * (W * W)) - p_star - ((lapse * lapse) * (b0 * b0)) - (rho * W)); // Fluid total energy density.
 
   double Bx_rel = 0.0; // Fluid relativistic magnetic field (x-direction).
-  double By_rel = sqrt(spatial_det) * Bz; // Fluid relativistic magnetic field (y-direction).
+  double By_rel = sqrt(spatial_det) * B0; // Fluid relativistic magnetic field (y-direction).
   double Bz_rel = 0.0; // Fluid relativistic magnetic field (z-direction).
 
   // Set fluid relativistic mass density.
