@@ -336,24 +336,6 @@ evalNuIonInit(double t, const double* GKYL_RESTRICT xn, double* GKYL_RESTRICT fo
   fout[0] = nu_ion;
 }
 
-static inline void
-mapc2p(double t, const double* GKYL_RESTRICT zc, double* GKYL_RESTRICT xp, void* ctx)
-{
-  // Set physical coordinates (X, Y, Z) from computational coordinates (x, y, z).
-  xp[0] = zc[0]; xp[1] = zc[1]; xp[2] = zc[2];
-}
-
-void
-bmag_func(double t, const double* GKYL_RESTRICT zc, double* GKYL_RESTRICT fout, void *ctx)
-{
-  struct sheath_ctx *app = ctx;
-
-  double B0 = app->B0;
-
-  // Set magnetic field strength.
-  fout[0] = B0;
-}
-
 void
 calc_integrated_diagnostics(struct gkyl_tm_trigger* iot, gkyl_gyrokinetic_app* app,
   double t_curr, bool is_restart_IC, bool force_calc, double dt)

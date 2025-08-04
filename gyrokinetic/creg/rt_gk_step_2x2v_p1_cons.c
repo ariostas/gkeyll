@@ -177,13 +177,6 @@ evalNuIon(double t, const double * GKYL_RESTRICT xn, double* GKYL_RESTRICT fout,
   fout[0] = app->nuIon;
 }
 
-void
-bmag_func(double t, const double *xc, double* GKYL_RESTRICT fout, void *ctx)
-{
-  struct gk_step_ctx *app = ctx;
-  fout[0] = app->B0;
-}
-
 double plasma_frequency(double n, double m)
 {
   double eps0 = GKYL_EPSILON0;
