@@ -2710,6 +2710,23 @@ gkyl_gyrokinetic_app_cout(const gkyl_gyrokinetic_app* app, FILE *fp, const char 
 }
 
 void
+gkyl_gyrokinetic_app_release_geom(gkyl_gyrokinetic_app* app)
+{
+  gkyl_gk_geometry_release(app->gk_geom);
+  gkyl_position_map_release(app->position_map);
+  for (int dir=0; dir<app->cdim; ++dir) {
+    gkyl_rect_decomp_release(app->decomp_plane[dir]);
+    gkyl_comm_release(app->comm_plane[dir]);
+  }
+  gkyl_comm_release(app->comm);
+  gkyl_rect_decomp_release(app->decomp);
+
+  if (app->use_gpu) {
+    gkyl_cu_free(app->basis_on_dev);
+  }
+}
+
+void
 gkyl_gyrokinetic_app_release(gkyl_gyrokinetic_app* app)
 {
   if (app->enforce_positivity) {

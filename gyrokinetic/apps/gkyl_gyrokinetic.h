@@ -554,6 +554,15 @@ typedef struct gkyl_gyrokinetic_app gkyl_gyrokinetic_app;
 gkyl_gyrokinetic_app* gkyl_gyrokinetic_app_new(struct gkyl_gk *gk);
 
 /**
+ * Construct a new gk app (geometry only).
+ *
+ * @param gk App inputs. See struct docs. All struct params MUST be
+ *     initialized
+ * @return New gk app object.
+ */
+gkyl_gyrokinetic_app* gkyl_gyrokinetic_app_new_geom(struct gkyl_gk *gk);
+
+/**
  * Initialize species and field by projecting initial conditions on
  * basis functions.
  *
@@ -1222,3 +1231,10 @@ void gkyl_gyrokinetic_app_species_ktm_rhs(gkyl_gyrokinetic_app* app, int update_
  * @param app App to release.
  */
 void gkyl_gyrokinetic_app_release(gkyl_gyrokinetic_app* app);
+
+/**
+ * Free gk app (geom only).
+ *
+ * @param app App to release.
+ */
+void gkyl_gyrokinetic_app_release_geom(gkyl_gyrokinetic_app* app);

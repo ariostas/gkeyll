@@ -216,6 +216,15 @@ struct gkyl_gyrokinetic_multib {
 gkyl_gyrokinetic_multib_app* gkyl_gyrokinetic_multib_app_new(const struct gkyl_gyrokinetic_multib *mbinp);
 
 /**
+ * Construct a new gk multi-block app (geom only).
+ *
+ * @param mbinp App inputs. See struct docs. All struct params MUST be
+ *     initialized
+ * @return New multi-block gk app object.
+ */
+gkyl_gyrokinetic_multib_app* gkyl_gyrokinetic_multib_app_new_geom(const struct gkyl_gyrokinetic_multib *mbinp);
+
+/**
  * Initialize species by projecting initial conditions on
  * basis functions, and the field by solving the field equations.
  *
@@ -852,3 +861,10 @@ void gkyl_gyrokinetic_multib_app_species_ktm_rhs(gkyl_gyrokinetic_multib_app* ap
  * @param app App to release.
  */
 void gkyl_gyrokinetic_multib_app_release(gkyl_gyrokinetic_multib_app* app);
+
+/**
+ * Free gk app (geom only).
+ *
+ * @param app App to release.
+ */
+void gkyl_gyrokinetic_multib_app_release_geom(gkyl_gyrokinetic_multib_app* app);
