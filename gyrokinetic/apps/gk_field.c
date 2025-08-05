@@ -84,7 +84,7 @@ gk_field_add_TSBC_and_SSFG_updaters(struct gkyl_gyrokinetic_app *app, struct gk_
   }
 
   // Add the SSFG updater for lower and upper application.
-  f->ssfg_lo = gkyl_skin_surf_from_ghost_new(zdir,  GKYL_LOWER_EDGE,
+  f->ssfg_z_lo = gkyl_skin_surf_from_ghost_new(zdir,  GKYL_LOWER_EDGE,
     app->basis,  &app->lower_skin_par_core,  &app->lower_ghost_par_core, app->use_gpu);
 
   int ghost_radial[] = {1, 1, 1};
@@ -115,7 +115,7 @@ gk_field_enforce_zbc(const gkyl_gyrokinetic_app *app, const struct gk_field *fie
   gkyl_comm_array_sync(app->comm, &app->local, &app->local_ext, finout);
 
   // Force the lower skin surface value to match the ghost cell at the node position.
-  gkyl_skin_surf_from_ghost_advance(field->ssfg_lo, finout);
+  gkyl_skin_surf_from_ghost_advance(field->ssfg_z_lo, finout);
 
   // Force the lower x skin surface value to match the ghost cell at the node position.
   gkyl_skin_surf_from_ghost_advance(field->ssfg_x_lo, finout);
@@ -787,7 +787,7 @@ gk_field_release(const gkyl_gyrokinetic_app* app, struct gk_field *f)
     if(app->cdim == 3) {
       gkyl_bc_twistshift_release(f->bc_T_LU_lo);
     }
-    gkyl_skin_surf_from_ghost_release(f->ssfg_lo);
+    gkyl_skin_surf_from_ghost_release(f->ssfg_z_lo);
   }
 
   gkyl_dynvec_release(f->integ_energy);

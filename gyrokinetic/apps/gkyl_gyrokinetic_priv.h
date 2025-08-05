@@ -1001,7 +1001,7 @@ struct gk_field {
   // Objects used in IWL simulations and TS BCs.
   struct gkyl_bc_twistshift *bc_T_LU_lo; // TS BC updater.
   // Objects used by the skin surface to ghost (SSFG) operator.
-  struct gkyl_skin_surf_from_ghost *ssfg_lo;
+  struct gkyl_skin_surf_from_ghost *ssfg_z_lo;
   // radial skin & ghost ranges and ssfg operator for BC of phi
   struct gkyl_range lower_skin_x, lower_ghost_x;
   struct gkyl_skin_surf_from_ghost *ssfg_x_lo;
