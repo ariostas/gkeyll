@@ -139,7 +139,7 @@ class adas_adf11:
                 ax.text(
                     0.1,
                     0.8,
-                    "$n_e = 10^{%.0f-%.0f}\mathrm{[cm^{-3}]}$"
+                    r"$n_e = 10^{%.0f-%.0f}\mathrm{[cm^{-3}]}$"
                     % (self.logNe[0], self.logNe[-1]),
                     horizontalalignment="left",
                     transform=ax.transAxes,
@@ -152,20 +152,19 @@ class adas_adf11:
                 meta = self.MPRT[i], self.MGRD[i]
                 if self.file_type in ["scd", "prs", "ccd", "prb", "qcd"]:
                     charge -= 1
-                title = self.imp + "$^{%d\!+}$" % charge
+                title = self.imp + r"$^{%d\!+}$" % charge
                 if any(self.metastables > 1):
                     title += str(meta)
                 ax.set_title(title)
 
         for ax in axes[-1]:
-            ax.set_xlabel("$\log\ T_e\ \mathrm{[eV]}$")
+            ax.set_xlabel(r"$\log\ T_e\ \mathrm{[eV]}$")
         for ax in axes[:, 0]:
             if self.file_type in ["scd", "acd", "ccd"]:
-                ax.set_ylabel("$\log(" + self.file_type + ")\ \mathrm{[cm^3/s]}$")
+                ax.set_ylabel(r"$\log(" + self.file_type + r")\ \mathrm{[cm^3/s]}$")
             elif self.file_type in ["prb", "plt", "prc", "pls", "brs", "prs"]:
-                ax.set_ylabel("$\log(" + self.file_type + ")\ \mathrm{[W\cdot cm^3]}$")        
-        plt.show()
-        
+                ax.set_ylabel(r"$\log(" + self.file_type + r")\ \mathrm{[W\cdot cm^3]}$")        
+        plt.show()        
 
 
 #Return full path for specific file and download if necessary

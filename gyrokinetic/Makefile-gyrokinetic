@@ -73,6 +73,13 @@ regression: ${LLIB} ${SLLIB} ${REGS} creg/rt_arg_parse.h ## Build regression tes
 .PHONY: all
 all: $(LLIB) $(SLLIB) ## Build all targets
 	${MKDIR_P} ${INSTALL_PREFIX}/${PROJ_NAME}/share/adas
+	@if [ -z "$$(ls ${INSTALL_PREFIX}/${PROJ_NAME}/share/adas/*.npy 2>/dev/null)" ]; then \
+		(cd data/adas && \
+		python download_adas.py && \
+		python adas_to_numpy.py && \
+		rm *.dat && \
+		mv *.npy ${INSTALL_PREFIX}/${PROJ_NAME}/share/adas/.); \
+	fi
 	cp ./data/adas/radiation_fit_parameters.txt ${INSTALL_PREFIX}/${PROJ_NAME}/share/adas
 .DEFAULT_GOAL := all
 
