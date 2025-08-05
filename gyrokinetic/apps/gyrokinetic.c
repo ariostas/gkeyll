@@ -2470,6 +2470,7 @@ gkyl_gyrokinetic_app_read_geometry(gkyl_gyrokinetic_app* app)
   struct gkyl_array* arr_surf_ho18 = mkarr(false, 18*app->gk_geom->num_surf_basis, app->local_ext.volume);
   for (int dir = 0; dir<app->cdim; dir++ ) {
     gyrokinetic_app_geometry_read_and_copy_surf(app, app->gk_geom->geo_surf[dir].jacobgeo     , arr_surf_ho1, arr_surf_ho2, "jacobgeo", dir);
+    gkyl_array_copy(app->gk_geom->geo_surf[dir].jacobgeo_sync, app->gk_geom->geo_surf[dir].jacobgeo);
     gyrokinetic_app_geometry_read_and_copy_surf(app, app->gk_geom->geo_surf[dir].jacobtot_inv , arr_surf_ho1, arr_surf_ho2, "jacobtot_inv", dir);
     gyrokinetic_app_geometry_read_and_copy_surf(app, app->gk_geom->geo_surf[dir].b_i          , arr_surf_ho3, arr_surf_ho6, "b_i", dir);
     gyrokinetic_app_geometry_read_and_copy_surf(app, app->gk_geom->geo_surf[dir].cmag         , arr_surf_ho1, arr_surf_ho2, "cmag", dir);
