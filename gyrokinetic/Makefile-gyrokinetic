@@ -78,6 +78,9 @@ all: $(LLIB) $(SLLIB) ## Build all targets
 		if ! python -c "import requests" &>/dev/null; then \
 			pip install requests; \
 		fi && \
+		if ! python -c "import numpy" &>/dev/null; then \
+			pip install numpy; \
+		fi && \
 		python download_adas.py && \
 		python adas_to_numpy.py && \
 		rm *.dat && \
