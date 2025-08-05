@@ -75,6 +75,9 @@ all: $(LLIB) $(SLLIB) ## Build all targets
 	${MKDIR_P} ${INSTALL_PREFIX}/${PROJ_NAME}/share/adas
 	@if [ -z "$$(ls ${INSTALL_PREFIX}/${PROJ_NAME}/share/adas/*.npy 2>/dev/null)" ]; then \
 		(cd data/adas && \
+		if ! python -c "import requests" &>/dev/null; then \
+			pip install requests; \
+		fi && \
 		python download_adas.py && \
 		python adas_to_numpy.py && \
 		rm *.dat && \
