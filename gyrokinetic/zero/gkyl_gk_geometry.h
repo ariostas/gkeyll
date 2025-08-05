@@ -22,6 +22,10 @@ struct gk_geom_surf {
   struct gkyl_array* b_i; // 3 components. Contravariant components of magnetic field vector b_1, b_2, b_3.
   struct gkyl_array* cmag; // 1 component. C = JB/sqrt(g_33)
   struct gkyl_array* jacobtot_inv; // 1 component. 1/(JB)
+  struct gkyl_array* B3; // 1 component n^3 \dot \vec{B} = 1/g_33
+  struct gkyl_array* normcurlbhat; // 1 component, n^m \dot curl(bhat)
+  struct gkyl_array* normals; // 9 components Cartesian components of normal vectors in order n^1,, n^2, n^3
+  struct gkyl_array* lenr; // 1 components Jc|n^i|
 
   // Arrays below are just for computation of arrays above
   struct gkyl_array* mc2p_nodal_fd; // 3 components. Cartesian X,Y, and Z at surf quad nodes and nodes epsilon away
@@ -103,6 +107,7 @@ struct gk_geom_int {
   struct gkyl_array* dualcurlbhatoverB; // 3 components, e^m \dot curl(bhat)/|B|
   struct gkyl_array* rtg33inv; // 1 component 1/sqrt(g_33)
   struct gkyl_array*  bioverJB; // 1 component b_i/J/|B|
+  struct gkyl_array* B3; // 1 component e^3 \dot \vec{B} = 1/g_33 
   
   // Arrays below are just for computation of arrays above
   struct gkyl_array *bmag_nodal;
@@ -322,6 +327,12 @@ gkyl_gk_geometry_init_nodal_grid(struct gkyl_rect_grid *ngrid, struct gkyl_rect_
  * param use_gpu whether or not to use gpu
  */
 struct gk_geometry* gkyl_gk_geometry_deflate(const struct gk_geometry* up_3d, struct gkyl_gk_geometry_inp *geometry_inp);
+
+/**
+ * Populate nodal arrays from modal geometry
+ * param gk_geom geometry object to deflate
+ */
+void gkyl_gk_geometry_populate_nodal(struct gk_geometry *gk_geom);
 
 /**
  * Acquire pointer to gk geometry object. The pointer must be released

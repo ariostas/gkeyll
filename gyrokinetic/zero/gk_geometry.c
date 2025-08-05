@@ -9,6 +9,7 @@
 #include <gkyl_deflate_geo.h>
 #include <gkyl_gk_geometry.h>
 #include <gkyl_gk_geometry_priv.h>
+#include <gkyl_nodal_ops.h>
 #include <gkyl_alloc_flags_priv.h>
 #include <assert.h>
 #include <float.h>
@@ -82,6 +83,46 @@ gkyl_gk_geometry_new(struct gk_geometry* geo_host, struct gkyl_gk_geometry_inp *
   up->on_dev = up; // CPU eqn obj points to itself
                    
   return up;
+}
+
+void gkyl_gk_geometry_populate_nodal(struct gk_geometry *gk_geom)
+{
+  // Populate nodal arrays for vpar surface terms
+  struct gkyl_nodal_ops *n2m = gkyl_nodal_ops_new(&gk_geom->basis, &gk_geom->grid, false);
+  gkyl_nodal_ops_m2n(n2m, &gk_geom->basis, &gk_geom->grid, &gk_geom->nrange_int, &gk_geom->local, 1, gk_geom->geo_int.jacobgeo_nodal, gk_geom->geo_int.jacobgeo, true);
+  gkyl_nodal_ops_m2n(n2m, &gk_geom->basis, &gk_geom->grid, &gk_geom->nrange_int, &gk_geom->local, 9, gk_geom->geo_int.dxdz_nodal, gk_geom->geo_int.dxdz, true);
+  gkyl_nodal_ops_m2n(n2m, &gk_geom->basis, &gk_geom->grid, &gk_geom->nrange_int, &gk_geom->local, 9, gk_geom->geo_int.dzdx_nodal, gk_geom->geo_int.dzdx, true);
+  gkyl_nodal_ops_m2n(n2m, &gk_geom->basis, &gk_geom->grid, &gk_geom->nrange_int, &gk_geom->local, 1, gk_geom->geo_int.bmag_nodal, gk_geom->geo_int.bmag, true);
+  gkyl_nodal_ops_m2n(n2m, &gk_geom->basis, &gk_geom->grid, &gk_geom->nrange_int, &gk_geom->local, 1, gk_geom->geo_int.B3_nodal, gk_geom->geo_int.B3, true);
+  gkyl_nodal_ops_m2n(n2m, &gk_geom->basis, &gk_geom->grid, &gk_geom->nrange_int, &gk_geom->local, 3, gk_geom->geo_int.dualcurlbhat_nodal, gk_geom->geo_int.dualcurlbhat, true);
+
+  // Populate nodal arrays for config space surface terms
+  int lower[gk_geom->grid.ndim];
+  int upper[gk_geom->grid.ndim];
+  for (int dir =0; dir < gk_geom->grid.ndim; dir++) {
+    struct gk_geom_surf up_surf = gk_geom->geo_surf[dir];
+
+    struct gkyl_range local_ext_in_dir;
+    for (int i = 0; i <gk_geom->grid.ndim; i++) {
+      lower[i] = gk_geom->local.lower[i];
+      upper[i] = gk_geom->local.upper[i];
+    }
+    upper[dir]+=1;
+    gkyl_sub_range_init(&local_ext_in_dir, &gk_geom->local_ext, lower, upper);
+
+
+    gkyl_nodal_ops_m2n_surface(n2m, &gk_geom->surf_basis, &gk_geom->grid, &gk_geom->nrange_surf[dir], &local_ext_in_dir, 1, up_surf.bmag_nodal, up_surf.bmag, dir);
+    gkyl_nodal_ops_m2n_surface(n2m, &gk_geom->surf_basis, &gk_geom->grid, &gk_geom->nrange_surf[dir], &local_ext_in_dir, 1, up_surf.jacobgeo_nodal, up_surf.jacobgeo, dir);
+    gkyl_nodal_ops_m2n_surface(n2m, &gk_geom->surf_basis, &gk_geom->grid, &gk_geom->nrange_surf[dir], &local_ext_in_dir, 3, up_surf.b_i_nodal, up_surf.b_i, dir);
+    gkyl_nodal_ops_m2n_surface(n2m, &gk_geom->surf_basis, &gk_geom->grid, &gk_geom->nrange_surf[dir], &local_ext_in_dir, 1, up_surf.cmag_nodal, up_surf.cmag, dir);
+    gkyl_nodal_ops_m2n_surface(n2m, &gk_geom->surf_basis, &gk_geom->grid, &gk_geom->nrange_surf[dir], &local_ext_in_dir, 1, up_surf.jacobtot_inv_nodal, up_surf.jacobtot_inv, dir);
+    gkyl_nodal_ops_m2n_surface(n2m, &gk_geom->surf_basis, &gk_geom->grid, &gk_geom->nrange_surf[dir], &local_ext_in_dir, 1, up_surf.B3_nodal, up_surf.B3, dir);
+    gkyl_nodal_ops_m2n_surface(n2m, &gk_geom->surf_basis, &gk_geom->grid, &gk_geom->nrange_surf[dir], &local_ext_in_dir, 1, up_surf.normcurlbhat_nodal, up_surf.normcurlbhat, dir);
+    gkyl_nodal_ops_m2n_surface(n2m, &gk_geom->surf_basis, &gk_geom->grid, &gk_geom->nrange_surf[dir], &local_ext_in_dir, 9, up_surf.normals_nodal, up_surf.normals, dir);
+    gkyl_nodal_ops_m2n_surface(n2m, &gk_geom->surf_basis, &gk_geom->grid, &gk_geom->nrange_surf[dir], &local_ext_in_dir, 1, up_surf.lenr_nodal, up_surf.lenr, dir);
+  }
+  gkyl_nodal_ops_release(n2m);
+
 }
 
 bool
@@ -324,6 +365,7 @@ gkyl_gk_geometry_deflate(const struct gk_geometry* up_3d, struct gkyl_gk_geometr
   gkyl_deflate_geo_advance(deflator, &up_3d->local, &up->local, up_3d->geo_int.dualcurlbhatoverB, up->geo_int.dualcurlbhatoverB, 3);
   gkyl_deflate_geo_advance(deflator, &up_3d->local, &up->local, up_3d->geo_int.rtg33inv, up->geo_int.rtg33inv, 1);
   gkyl_deflate_geo_advance(deflator, &up_3d->local, &up->local, up_3d->geo_int.bioverJB, up->geo_int.bioverJB, 3);
+  gkyl_deflate_geo_advance(deflator, &up_3d->local, &up->local, up_3d->geo_int.B3, up->geo_int.B3, 1);
   // Done deflating modal
   // Deflate nodal quantities
   gkyl_deflate_geo_advance_nodal(deflator, &up_3d->nrange_int, &up->nrange_int, up_3d->geo_int.jacobgeo_nodal, up->geo_int.jacobgeo_nodal, 1);
@@ -331,6 +373,7 @@ gkyl_gk_geometry_deflate(const struct gk_geometry* up_3d, struct gkyl_gk_geometr
   gkyl_deflate_geo_advance_nodal(deflator, &up_3d->nrange_int, &up->nrange_int, up_3d->geo_int.dzdx_nodal, up->geo_int.dzdx_nodal, 9);
   gkyl_deflate_geo_advance_nodal(deflator, &up_3d->nrange_int, &up->nrange_int, up_3d->geo_int.B3_nodal, up->geo_int.B3_nodal, 1);
   gkyl_deflate_geo_advance_nodal(deflator, &up_3d->nrange_int, &up->nrange_int, up_3d->geo_int.bmag_nodal, up->geo_int.bmag_nodal, 1);
+  gkyl_deflate_geo_advance_nodal(deflator, &up_3d->nrange_int, &up->nrange_int, up_3d->geo_int.dualcurlbhat_nodal, up->geo_int.dualcurlbhat_nodal, 3);
   gkyl_deflate_geo_release(deflator);
 
   if (up->grid.ndim==1) {
@@ -382,6 +425,10 @@ gkyl_gk_geometry_deflate(const struct gk_geometry* up_3d, struct gkyl_gk_geometr
       gkyl_deflate_geo_surf_advance(deflator_surf, &local_ext_in_dir_3d, &local_ext_in_dir, up_3d->geo_surf[dir].jacobtot_inv, up->geo_surf[count].jacobtot_inv, 1);
       gkyl_deflate_geo_surf_advance(deflator_surf, &local_ext_in_dir_3d, &local_ext_in_dir, up_3d->geo_surf[dir].b_i, up->geo_surf[count].b_i, 3);
       gkyl_deflate_geo_surf_advance(deflator_surf, &local_ext_in_dir_3d, &local_ext_in_dir, up_3d->geo_surf[dir].cmag, up->geo_surf[count].cmag, 1);
+      gkyl_deflate_geo_surf_advance(deflator_surf, &local_ext_in_dir_3d, &local_ext_in_dir, up_3d->geo_surf[dir].B3, up->geo_surf[count].B3, 1);
+      gkyl_deflate_geo_surf_advance(deflator_surf, &local_ext_in_dir_3d, &local_ext_in_dir, up_3d->geo_surf[dir].normcurlbhat, up->geo_surf[count].normcurlbhat, 1);
+      gkyl_deflate_geo_surf_advance(deflator_surf, &local_ext_in_dir_3d, &local_ext_in_dir, up_3d->geo_surf[dir].normals, up->geo_surf[count].normals, 9);
+      gkyl_deflate_geo_surf_advance(deflator_surf, &local_ext_in_dir_3d, &local_ext_in_dir, up_3d->geo_surf[dir].lenr, up->geo_surf[count].lenr, 1);
       // deflate nodal quantities 
       gkyl_deflate_geo_surf_advance_nodal(deflator_surf, &up_3d->nrange_surf[dir], &up->nrange_surf[count], up_3d->geo_surf[dir].bmag_nodal, up->geo_surf[count].bmag_nodal, 1);
       gkyl_deflate_geo_surf_advance_nodal(deflator_surf, &up_3d->nrange_surf[dir], &up->nrange_surf[count], up_3d->geo_surf[dir].jacobgeo_nodal, up->geo_surf[count].jacobgeo_nodal, 1);
@@ -442,6 +489,7 @@ gkyl_gk_geometry_free(const struct gkyl_ref_count *ref)
   gkyl_array_release(up->geo_int.dualcurlbhatoverB);
   gkyl_array_release(up->geo_int.rtg33inv);
   gkyl_array_release(up->geo_int.bioverJB);
+  gkyl_array_release(up->geo_int.B3);
 
   for(int dir = 0; dir < up->grid.ndim; dir++) {
     gkyl_array_release(up->geo_surf[dir].jacobgeo);
@@ -450,6 +498,10 @@ gkyl_gk_geometry_free(const struct gkyl_ref_count *ref)
     gkyl_array_release(up->geo_surf[dir].b_i);
     gkyl_array_release(up->geo_surf[dir].cmag);
     gkyl_array_release(up->geo_surf[dir].jacobtot_inv);
+    gkyl_array_release(up->geo_surf[dir].B3);
+    gkyl_array_release(up->geo_surf[dir].normcurlbhat);
+    gkyl_array_release(up->geo_surf[dir].normals);
+    gkyl_array_release(up->geo_surf[dir].lenr);
   }
 
   // Release nodal data
