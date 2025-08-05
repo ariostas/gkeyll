@@ -187,6 +187,7 @@ struct gkyl_gyrokinetic_multib {
   struct gkyl_gk_block_geom *gk_block_geom;
 
   double cfl_frac; // CFL fraction to use (default 1.0)
+  double cfl_frac_omegaH; // CFL fraction to use for omegaH (default 1.7)
 
   bool enforce_positivity; // Positivity enforcement via shift in f.
 

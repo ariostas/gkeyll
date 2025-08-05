@@ -214,6 +214,7 @@ singleb_app_new_geom(const struct gkyl_gyrokinetic_multib *mbinp, int bid,
   app_inp.poly_order = mbinp->poly_order;
   app_inp.basis_type = mbinp->basis_type;
   app_inp.cfl_frac = mbinp->cfl_frac; 
+  app_inp.cfl_frac_omegaH = mbinp->cfl_frac_omegaH; 
 
   struct gkyl_comm *comm = mbapp->block_comms[bid];
 
@@ -257,6 +258,7 @@ singleb_app_new_solver(const struct gkyl_gyrokinetic_multib *mbinp, int bid,
   app_inp.poly_order = mbinp->poly_order;
   app_inp.basis_type = mbinp->basis_type;
   app_inp.cfl_frac = mbinp->cfl_frac; 
+  app_inp.cfl_frac_omegaH = mbinp->cfl_frac_omegaH; 
 
   app_inp.enforce_positivity = mbinp->enforce_positivity;
 
