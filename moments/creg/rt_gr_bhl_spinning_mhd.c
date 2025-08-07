@@ -103,7 +103,7 @@ create_ctx(void)
   int Ny = 256; // Cell count (y-direction).
   double Lx = 5.0; // Domain size (x-direction).
   double Ly = 5.0; // Domain size (y-direction).
-  double cfl_frac = 0.95; // CFL coefficient.
+  double cfl_frac = 0.9; // CFL coefficient.
 
   enum gkyl_spacetime_gauge spacetime_gauge = GKYL_STATIC_GAUGE; // Spacetime gauge choice.
   int reinit_freq = 100; // Spacetime reinitialization frequency.
