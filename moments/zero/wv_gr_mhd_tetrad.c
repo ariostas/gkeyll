@@ -9,13 +9,74 @@
 void
 gkyl_gr_mhd_tetrad_flux(double gas_gamma, double light_speed, double b_fact, const double q[75], double flux[75])
 {
-  // TODO: Implement special relativistic flux.
+  double v[75] = { 0.0 };
+  gkyl_gr_mhd_tetrad_prim_vars(gas_gamma, q, v);
+  double rho = v[0];
+  double vx = v[1];
+  double vy = v[2];
+  double vz = v[3];
+  double p = v[4];
+
+  double mag_x = v[5];
+  double mag_y = v[6];
+  double mag_z = v[7];
+  double psi = v[8];
+
+  bool in_excision_region = false;
+  if (v[31] < pow(10.0, -8.0)) {
+    in_excision_region = true;
+  }
+
+  if (!in_excision_region) {
+    double W = 1.0 / (sqrt(1.0 - ((vx * vx) + (vy * vy) + (vz * vz))));
+    if ((vx * vx) + (vy * vy) + (vz * vz) > 1.0 - pow(10.0, -8.0)) {
+      W = 1.0 / sqrt(pow(10.0, -8.0));
+    }
+
+    double b0 = W * ((mag_x * vx) + (mag_y * vy) + (mag_z * vz));
+    double b1 = (mag_x / W) + (b0 * vx);
+    double b2 = (mag_y / W) + (b0 * vy);
+    double b3 = (mag_z / W) + (b0 * vz);
+    double b_sq = ((mag_x * mag_x) + (mag_y * mag_y) + (mag_z * mag_z) + (b0 * b0)) / (W * W);
+
+    double h_star = 1.0 + ((p / rho) * (gas_gamma / (gas_gamma - 1.0))) + (b_sq / rho);
+    double p_star = p + (0.5 * b_sq);
+
+    double D = rho * W;
+    double Sx = (rho * h_star * (W * W) * vx) - (b0 * b1);
+    double Sy = (rho * h_star * (W * W) * vy) - (b0 * b2);
+    double Sz = (rho * h_star * (W * W) * vz) - (b0 * b3);
+    double Etot = (rho * h_star * (W * W)) - p_star - (b0 * b0) - (rho * W);
+
+    flux[0] = D * vx;
+    flux[1] = (Sx * vx) + p_star - ((b1 * mag_x) / W);
+    flux[2] = (Sy * vx) - ((b2 * mag_x) / W);
+    flux[3] = (Sz * vx) - ((b3 * mag_x) / W);
+    flux[4] = (Etot * vx) + (p_star * vx) - ((b0 * mag_x) / W);
+
+    flux[5] = (vx * mag_x) - (vx * mag_x) + (b_fact * psi);
+    flux[6] = (vx * mag_y) - (vy * mag_x);
+    flux[7] = (vx * mag_z) - (vz * mag_x);
+    flux[8] = b_fact * (light_speed * light_speed) * mag_x;
+
+    for (int i = 9; i < 75; i++) {
+      flux[i] = 0.0;
+    }
+  }
+  else {
+    for (int i = 0; i < 75; i++) {
+      flux[i] = 0.0;
+    }
+  }
 }
 
 void
 gkyl_gr_mhd_tetrad_flux_correction(double gas_gamma, double light_speed, double b_fact, const double q[75], const double flux_sr[75], double flux_gr[75])
 {
   // TODO: Implement general relativistic flux correction.
+  for (int i = 0; i < 75; i++) {
+    flux_gr[i] = flux_sr[i];
+  }
 }
 
 void

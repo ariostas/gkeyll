@@ -2001,7 +2001,7 @@ test_gr_mhd_waves_kerr()
 }
 
 TEST_LIST = {
-  { "gr_mhd_basic_minkowski" , test_gr_mhd_basic_minkowski},
+  { "gr_mhd_basic_minkowski", test_gr_mhd_basic_minkowski},
   { "gr_mhd_basic_schwarzschild", test_gr_mhd_basic_schwarzschild },
   { "gr_mhd_basic_kerr", test_gr_mhd_basic_kerr },
   { "gr_mhd_waves_minkowski", test_gr_mhd_waves_minkowski },
