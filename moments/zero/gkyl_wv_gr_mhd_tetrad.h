@@ -5,7 +5,8 @@
 
 // Type of Riemann-solver to use:
 enum gkyl_wv_gr_mhd_tetrad_rp {
-  WV_GR_MHD_TETRAD_RP_LAX = 0 // Default (Lax fluxes).
+  WV_GR_MHD_TETRAD_RP_HLL = 0, // Default (HLL fluxes).
+  WV_GR_MHD_TETRAD_RP_LAX
 };
 
 // Input context, packaged as a struct.
