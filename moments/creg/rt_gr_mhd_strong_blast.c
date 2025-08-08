@@ -18,7 +18,7 @@
 
 #include <rt_arg_parse.h>
 
-struct mhd_balsara2_ctx
+struct mhd_strong_blast_ctx
 {
   // Physical constants (using normalized code units).
   double gas_gamma; // Adiabatic index.
@@ -61,7 +61,7 @@ struct mhd_balsara2_ctx
   int num_failures_max; // Maximum allowable number of consecutive small time-steps.
 };
 
-struct mhd_balsara2_ctx
+struct mhd_strong_blast_ctx
 create_ctx(void)
 {
   // Physical constants (using normalized code units).
@@ -104,7 +104,7 @@ create_ctx(void)
   double dt_failure_tol = 1.0e-4; // Minimum allowable fraction of initial time-step.
   int num_failures_max = 20; // Maximum allowable number of consecutive small time-steps.
   
-  struct mhd_balsara2_ctx ctx = {
+  struct mhd_strong_blast_ctx ctx = {
     .gas_gamma = gas_gamma,
     .rhol = rhol,
     .ul = ul,
@@ -141,7 +141,7 @@ void
 evalGRMHDInit(double t, const double* GKYL_RESTRICT xn, double* GKYL_RESTRICT fout, void* ctx)
 {
   double x = xn[0];
-  struct mhd_balsara2_ctx *app = ctx;
+  struct mhd_strong_blast_ctx *app = ctx;
 
   double gas_gamma = app->gas_gamma;
 
@@ -452,7 +452,7 @@ main(int argc, char **argv)
     gkyl_mem_debug_set(true);
   }
 
-  struct mhd_balsara2_ctx ctx = create_ctx(); // Context for initialization functions.
+  struct mhd_strong_blast_ctx ctx = create_ctx(); // Context for initialization functions.
 
   int NX = APP_ARGS_CHOOSE(app_args.xcells[0], ctx.Nx);
 
@@ -542,7 +542,7 @@ main(int argc, char **argv)
 
   // Moment app.
   struct gkyl_moment app_inp = {
-    .name = "gr_mhd_balsara2",
+    .name = "gr_mhd_strong_blast",
 
     .ndim = 1,
     .lower = { 0.0 },

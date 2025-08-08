@@ -70,6 +70,17 @@ void
 gkyl_gr_mhd_tetrad_inv_spatial_metric(const double q[75], double ***inv_spatial_metric);
 
 /**
+* Compute ideal magnetohydrodynamic stress-energy tensor (in contravariant component form) given the conserved variables.
+*
+* @param gas_gamma Adiabatic index.
+* @param q Conserved variable vector.
+* @param stress_energy Stress-energy tensor (output).
+*/
+GKYL_CU_D
+void
+gkyl_gr_mhd_tetrad_stress_energy_tensor(double gas_gamma, const double q[75], double ***stress_energy);
+
+/**
 * Compute maximum absolute wave speed.
 *
 * @param gas_gamma Adiabatic index.
