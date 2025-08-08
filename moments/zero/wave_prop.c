@@ -549,6 +549,9 @@ gkyl_wave_prop_advance(gkyl_wave_prop *wv,
         if (wv->equation->type == GKYL_EQN_GR_MHD) {
           gr_mhd_impose_gauge(wv, update_range, idxl, loidx_c, upidx_c, qout, dir);
         }
+        if (wv->equation->type == GKYL_EQN_GR_MHD_TETRAD) {
+          gr_mhd_tetrad_impose_gauge(wv, update_range, idxl, loidx_c, upidx_c, qout, dir);
+        }
 
         state = next_state; // change state for next sweep
         
