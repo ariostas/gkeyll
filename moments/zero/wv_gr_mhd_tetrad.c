@@ -73,9 +73,156 @@ gkyl_gr_mhd_tetrad_flux(double gas_gamma, double light_speed, double b_fact, con
 void
 gkyl_gr_mhd_tetrad_flux_correction(double gas_gamma, double light_speed, double b_fact, const double q[75], const double flux_sr[75], double flux_gr[75])
 {
-  // TODO: Implement general relativistic flux correction.
-  for (int i = 0; i < 75; i++) {
-    flux_gr[i] = flux_sr[i];
+  double v[75] = { 0.0 };
+  gkyl_gr_mhd_tetrad_prim_vars(gas_gamma, q, v);
+  double rho = v[0];
+  double vx = v[1];
+  double vy = v[2];
+  double vz = v[3];
+  double p = v[4];
+
+  double mag_x = v[5];
+  double mag_y = v[6];
+  double mag_z = v[7];
+  double psi = v[8];
+
+  double lapse = v[9];
+  double shift_x = v[10];
+  double shift_y = v[11];
+  double shift_z = v[12];
+
+  double spatial_metric[3][3];
+  spatial_metric[0][0] = v[13]; spatial_metric[0][1] = v[14]; spatial_metric[0][2] = v[15];
+  spatial_metric[1][0] = v[16]; spatial_metric[1][1] = v[17]; spatial_metric[1][2] = v[18];
+  spatial_metric[2][0] = v[19]; spatial_metric[2][1] = v[20]; spatial_metric[2][2] = v[21];
+
+  double spatial_det = (spatial_metric[0][0] * ((spatial_metric[1][1] * spatial_metric[2][2]) - (spatial_metric[2][1] * spatial_metric[1][2]))) -
+    (spatial_metric[0][1] * ((spatial_metric[1][0] * spatial_metric[2][2]) - (spatial_metric[1][2] * spatial_metric[2][0]))) +
+    (spatial_metric[0][2] * ((spatial_metric[1][0] * spatial_metric[2][1]) - (spatial_metric[1][1] * spatial_metric[2][0])));
+
+  bool in_excision_region = false;
+  if (v[31] < pow(10.0, -8.0)) {
+    in_excision_region = true;
+  }
+
+  if (!in_excision_region) {
+    double vel[3];
+    double v_sq = 0.0;
+    vel[0] = vx; vel[1] = vy; vel[2] = vz;
+
+    for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 3; j++) {
+        v_sq += spatial_metric[i][j] * vel[i] * vel[j];
+      }
+    }
+
+    double W_flat = 1.0 / (sqrt(1.0 - ((vx * vx) + (vy * vy) + (vz * vz))));
+    if ((vx * vx) + (vy * vy) + (vz * vz) > 1.0 - pow(10.0, -8.0)) {
+      W_flat = 1.0 / sqrt(pow(10.0, -8.0));
+    }
+
+    double W_curved = 1.0 / (sqrt(1.0 - v_sq));
+    if (v_sq > 1.0 - pow(10.0, -8.0)) {
+      W_curved = 1.0 / sqrt(pow(10.0, -8.0));
+    }
+
+    double b0_flat = W_flat * ((mag_x * vx) + (mag_y * vy) + (mag_z * vz));
+    double b1_flat = (mag_x / W_flat) + (b0_flat * vx);
+    double b2_flat = (mag_y / W_flat) + (b0_flat * vy);
+    double b3_flat = (mag_z / W_flat) + (b0_flat * vz);
+    double b_sq_flat = ((mag_x * mag_x) + (mag_y * mag_y) + (mag_z * mag_z) + (b0_flat * b0_flat)) / (W_flat * W_flat);
+
+    double mag[3];
+    mag[0] = mag_x; mag[1] = mag_y; mag[2] = mag_z;
+
+    double cov_mag[3];
+    for (int i = 0; i < 3; i++) {
+      cov_mag[i] = 0.0;
+
+      for (int j = 0; j < 3; j++) {
+        cov_mag[i] += spatial_metric[i][j] * mag[j];
+      }
+    }
+
+    double cov_vel[3];
+    for (int i = 0; i < 3; i++) {
+      cov_vel[i] = 0.0;
+
+      for (int j = 0; j < 3; j++) {
+        cov_vel[i] += spatial_metric[i][j] * vel[j];
+      }
+    }
+    
+    double b0_curved = 0.0;
+    for (int i = 0; i < 3; i++) {
+      b0_curved += W_curved * mag[i] * (cov_vel[i] / lapse);
+    }
+
+    double shift[3];
+    shift[0] = shift_x; shift[1] = shift_y; shift[2] = shift_z;
+
+    double spacetime_vel[4];
+    spacetime_vel[0] = W_curved / lapse;
+    for (int i = 0; i < 3; i++) {
+      spacetime_vel[i + 1] = (W_curved * vel[i]) - (shift[i] * (W_curved / lapse));
+    }
+
+    double b_curved[3];
+    for (int i = 0; i < 3; i++) {
+      b_curved[i] = (mag[i] + (lapse * b0_curved * spacetime_vel[i + 1])) / W_curved;
+    }
+
+    double b_sq_curved = 0.0;
+    for (int i = 0; i < 3; i++) {
+      b_sq_curved += (mag[i] * cov_mag[i]) / (W_curved * W_curved);
+    }
+    b_sq_curved += ((lapse * lapse) * (b0_curved * b0_curved)) / (W_curved * W_curved);
+
+    double cov_b[3];
+    for (int i = 0; i < 3; i++) {
+      cov_b[i] = 0.0;
+
+      for (int j = 0; j < 3; j++) {
+        cov_b[i] += spatial_metric[i][j] * b_curved[j];
+      }
+    }
+
+    double h_star_flat = 1.0 + ((p / rho) * (gas_gamma / (gas_gamma - 1.0))) + (b_sq_flat / rho);
+    double p_star_flat = p + (0.5 * b_sq_flat);
+
+    double h_star_curved = 1.0 + ((p / rho) * (gas_gamma / (gas_gamma - 1.0))) + (b_sq_curved / rho);
+    double p_star_curved = p + (0.5 * b_sq_curved);
+
+    flux_gr[0] = (lapse * sqrt(spatial_det)) * ((flux_sr[0] * (vx - (shift_x / lapse)) * W_curved) / (vx * W_flat));
+
+    flux_gr[1] = (lapse * sqrt(spatial_det)) * (((((((flux_sr[1] - p_star_flat + ((b1_flat * mag_x) / W_flat)) / vx) + (b0_flat * b1_flat)) *
+      ((h_star_curved * (W_curved * W_curved) * cov_vel[0]) / (h_star_flat * (W_flat * W_flat) * vx))) - (lapse * b0_curved * cov_b[0])) *
+      (vx - (shift_x / lapse))) + p_star_curved - ((cov_b[0] * mag_x) / W_curved));
+    flux_gr[2] = (lapse * sqrt(spatial_det)) * (((((((flux_sr[2] + ((b2_flat * mag_x) / W_flat)) / vx) + (b0_flat * b2_flat)) *
+      ((h_star_curved * (W_curved * W_curved) * cov_vel[1]) / (h_star_flat * (W_flat * W_flat) * vy))) - (lapse * b0_curved * cov_b[1])) *
+      (vx - (shift_x / lapse))) - ((cov_b[1] * mag_x) / W_curved));
+    flux_gr[3] = (lapse * sqrt(spatial_det)) * (((((((flux_sr[3] + ((b3_flat * mag_x) / W_flat)) / vx) + (b0_flat * b3_flat)) *
+      ((h_star_curved * (W_curved * W_curved) * cov_vel[2]) / (h_star_flat * (W_flat * W_flat) * vz))) - (lapse * b0_curved * cov_b[2])) *
+      (vx - (shift_x / lapse))) - ((cov_b[2] * mag_x) / W_curved));
+    
+    flux_gr[4] = (lapse * sqrt(spatial_det)) * (((((((flux_sr[4] - (p_star_flat * vx) + ((b0_flat * mag_x) / W_flat)) / vx) + p_star_flat +
+      (b0_flat * b0_flat) + (rho * W_flat)) * ((h_star_curved * (W_curved * W_curved)) / (h_star_flat * (W_flat * W_flat)))) - p_star_curved -
+      ((lapse * lapse) * (b0_curved * b0_curved)) - (rho * W_curved)) * (vx - (shift_x / lapse))) + (p_star_curved * vx) -
+      (lapse * ((b0_curved * mag_x) / W_curved)));
+
+    flux_gr[5] = (lapse * sqrt(spatial_det)) * flux_sr[5];
+    flux_gr[6] = (lapse * sqrt(spatial_det)) * (flux_sr[6] - ((shift_x / lapse) * mag_y) + ((shift_y / lapse) * mag_x));
+    flux_gr[7] = (lapse * sqrt(spatial_det)) * (flux_sr[7] - ((shift_x / lapse) * mag_z) + ((shift_z / lapse) * mag_x));
+    flux_gr[8] = (lapse * sqrt(spatial_det)) * flux_sr[8];
+
+    for (int i = 9; i < 75; i++) {
+      flux_gr[i] = 0.0;
+    }
+  }
+  else {
+    for (int i = 0; i < 75; i++) {
+      flux_gr[i] = 0.0;
+    }
   }
 }
 
