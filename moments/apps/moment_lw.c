@@ -107,6 +107,13 @@ static const struct gkyl_str_int_pair braginskii_type[] = {
   { 0, 0 }
 };
 
+// Spacetime gauge type -> enum map.
+static const struct gkyl_str_int_pair spacetime_gauge_type[] = {
+  { "Static", GKYL_STATIC_GAUGE },
+  { "BlackHoleCollapse", GKYL_BLACKHOLE_COLLAPSE_GAUGE },
+  { 0, 0 }
+};
+
 void
 gkyl_register_moment_scheme_types(lua_State *L)
 {
@@ -141,6 +148,12 @@ void
 gkyl_register_braginskii_types(lua_State *L)
 {
   register_types(L, braginskii_type, "Braginskii");
+}
+
+void
+gkyl_register_spacetime_gauge_types(lua_State *L)
+{
+  register_types(L, spacetime_gauge_type, "SpacetimeGauge");
 }
 
 // Magic IDs for use in distinguishing various species and field types.
@@ -1353,12 +1366,15 @@ eqn_gr_mhd_lw_new(lua_State *L)
     spacetime = gkyl_gr_neutronstar_new(false, mass, spin, mass_quadrupole, spin_octupole, mass_hexadecapole, pos_x, pos_y, pos_z);
   }
 
+  int spacetime_gauge = glua_tbl_get_integer(L, "spacetimeGauge", GKYL_STATIC_GAUGE);
+
   gr_mhd_lw->magic = MOMENT_EQN_DEFAULT;
   gr_mhd_lw->eqn = gkyl_wv_gr_mhd_inew( &(struct gkyl_wv_gr_mhd_inp) {
       .gas_gamma = gas_gamma,
       .light_speed = light_speed,
       .b_fact = b_fact,
       .spacetime = spacetime,
+      .spacetime_gauge = spacetime_gauge,
       .reinit_freq = reinit_freq,
       .rp_type = rp_type,
       .use_gpu = false,
@@ -4499,6 +4515,7 @@ gkyl_moment_lw_openlibs(lua_State *L)
   gkyl_register_mhd_rp_types(L);
   gkyl_register_mhd_divb_types(L);
   gkyl_register_braginskii_types(L);
+  gkyl_register_spacetime_gauge_types(L);
   
   eqn_openlibs(L);
   spacetime_openlibs(L);

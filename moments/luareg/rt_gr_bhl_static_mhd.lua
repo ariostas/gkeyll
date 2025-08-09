@@ -33,6 +33,7 @@ Lx = 5.0 -- Domain size (x-direction).
 Ly = 5.0 -- Domain size (y-direction).
 cfl_frac = 0.9 -- CFL coefficient.
 
+spacetime_gauge = G0.SpacetimeGauge.Static
 reinit_freq = 100 -- Spacetime reinitialization frequency.
 
 t_end = 15.0 -- Final simulation time.
@@ -76,6 +77,7 @@ momentApp = Moments.App.new {
         posY = pos_y,
         posZ = pos_z
       },
+      spacetimeGauge = spacetime_gauge,
       reinitFreq = reinit_freq
     },
 

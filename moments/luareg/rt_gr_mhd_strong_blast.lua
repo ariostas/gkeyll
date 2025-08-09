@@ -3,21 +3,23 @@ local GRMHD = G0.Moments.Eq.GRMHD
 local Minkowski = G0.Moments.Spacetime.Minkowski
 
 -- Physical constants (using normalized code units).
-gas_gamma = 2.0 -- Adiabatic index.
+gas_gamma = 5.0 / 3.0 -- Adiabatic index.
 
 rhol = 1.0 -- Left fluid mass density.
 ul = 0.0 -- Left fluid velocity.
-pl = 1.0 -- Left fluid pressure.
+pl = 30.0 -- Left fluid pressure.
 
-Bxl = 0.5 -- Left fluid magnetic field (x-direction).
-Byl = 1.0 -- Left fluid magnetic field (y-direction).
+Bxl = 5.0 -- Left fluid magnetic field (x-direction).
+Byl = 6.0 -- Left fluid magnetic field (y-direction).
+Bzl = 6.0 -- Left fluid magnetic field (z-direction).
 
-rhor = 0.125 -- Right fluid mass density.
+rhor = 1.0 -- Right fluid mass density.
 ur = 0.0 -- Right fluid velocity.
-pr = 0.1 -- Right fluid pressure.
+pr = 1.0 -- Right fluid pressure.
 
-Bxr = 0.5 -- Right fluid magnetic field (x-direction).
-Byr = -1.0 -- Right fluid magnetic field (y-direction).
+Bxr = 5.0 -- Right fluid magnetic field (x-direction).
+Byr = 0.7 -- Right fluid magnetic field (y-direction).
+Bzr = 0.7 -- Right fluid magnetic field (z-direction).
 
 light_speed = 1.0 -- Speed of light.
 b_fact = 0.8 -- Factor of speed of light for magnetic field correction.
@@ -25,8 +27,9 @@ b_fact = 0.8 -- Factor of speed of light for magnetic field correction.
 -- Simulation parameters.
 Nx = 4096 -- Cell count (x-direction).
 Lx = 1.0 -- Domain size (x-direction).
-cfl_frac = 0.65 -- CFL coefficient.
+cfl_frac = 0.85 -- CFL coefficient.
 
+spacetime_gauge = G0.SpacetimeGauge.Static
 reinit_freq = 10 -- Spacetime reinitialization frequency.
 
 t_end = 0.4 -- Final simulation time.
@@ -61,6 +64,7 @@ momentApp = Moments.App.new {
       gasGamma = gas_gamma,
       lightSpeed = light_speed,
       mgnErrorSpeedFactor = b_fact,
+      spacetimeGauge = spacetime_gauge,
       reinitFreq = reinit_freq
     },
 
@@ -77,6 +81,7 @@ momentApp = Moments.App.new {
 
       local Bx = 0.0
       local By = 0.0
+      local Bz = 0.0
 
       if x < 0.5 then
         rho = rhol -- Fluid mass density (left).
@@ -85,6 +90,7 @@ momentApp = Moments.App.new {
 
         Bx = Bxl -- Fluid magnetic field (x-direction, left).
         By = Byl -- Fluid magnetic field (y-direction, left).
+        Bz = Bzl -- Fluid magnetic field (z-direction, left).
       else
         rho = rhor -- Fluid mass density (right).
         u = ur -- Fluid velocity (right).
@@ -92,6 +98,7 @@ momentApp = Moments.App.new {
 
         Bx = Bxr -- Fluid magnetic field (x-direction, right).
         By = Byr -- Fluid magnetic field (y-direction, right).
+        Bz = Bzr -- Fluid magnetic field (z-direction, right).
       end
 
       local lapse = Minkowski.lapseFunction(0.0, x, 0.0, 0.0)
@@ -119,7 +126,7 @@ momentApp = Moments.App.new {
         W = 1.0 / math.sqrt(1.0 - pow(10.0, -8.0))
       end
 
-      local mag = { Bx, By, 0.0 }
+      local mag = { Bx, By, Bz }
 
       local cov_mag = { 0.0, 0.0, 0.0 }
       for i = 1, 3 do
@@ -169,12 +176,12 @@ momentApp = Moments.App.new {
       local rho_rel = math.sqrt(spatial_det) * rho * W -- Fluid relativistic mass density.
       local mom_x = math.sqrt(spatial_det) * ((rho * h_star * (W * W) * cov_vel[1]) - (lapse * b0 * cov_b[1])) -- Fluid momentum density (x-direction).
       local mom_y = math.sqrt(spatial_det) * ((rho * h_star * (W * W) * cov_vel[2]) - (lapse * b0 * cov_b[2])) -- Fluid momentum density (y-direction).
-      local mom_z = 0.0 -- Fluid momentum density (z-direction).
+      local mom_z = math.sqrt(spatial_det) * ((rho * h_star * (W * W) * cov_vel[3]) - (lapse * b0 * cov_b[3])) -- Fluid momentum density (z-direction).
       local Etot = math.sqrt(spatial_det) * ((rho * h_star * (W * W)) - p_star - ((lapse * lapse) * (b0 * b0)) - (rho * W)) -- Fluid total energy density.
 
       local Bx_rel = math.sqrt(spatial_det) * Bx -- Fluid relativistic magnetic field (x-direction).
       local By_rel = math.sqrt(spatial_det) * By -- Fluid relativistic magnetic field (y-direction).
-      local Bz_rel = 0.0 -- Fluid relativistic magnetic field (z-direction).
+      local Bz_rel = math.sqrt(spatial_det) * Bz -- Fluid relativistic magnetic field (z-direction).
 
       local excision = 0.0
       if in_excision_region then

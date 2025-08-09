@@ -1,30 +1,31 @@
 local Moments = G0.Moments
 local GRMHD = G0.Moments.Eq.GRMHD
+local Minkowski = G0.Moments.Spacetime.Minkowski
 local BlackHole = G0.Moments.Spacetime.BlackHole
 
 -- Physical constants (using normalized code units).
 gas_gamma = 5.0 / 3.0 -- Adiabatic index.
 
-rhol = 3.0 -- Left fluid mass density.
-ul = 0.3 -- Left fluid velocity.
-pl = 0.05 -- Left fluid pressure.
+rhob = 1.0 -- Background fluid mass density.
+omega_b = 0.2 -- Background fluid angular velocity.
+pb = 1.0 -- Background fluid pressure.
 
-rhor = 0.01 -- Right fluid mass density.
-ur = 0.0 -- Right fluid velocity.
-pr = 0.01 -- Right fluid pressure.
+rhos = 10.0 -- Star fluid mass density.
+omega_s = 0.0 -- Star fluid angular velocity.
+ps = 10.0 -- Star fluid pressure.
 
-B0 = 0.03 -- Reference magnetic field strength.
+B0 = 0.05 -- Reference magnetic field strength.
 
 light_speed = 1.0 -- Speed of light.
 b_fact = 0.8 -- Factor of speed of light for magnetic field correction.
 
--- Spacetime parameters (using geometric units).
-mass = 0.3 -- Mass of the black hole.
-spin = -0.9 -- Spin of the black hole.
+-- Predicted spacetime parameters (using geometric units).
+mass = 0.3 -- Predicted mass of the black hole.
+spin = 0.9 -- Predicted spin of the black hole.
 
-pos_x = 2.5 -- Position of the black hole (x-direction).
-pos_y = 2.5 -- Position of the black hole (y-direction).
-pos_z = 0.0 -- Position of the black hole (z-direction).
+pos_x = 2.5 -- Predicted position of the black hole (x-direction).
+pos_y = 2.5 -- Predicted position of the black hole (y-direction).
+pos_z = 0.0 -- Predicted position of the black hole (z-direction).
 
 -- Simulation parameters.
 Nx = 256 -- Cell count (x-direction).
@@ -33,17 +34,17 @@ Lx = 5.0 -- Domain size (x-direction).
 Ly = 5.0 -- Domain size (y-direction).
 cfl_frac = 0.9 -- CFL coefficient.
 
-spacetime_gauge = G0.SpacetimeGauge.Static
+spacetime_gauge = G0.SpacetimeGauge.BlackHoleCollapse
 reinit_freq = 100 -- Spacetime reinitialization frequency.
 
-t_end = 15.0 -- Final simulation time.
-num_frames = 1 -- Number of output frames.
+t_end = 2.0 -- Final simulation time.
+num_frames = 100 -- Number of output frames.
 field_energy_calcs = GKYL_MAX_INT -- Number of times to calculate field energy.
 integrated_mom_calcs = GKYL_MAX_INT -- Number of times to calculate integrated moments.
 dt_failure_tol = 1.0e-4 -- Minimum allowable fraction of initial time-step.
 num_failures_max = 20 -- Maximum allowable number of consecutive small time-steps.
 
-x_loc = 1.0 -- Shock location (x-direction).
+r_star = 1.5 -- Star radius.
 
 momentApp = Moments.App.new {
   
@@ -90,34 +91,35 @@ momentApp = Moments.App.new {
       
       local rho = 0.0
       local u = 0.0
+      local v = 0.0
       local p = 0.0
+
+      local r = math.sqrt((x - (0.5 * Lx)) * (x - (0.5 * Lx)) + (y - (0.5 * Ly)) * (y - (0.5 * Ly)))
     
-      if x < x_loc then
-        rho = rhol -- Fluid mass density (left).
-        u = ul -- Fluid velocity (left).
-        p = pl -- Fluid pressure (left).
+      if (r <= r_star) then
+        rho = rhos -- Fluid mass density (star).
+        u = -omega_s * (y - (0.5 * Ly)) -- Fluid velocity (star).
+        v = omega_s * (x - (0.5 * Lx))
+        p = ps -- Fluid pressure (star).
       else
-        rho = rhor -- Fluid mass density (right).
-        u = ur -- Fluid velocity (right).
-        p = pr -- Fluid pressure (right).
+        rho = rhob -- Fluid mass density (background).
+        u = -omega_b * (y - (0.5 * Ly)) -- Fluid velocity (background).
+        v = omega_b * (x - (0.5 * Lx))
+        p = pb -- Fluid pressure (background).
       end
 
-      local lapse = BlackHole.lapseFunction(mass, spin, pos_x, pos_y, pos_z, 0.0, x, y, 0.0)
-      local shift = BlackHole.shiftVector(mass, spin, pos_x, pos_y, pos_z, 0.0, x, y, 0.0)
-      local spatial_metric = BlackHole.spatialMetricTensor(mass, spin, pos_x, pos_y, pos_z, 0.0, x, y, 0.0)
-      local spatial_det = BlackHole.spatialMetricDeterminant(mass, spin, pos_x, pos_y, pos_z, 0.0, x, y, 0.0)
-      local extrinsic_curvature = BlackHole.extrinsicCurvatureTensor(mass, spin, pos_x, pos_y, pos_z, 0.0, x, y, 0.0,
-        math.pow(10.0, -8.0), math.pow(10.0, -8.0), math.pow(10.0, -8.0))
-      local in_excision_region = BlackHole.excisionRegion(mass, spin, pos_x, pos_y, pos_z, 0.0, x, y, 0.0)
-      
-      local lapse_der = BlackHole.lapseFunctionDer(mass, spin, pos_x, pos_y, pos_z, 0.0, x, y, 0.0,
-        math.pow(10.0, -8.0), math.pow(10.0, -8.0), math.pow(10.0, -8.0))
-      local shift_der = BlackHole.shiftVectorDer(mass, spin, pos_x, pos_y, pos_z, 0.0, x, y, 0.0,
-        math.pow(10.0, -8.0), math.pow(10.0, -8.0), math.pow(10.0, -8.0))
-      local spatial_metric_der = BlackHole.spatialMetricTensorDer(mass, spin, pos_x, pos_y, pos_z, 0.0, x, y, 0.0,
-        math.pow(10.0, -8.0), math.pow(10.0, -8.0), math.pow(10.0, -8.0))
+      local lapse = Minkowski.lapseFunction(0.0, x, y, 0.0)
+      local shift = Minkowski.shiftVector(0.0, x, y, 0.0)
+      local spatial_metric = Minkowski.spatialMetricTensor(0.0, x, y, 0.0)
+      local spatial_det = Minkowski.spatialMetricDeterminant(0.0, x, y, 0.0)
+      local extrinsic_curvature = Minkowski.extrinsicCurvatureTensor(0.0, x, y, 0.0, 1.0, 1.0, 1.0)
+      local in_excision_region = Minkowski.excisionRegion(0.0, x, y, 0.0)
 
-      local vel = { u, 0.0, 0.0 }
+      local lapse_der = Minkowski.lapseFunctionDer(0.0, x, y, 0.0, 1.0, 1.0, 1.0)
+      local shift_der = Minkowski.shiftVectorDer(0.0, x, y, 0.0, 1.0, 1.0, 1.0)
+      local spatial_metric_der = Minkowski.spatialMetricTensorDer(0.0, x, y, 0.0, 1.0, 1.0, 1.0)
+
+      local vel = { u, v, 0.0 }
       local v_sq = 0.0
 
       for i = 1, 3 do
@@ -180,7 +182,7 @@ momentApp = Moments.App.new {
 
       local rho_rel = math.sqrt(spatial_det) * rho * W -- Fluid relativistic mass density.
       local mom_x = math.sqrt(spatial_det) * ((rho * h_star * (W * W) * cov_vel[1]) - (lapse * b0 * cov_b[1])) -- Fluid momentum density (x-direction).
-      local mom_y = 0.0 -- Fluid momentum density (y-direction).
+      local mom_y = math.sqrt(spatial_det) * ((rho * h_star * (W * W) * cov_vel[2]) - (lapse * b0 * cov_b[2])) -- Fluid momentum density (y-direction).
       local mom_z = 0.0 -- Fluid momentum density (z-direction).
       local Etot = math.sqrt(spatial_det) * ((rho * h_star * (W * W)) - p_star - ((lapse * lapse) * (b0 * b0)) - (rho * W)) -- Fluid total energy density.
 
