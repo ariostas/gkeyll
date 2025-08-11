@@ -193,28 +193,28 @@ gkyl_gr_mhd_tetrad_flux_correction(double gas_gamma, double light_speed, double 
     double h_star_curved = 1.0 + ((p / rho) * (gas_gamma / (gas_gamma - 1.0))) + (b_sq_curved / rho);
     double p_star_curved = p + (0.5 * b_sq_curved);
 
-    if (fabs(vx) < pow(10.0, -10.0)) {
+    if (fabs(vx) < pow(10.0, -12.0)) {
       if (vx > 0.0) {
-        vx = pow(10.0, -10.0);
+        vx = pow(10.0, -12.0);
       }
       else {
-        vx = -pow(10.0, -10.0);
+        vx = -pow(10.0, -12.0);
       }
     }
-    if (fabs(vy) < pow(10.0, -10.0)) {
+    if (fabs(vy) < pow(10.0, -12.0)) {
       if (vy > 0.0) {
-        vy = pow(10.0, -10.0);
+        vy = pow(10.0, -12.0);
       }
       else {
-        vy = -pow(10.0, -10.0);
+        vy = -pow(10.0, -12.0);
       }
     }
-    if (fabs(vz) < pow(10.0, -10.0)) {
+    if (fabs(vz) < pow(10.0, -12.0)) {
       if (vz > 0.0) {
-        vz = pow(10.0, -10.0);
+        vz = pow(10.0, -12.0);
       }
       else {
-        vz = -pow(10.0, -10.0);
+        vz = -pow(10.0, -12.0);
       }
     }
 

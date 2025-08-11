@@ -6,7 +6,7 @@
 #include <gkyl_alloc.h>
 #include <gkyl_moment.h>
 #include <gkyl_util.h>
-#include <gkyl_wv_gr_mhd.h>
+#include <gkyl_wv_gr_mhd_tetrad.h>
 #include <gkyl_gr_minkowski.h>
 #include <gkyl_gr_blackhole.h>
 
@@ -154,7 +154,7 @@ create_ctx(void)
 }
 
 void
-evalGRMHDInit(double t, const double* GKYL_RESTRICT xn, double* GKYL_RESTRICT fout, void* ctx)
+evalGRMHDTetradInit(double t, const double* GKYL_RESTRICT xn, double* GKYL_RESTRICT fout, void* ctx)
 {
   double x = xn[0], y = xn[1];
   struct bhl_static_mhd_ctx *app = ctx;
@@ -461,13 +461,13 @@ main(int argc, char **argv)
   int NY = APP_ARGS_CHOOSE(app_args.xcells[1], ctx.Ny);
 
   // Fluid equations.
-  struct gkyl_wv_eqn *gr_mhd = gkyl_wv_gr_mhd_new(ctx.gas_gamma, ctx.light_speed, ctx.b_fact, ctx.spacetime_gauge, ctx.reinit_freq, ctx.spacetime, app_args.use_gpu);
+  struct gkyl_wv_eqn *gr_mhd_tetrad = gkyl_wv_gr_mhd_tetrad_new(ctx.gas_gamma, ctx.light_speed, ctx.b_fact, ctx.spacetime_gauge, ctx.reinit_freq, ctx.spacetime, app_args.use_gpu);
 
   struct gkyl_moment_species fluid = {
-    .name = "gr_mhd",
-    .equation = gr_mhd,
+    .name = "gr_mhd_tetrad",
+    .equation = gr_mhd_tetrad,
     
-    .init = evalGRMHDInit,
+    .init = evalGRMHDTetradInit,
     .force_low_order_flux = true, // Use Lax fluxes.
     .ctx = &ctx,
 
@@ -546,7 +546,7 @@ main(int argc, char **argv)
 
   // Moment app.
   struct gkyl_moment app_inp = {
-    .name = "gr_bhl_static_mhd",
+    .name = "gr_mhd_bhl_static_tetrad",
 
     .ndim = 2,
     .lower = { 0.0, 0.0 },
@@ -681,7 +681,7 @@ main(int argc, char **argv)
 
 freeresources:
   // Free resources after simulation completion.
-  gkyl_wv_eqn_release(gr_mhd);
+  gkyl_wv_eqn_release(gr_mhd_tetrad);
   gkyl_gr_spacetime_release(ctx.spacetime);
   gkyl_comm_release(comm);
   gkyl_moment_app_release(app);  
