@@ -31,6 +31,7 @@
 #include <gkyl_wv_gr_medium.h>
 #include <gkyl_wv_gr_twofluid.h>
 #include <gkyl_wv_gr_mhd.h>
+#include <gkyl_wv_gr_mhd_tetrad.h>
 #include <gkyl_wv_advect.h>
 #include <gkyl_wv_burgers.h>
 #include <gkyl_zero_lw.h>
@@ -261,6 +262,13 @@ static const struct gkyl_str_int_pair gr_twofluid_rp_type[] = {
 static const struct gkyl_str_int_pair gr_mhd_rp_type[] = {
   { "hll", WV_GR_MHD_RP_HLL },
   { "lax", WV_GR_MHD_RP_LAX },
+  { 0, 0 }
+};
+
+// General relativistic magnetohydrodynamics Riemann problem in the tetrad basis -> enum map.
+static const struct gkyl_str_int_pair gr_mhd_tetrad_rp_type[] = {
+  { "hll", WV_GR_MHD_TETRAD_RP_HLL },
+  { "lax", WV_GR_MHD_TETRAD_RP_LAX },
   { 0, 0 }
 };
 
@@ -1398,6 +1406,82 @@ static struct luaL_Reg eqn_gr_mhd_ctor[] = {
   { 0, 0 }
 };
 
+/* ***************************************************************************************************** */
+/* General Relativistic Magnetohydrodynamics Equations in the Tetrad Basis (Ideal Gas Equation of State) */
+/* ***************************************************************************************************** */
+
+// GRMHDTetrad.new { gasGamma = 5.0 / 3.0, lightSpeed = 1.0, mgnErrorSpeedFactor = 0.0, rpType = "hll" }
+// where rpType is one of "hll" or "lax".
+static int
+eqn_gr_mhd_tetrad_lw_new(lua_State *L)
+{
+  struct wv_eqn_lw *gr_mhd_tetrad_lw = gkyl_malloc(sizeof(*gr_mhd_tetrad_lw));
+
+  double gas_gamma = glua_tbl_get_number(L, "gasGamma", 5.0 / 3.0);
+  double light_speed = glua_tbl_get_number(L, "lightSpeed", 1.0);
+  double b_fact = glua_tbl_get_number(L, "mgnErrorSpeedFactor", 0.0);
+
+  const char *rp_str = glua_tbl_get_string(L, "rpType", "hll");
+  enum gkyl_wv_gr_mhd_tetrad_rp rp_type = gkyl_search_str_int_pair_by_str(gr_mhd_tetrad_rp_type, rp_str, WV_GR_MHD_TETRAD_RP_HLL);
+
+  struct gkyl_gr_spacetime *spacetime = gkyl_gr_minkowski_new(false);
+  int reinit_freq = glua_tbl_get_integer(L, "reinitFreq", 100);
+
+  with_lua_tbl_tbl(L, "blackHoleParameters") {
+    double mass = glua_tbl_get_number(L, "mass", 1.0);
+    double spin = glua_tbl_get_number(L, "spin", 0.0);
+    double pos_x = glua_tbl_get_number(L, "posX", 0.0);
+    double pos_y = glua_tbl_get_number(L, "posY", 0.0);
+    double pos_z = glua_tbl_get_number(L, "posZ", 0.0);
+
+    spacetime = gkyl_gr_blackhole_new(false, mass, spin, pos_x, pos_y, pos_z);
+  }
+
+  with_lua_tbl_tbl(L, "neutronStarParameters") {
+    double mass = glua_tbl_get_number(L, "mass", 1.0);
+    double spin = glua_tbl_get_number(L, "spin", 0.0);
+    double mass_quadrupole = glua_tbl_get_number(L, "massQuadrupole", 0.0);
+    double spin_octupole = glua_tbl_get_number(L, "spinOctupole", 0.0);
+    double mass_hexadecapole = glua_tbl_get_number(L, "massHexadecapole", 0.0);
+    double pos_x = glua_tbl_get_number(L, "posX", 0.0);
+    double pos_y = glua_tbl_get_number(L, "posY", 0.0);
+    double pos_z = glua_tbl_get_number(L, "posZ", 0.0);
+
+    spacetime = gkyl_gr_neutronstar_new(false, mass, spin, mass_quadrupole, spin_octupole, mass_hexadecapole, pos_x, pos_y, pos_z);
+  }
+
+  int spacetime_gauge = glua_tbl_get_integer(L, "spacetimeGauge", GKYL_STATIC_GAUGE);
+
+  gr_mhd_tetrad_lw->magic = MOMENT_EQN_DEFAULT;
+  gr_mhd_tetrad_lw->eqn = gkyl_wv_gr_mhd_tetrad_inew( &(struct gkyl_wv_gr_mhd_tetrad_inp) {
+      .gas_gamma = gas_gamma,
+      .light_speed = light_speed,
+      .b_fact = b_fact,
+      .spacetime = spacetime,
+      .spacetime_gauge = spacetime_gauge,
+      .reinit_freq = reinit_freq,
+      .rp_type = rp_type,
+      .use_gpu = false,
+    }
+  );
+
+  // Create Lua userdata.
+  struct wv_eqn_lw **l_gr_mhd_tetrad_lw = lua_newuserdata(L, sizeof(struct wv_eqn_lw*));
+  *l_gr_mhd_tetrad_lw = gr_mhd_tetrad_lw;
+
+  // Set metatable.
+  luaL_getmetatable(L, MOMENT_WAVE_EQN_METATABLE_NM);
+  lua_setmetatable(L, -2);
+
+  return 1;
+}
+
+// Equation constructor.
+static struct luaL_Reg eqn_gr_mhd_tetrad_ctor[] = {
+  { "new", eqn_gr_mhd_tetrad_lw_new },
+  { 0, 0 }
+};
+
 /* ************************* */
 /* Linear Advection Equation */
 /* ************************* */
@@ -1493,6 +1577,7 @@ eqn_openlibs(lua_State *L)
   luaL_register(L, "G0.Moments.Eq.GRMedium", eqn_gr_medium_ctor);
   luaL_register(L, "G0.Moments.Eq.GRTwoFluid", eqn_gr_twofluid_ctor);
   luaL_register(L, "G0.Moments.Eq.GRMHD", eqn_gr_mhd_ctor);
+  luaL_register(L, "G0.Moments.Eq.GRMHDTetrad", eqn_gr_mhd_tetrad_ctor);
   luaL_register(L, "G0.Moments.Eq.LinearAdvection", eqn_advect_ctor);
   luaL_register(L, "G0.Moments.Eq.Burgers", eqn_burgers_ctor);
 }

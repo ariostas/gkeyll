@@ -33,7 +33,7 @@ Lx = 5.0 -- Domain size (x-direction).
 Ly = 5.0 -- Domain size (y-direction).
 cfl_frac = 0.9 -- CFL coefficient.
 
-spacetime_gauge = G0.SpacetimeGauge.Static
+spacetime_gauge = G0.SpacetimeGauge.Static -- Spacetime gauge choice.
 reinit_freq = 100 -- Spacetime reinitialization frequency.
 
 t_end = 15.0 -- Final simulation time.

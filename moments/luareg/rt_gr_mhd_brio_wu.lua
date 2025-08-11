@@ -27,7 +27,7 @@ Nx = 4096 -- Cell count (x-direction).
 Lx = 1.0 -- Domain size (x-direction).
 cfl_frac = 0.65 -- CFL coefficient.
 
-spacetime_gauge = G0.SpacetimeGauge.Static
+spacetime_gauge = G0.SpacetimeGauge.Static -- Spacetime gauge choice.
 reinit_freq = 10 -- Spacetime reinitialization frequency.
 
 t_end = 0.4 -- Final simulation time.

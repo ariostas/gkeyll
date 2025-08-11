@@ -34,7 +34,7 @@ Lx = 5.0 -- Domain size (x-direction).
 Ly = 5.0 -- Domain size (y-direction).
 cfl_frac = 0.9 -- CFL coefficient.
 
-spacetime_gauge = G0.SpacetimeGauge.BlackHoleCollapse
+spacetime_gauge = G0.SpacetimeGauge.BlackHoleCollapse -- Spacetime gauge choice.
 reinit_freq = 100 -- Spacetime reinitialization frequency.
 
 t_end = 2.0 -- Final simulation time.
