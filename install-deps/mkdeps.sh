@@ -18,7 +18,6 @@ BUILD_SUPERLU_DIST_GPU=no
 BUILD_OPENMPI=no
 BUILD_LUAJIT=no
 BUILD_CUDSS=no
-USE_ADAS=no
 
 # by default, download as well as build packages
 DOWNLOAD_PKGS=yes
@@ -254,14 +253,6 @@ build_cudss() {
     fi
 }
 
-use_adas() {
-    if [ "$USE_ADAS" = "yes" ]
-    then    
-	echo "Downloading ADAS data for neutral reactions"
-	./download-adas.sh
-    fi
-}
-
 echo "Installations will be in  $PREFIX"
 
 build_openmpi
@@ -270,4 +261,3 @@ build_openblas
 build_superlu
 build_superlu_dist
 build_cudss
-use_adas

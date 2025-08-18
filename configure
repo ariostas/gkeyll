@@ -15,7 +15,6 @@ CUDA_ARCH=70
 
 USE_MPI=
 USE_LUA=
-USE_ADAS=
 CONF_LUA_LIB=luajit-5.1
 
 # Location of CUDA math libraries
@@ -205,10 +204,6 @@ do
       [ -n "$value" ] || die "Missing value in flag $key."
       CUDAMATH_LIBDIR="$value"
       ;;
-   --use-adas)
-      [ -n "$value" ] || die "Missing value in flag $key."
-      USE_ADAS="$value"
-      ;;  
    *)
       die "Error: Unknown flag: $1"
       ;;
@@ -242,13 +237,6 @@ then
     USE_LUA=1
 else
     USE_LUA=
-fi
-
-if [ "$USE_ADAS" = "yes" ]
-then
-    USE_ADAS=1
-else
-    USE_ADAS=
 fi
 
 # Default lapack include and libraries: we prefer linking to static library
@@ -312,8 +300,6 @@ CONF_LUA_LIB_DIR=$CONF_LUA_LIB_DIR
 CONF_LUA_LIB=$CONF_LUA_LIB
 
 CUDAMATH_LIBDIR=$CUDAMATH_LIBDIR
-
-USE_ADAS=$USE_ADAS
 
 EOF1
 
