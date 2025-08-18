@@ -59,7 +59,6 @@ The following flags specify the libraries to build.
 --build-openmpi             [no] Should we build OpenMPI?
 --build-luajit              [no] Should we build LuaJIT?
 --build-cudss               [no] Should we build cuDSS?
---use-adas                  [no] Should we download ADAS data? (uses python, needs the `requests, os, shutil, sys` modules)
 
 EOF
 }
@@ -168,10 +167,6 @@ do
       [ -n "$value" ] || die "Missing value in flag $key."
       BUILD_CUDSS="$value"
       ;;   
-   --use-adas)
-      [ -n "$value" ] || die "Missing value in flag $key."
-      USE_ADAS="$value"
-      ;;
    *)
       die "Error: Unknown flag: $1"
       ;;

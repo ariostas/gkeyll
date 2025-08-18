@@ -51,7 +51,6 @@ CUDA_ARCH                  CUDA architecture flag to specify compute capability.
 --use-nccl                 [no] Build NCCL-dependent code
 --use-cudss                [no] Build CUDSS-dependent code
 --use-lua                  [no] Build Lua dependent code
---use-adas                 [no] Build adas dependent code
 
 Library Includes and Locations
 
