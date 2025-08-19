@@ -163,8 +163,14 @@ gkyl_nodal_ops_n2m_surface(const struct gkyl_nodal_ops *nodal_ops,
             if (j < grid->ndim-1) {
               if (dir == 0)
                 nidx[j] = (iter.idx[j]-update_range->lower[j])*2 + i/((int) pow(2,grid->ndim-1-j));
-              else
+              else if (dir == 1)
                 nidx[j] = (iter.idx[j]-update_range->lower[j])*2 + i/((int) pow(2,grid->ndim-2+j));
+              else if (dir == 2) {
+                if(j==0)
+                  nidx[j] = (iter.idx[j]-update_range->lower[j])*2 + i/((int) pow(2,grid->ndim-2+j));
+                if(j==1)
+                  nidx[j] = (iter.idx[j]-update_range->lower[j])*2 + i%2;
+              }
             }
             else
               nidx[j] = (iter.idx[j]-update_range->lower[j])*2 + i%2 ;
@@ -225,8 +231,14 @@ gkyl_nodal_ops_m2n_surface(const struct gkyl_nodal_ops *nodal_ops,
             if (j < grid->ndim-1) {
               if (dir == 0)
                 nidx[j] = (iter.idx[j]-update_range->lower[j])*2 + i/((int) pow(2,grid->ndim-1-j));
-              else
+              else if (dir == 1)
                 nidx[j] = (iter.idx[j]-update_range->lower[j])*2 + i/((int) pow(2,grid->ndim-2+j));
+              else if (dir == 2) {
+                if(j==0)
+                  nidx[j] = (iter.idx[j]-update_range->lower[j])*2 + i/((int) pow(2,grid->ndim-2+j));
+                if(j==1)
+                  nidx[j] = (iter.idx[j]-update_range->lower[j])*2 + i%2;
+              }
             }
             else
               nidx[j] = (iter.idx[j]-update_range->lower[j])*2 + i%2 ;
