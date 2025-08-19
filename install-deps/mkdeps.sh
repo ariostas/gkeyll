@@ -58,7 +58,7 @@ The following flags specify the libraries to build.
 --build-openmpi             [no] Should we build OpenMPI?
 --build-luajit              [no] Should we build LuaJIT?
 --build-cudss               [no] Should we build cuDSS?
---build-adas                [no] Should we download ADAS data? (uses python, needs the `requests, os, shutil, sys` modules)
+--build-adas                [no] Should we download ADAS data? (uses python, needs numpy)
 
 EOF
 }
