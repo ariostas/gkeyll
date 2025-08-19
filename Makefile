@@ -26,6 +26,19 @@ LAPACK_LIB = -lopenblas
 # Include config.mak file (if it exists) to overide defaults above
 -include config.mak
 
+ifeq (${BUILD_APP}, moments)
+	CFLAGS += -DGKYL_HAVE_MOMENTS
+endif
+ifeq (${BUILD_APP}, vlasov)
+	CFLAGS += -DGKYL_HAVE_VLASOV -DGKYL_HAVE_MOMENTS
+endif
+ifeq (${BUILD_APP}, gyrokinetic)
+	CFLAGS += -DGKYL_HAVE_GYROKINETIC -DGKYL_HAVE_VLASOV -DGKYL_HAVE_MOMENTS
+endif
+ifeq (${BUILD_APP}, pkpm)
+	CFLAGS += -DGKYL_HAVE_PKPM -DGKYL_HAVE_GYROKINETIC -DGKYL_HAVE_VLASOV -DGKYL_HAVE_MOMENTS
+endif
+
 INSTALL_PREFIX ?= ${PREFIX}
 PROJ_NAME ?= gkeyll
 
@@ -211,10 +224,10 @@ core-valcheck: core ## Run valgrind on unit tests in core
 moments: core  ## Build moments infrastructure code
 	cd moments && $(MAKE) -f Makefile-moments
 
-moments-unit: moments ## Build moments unit tests
+moments-unit: moments core-unit ## Build moments unit tests
 	cd moments && $(MAKE) -f Makefile-moments unit
 
-moments-regression: moments ## Build moments regression tests
+moments-regression: moments core-regression ## Build moments regression tests
 	cd moments && $(MAKE) -f Makefile-moments regression
 
 moments-amr-regression: moments ## Build moments AMR regression tests
@@ -236,10 +249,10 @@ moments-valcheck: moments ## Run valgrind on unit tests in moments
 vlasov: moments  ## Build Vlasov infrastructure code
 	cd vlasov && $(MAKE) -f Makefile-vlasov
 
-vlasov-unit: vlasov ## Build Vlasov unit tests
+vlasov-unit: vlasov moments-unit ## Build Vlasov unit tests
 	cd vlasov && $(MAKE) -f Makefile-vlasov unit
 
-vlasov-regression: vlasov ## Build Vlasov regression tests
+vlasov-regression: vlasov moments-regression ## Build Vlasov regression tests
 	cd vlasov && $(MAKE) -f Makefile-vlasov regression
 
 vlasov-install: moments-install ## Install Vlasov infrastructure code
@@ -258,10 +271,10 @@ vlasov-valcheck: vlasov ## Run valgrind on unit tests in Vlasov
 gyrokinetic: vlasov  ## Build Gyrokinetic infrastructure code
 	cd gyrokinetic && $(MAKE) -f Makefile-gyrokinetic
 
-gyrokinetic-unit: gyrokinetic ## Build Gyrokinetic unit tests
+gyrokinetic-unit: gyrokinetic vlasov-unit ## Build Gyrokinetic unit tests
 	cd gyrokinetic && $(MAKE) -f Makefile-gyrokinetic unit
 
-gyrokinetic-regression: gyrokinetic ## Build Gyrokinetic regression tests
+gyrokinetic-regression: gyrokinetic vlasov-regression ## Build Gyrokinetic regression tests
 	cd gyrokinetic && $(MAKE) -f Makefile-gyrokinetic regression
 
 gyrokinetic-install: vlasov-install ## Install Gyrokinetic infrastructure code
@@ -280,10 +293,10 @@ gyrokinetic-valcheck: gyrokinetic ## Run valgrind on unit tests in Gyrokinetics
 pkpm: gyrokinetic  ## Build PKPM infrastructure code
 	cd pkpm && $(MAKE) -f Makefile-pkpm
 
-pkpm-unit: pkpm ## Build PKPM unit tests
+pkpm-unit: pkpm gyrokinetic-unit ## Build PKPM unit tests
 	cd pkpm && $(MAKE) -f Makefile-pkpm unit
 
-pkpm-regression: pkpm ## Build PKM regression tests
+pkpm-regression: pkpm gyrokinetic-regression ## Build PKM regression tests
 	cd pkpm && $(MAKE) -f Makefile-pkpm regression
 
 pkpm-install: gyrokinetic-install ## Install PKPM infrastructure code

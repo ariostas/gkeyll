@@ -251,17 +251,18 @@ echo "Building APP " $APP
 
 if [ "$APP" = "moments" ]
 then
-    ALLTARGETS="moments moments moments-unit moments-regression"
+    ALLTARGETS="moments moments-unit moments-regression"
 elif [ "$APP" = "vlasov" ]
 then
-    ALLTARGETS="vlasov vlasov vlasov-unit vlasov-regression"
+    ALLTARGETS="vlasov vlasov-unit vlasov-regression"
 elif [ "$APP" = "gyrokinetic" ]
 then
-    ALLTARGETS="gyrokinetic gyrokinetic gyrokinetic-unit gyrokinetic-regression"
+    ALLTARGETS="gyrokinetic gyrokinetic-unit gyrokinetic-regression"
 elif [ "$APP" = "pkpm" ]
 then
-    ALLTARGETS="pkpm pkpm pkpm-unit pkpm-regression"
+    ALLTARGETS="pkpm pkpm-unit pkpm-regression"
 else
+    APP=all
     ALLTARGETS=gkeyll
 fi
 
