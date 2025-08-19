@@ -34,7 +34,7 @@ UNAME = $(shell uname)
 
 # Directory for storing shared data, like ADAS reaction rates and radiation fits
 GKYL_SHARE_DIR ?= "${INSTALL_PREFIX}/${PROJ_NAME}/share"
-CFLAGS += -DGKYL_SHARE_DIR=$(GKYL_SHARE_DIR)
+CFLAGS += -DGKYL_SHARE_DIR=\"$(GKYL_SHARE_DIR)\"
 
 # On OSX we should use Accelerate framework
 ifeq ($(UNAME), Darwin)
