@@ -58,6 +58,7 @@ The following flags specify the libraries to build.
 --build-openmpi             [no] Should we build OpenMPI?
 --build-luajit              [no] Should we build LuaJIT?
 --build-cudss               [no] Should we build cuDSS?
+--build-adas                [no] Should we download ADAS data? (uses python, needs the `requests, os, shutil, sys` modules)
 
 EOF
 }
@@ -166,6 +167,10 @@ do
       [ -n "$value" ] || die "Missing value in flag $key."
       BUILD_CUDSS="$value"
       ;;   
+   --build-adas)
+      [ -n "$value" ] || die "Missing value in flag $key."
+      BUILD_ADAS="$value"
+      ;;
    *)
       die "Error: Unknown flag: $1"
       ;;
@@ -253,6 +258,14 @@ build_cudss() {
     fi
 }
 
+build_adas() {
+    if [ "$BUILD_ADAS" = "yes" ]
+    then
+	echo "Downloading ADAS data for neutral reactions"
+	./download-adas.sh
+    fi
+}
+
 echo "Installations will be in  $PREFIX"
 
 build_openmpi
@@ -261,3 +274,4 @@ build_openblas
 build_superlu
 build_superlu_dist
 build_cudss
+build_adas
