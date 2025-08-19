@@ -8,6 +8,7 @@ echo "# OS type is $OSTYPE on $MACHINE user $USER"
 # Defaults
 PREFIX=${HOME}/gkylsoft
 APP=all
+ALLTARGETS=gkeyll
 
 # default build options
 CC=cc
@@ -246,6 +247,24 @@ else
     USE_LUA=
 fi
 
+echo "Building APP " $APP
+
+if [ "$APP" = "moments" ]
+then
+    ALLTARGETS="moments moments moments-unit moments-regression"
+elif [ "$APP" = "vlasov" ]
+then
+    ALLTARGETS="vlasov vlasov vlasov-unit vlasov-regression"
+elif [ "$APP" = "gyrokinetic" ]
+then
+    ALLTARGETS="gyrokinetic gyrokinetic gyrokinetic-unit gyrokinetic-regression"
+elif [ "$APP" = "pkpm" ]
+then
+    ALLTARGETS="pkpm pkpm pkpm-unit pkpm-regression"
+else
+    ALLTARGETS=gkeyll
+fi
+
 # Default lapack include and libraries: we prefer linking to static library
 : "${LAPACK_INC:=$PREFIX/OpenBLAS/include}"
 : "${LAPACK_LIB=$PREFIX/OpenBLAS/lib/libopenblas.a}"
@@ -310,6 +329,8 @@ CONF_LUA_LIB_DIR=$CONF_LUA_LIB_DIR
 CONF_LUA_LIB=$CONF_LUA_LIB
 
 CUDAMATH_LIBDIR=$CUDAMATH_LIBDIR
+
+all: $ALLTARGETS ## Build only specified Apps ($APP)
 
 EOF1
 

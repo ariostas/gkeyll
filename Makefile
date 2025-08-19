@@ -182,9 +182,6 @@ ${BUILD_DIR}/pkpm/unit/%: pkpm/unit/%.c ${BUILD_DIR}/pkpm/libg0pkpm.so
 # Declare sub-directories as phony targets
 .PHONY: core moments vlasov gyrokinetic pkpm
 
-all: gkeyll
-	${MKDIR_P} ${INSTALL_PREFIX}/${PROJ_NAME}/share/adas
-
 everything: regression unit gkeyll ## Build everything, including unit, regression and gkeyll exectuable
 
 ## Core infrastructure targets
