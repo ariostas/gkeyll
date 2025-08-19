@@ -7,6 +7,7 @@ echo "# OS type is $OSTYPE on $MACHINE user $USER"
 
 # Defaults
 PREFIX=${HOME}/gkylsoft
+APP=all
 
 # default build options
 CC=cc
@@ -50,6 +51,8 @@ CUDA_ARCH                  CUDA architecture flag to specify compute capability.
 --use-nccl                 [no] Build NCCL-dependent code
 --use-cudss                [no] Build CUDSS-dependent code
 --use-lua                  [no] Build Lua dependent code
+--app                      [all] What app to build? One of
+			   moments, vlasov, gyrokinetic, pkpm, all
 
 Library Includes and Locations
 
@@ -135,6 +138,10 @@ do
    --prefix)
       [ -n "$value" ] || die "Missing value in flag $key."
       PREFIX="$value"
+      ;;
+   --app)
+      [ -n "$value" ] || die "Missing value in flag $key."
+      APP="$value"
       ;;
    --lapack-inc)
       [ -n "$value" ] || die "Missing value in flag $key."
@@ -274,6 +281,9 @@ PREFIX=$PREFIX
 CC=$CC
 ARCH_FLAGS=$ARCH_FLAGS
 CUDA_ARCH=$CUDA_ARCH
+
+# App to build
+BUILD_APP=$APP
 
 # Library paths
 LAPACK_INC=$LAPACK_INC
