@@ -333,6 +333,9 @@ unit: pkpm-unit gyrokinetic-unit vlasov-unit moments-unit core-unit ## Build all
 # build all regression tests 
 regression: pkpm-regression gyrokinetic-regression vlasov-regression moments-regression core-regression ## Build all regression tests
 
+# Install everything
+install: gkeyll-install  ## Install all code
+
 # Clean everything
 clean:
 	rm -rf ${BUILD_DIR}
