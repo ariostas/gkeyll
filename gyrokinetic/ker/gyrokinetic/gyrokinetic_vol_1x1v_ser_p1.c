@@ -54,10 +54,10 @@ GKYL_CU_DH double gyrokinetic_vol_1x1v_ser_p1(const double *w, const double *dxv
   out[5] += 0.5532833351724881*alphax[5]*fin[5]+0.8660254037844386*(alphax[1]*fin[5]+fin[1]*alphax[5])+0.5532833351724881*alphax[4]*fin[4]+0.8660254037844387*(alphax[0]*fin[4]+fin[0]*alphax[4])+0.7745966692414834*(alphax[3]*fin[3]+alphax[2]*fin[2]); 
 
   double alphavpar[6] = {0.}; 
-  alphavpar[0] = (0.7071067811865475*dualcurlbhatoverB_x[0]*hamil[1]*hamil[2]*rdx2)/(m_*q_*vmap2)-(1.0*rtg33inv[0]*hamil[1]*vmap[1]*rdx2)/(m_*vmap2); 
-  alphavpar[1] = (0.7071067811865475*dualcurlbhatoverB_x[1]*hamil[1]*hamil[2]*rdx2)/(m_*q_*vmap2)-(1.0*hamil[1]*rtg33inv[1]*vmap[1]*rdx2)/(m_*vmap2); 
-  alphavpar[2] = (1.58113883008419*dualcurlbhatoverB_x[0]*hamil[1]*hamil[4]*rdx2)/(m_*q_*vmap2); 
-  alphavpar[3] = (1.58113883008419*dualcurlbhatoverB_x[1]*hamil[1]*hamil[4]*rdx2)/(m_*q_*vmap2); 
+  alphavpar[0] = (0.7071067811865475*dualcurlbhatoverB_z[0]*hamil[1]*hamil[2]*rdx2)/(m_*q_*vmap2)-(1.0*rtg33inv[0]*hamil[1]*vmap[1]*rdx2)/(m_*vmap2); 
+  alphavpar[1] = (0.7071067811865475*dualcurlbhatoverB_z[1]*hamil[1]*hamil[2]*rdx2)/(m_*q_*vmap2)-(1.0*hamil[1]*rtg33inv[1]*vmap[1]*rdx2)/(m_*vmap2); 
+  alphavpar[2] = (1.58113883008419*dualcurlbhatoverB_z[0]*hamil[1]*hamil[4]*rdx2)/(m_*q_*vmap2); 
+  alphavpar[3] = (1.58113883008419*dualcurlbhatoverB_z[1]*hamil[1]*hamil[4]*rdx2)/(m_*q_*vmap2); 
 
 
   out[2] += 0.8660254037844386*(alphavpar[3]*fin[3]+alphavpar[2]*fin[2]+alphavpar[1]*fin[1]+alphavpar[0]*fin[0]); 
