@@ -9,6 +9,10 @@ echo "# OS type is $OSTYPE on $MACHINE user $USER"
 PREFIX=${HOME}/gkylsoft
 APP=all
 ALLTARGETS=gkeyll
+INSTALLTARGET=gkeyll
+
+FIN_APP_LIB_DIR="-L../${BUILD_DIR}/pkpm"
+FIN_APP_LIB="-lg0pkpm"
 
 # default build options
 CC=cc
@@ -53,7 +57,7 @@ CUDA_ARCH                  CUDA architecture flag to specify compute capability.
 --use-cudss                [no] Build CUDSS-dependent code
 --use-lua                  [no] Build Lua dependent code
 --app                      [all] What app to build? One of
-			   moments, vlasov, gyrokinetic, pkpm, all
+			   core, moments, vlasov, gyrokinetic, pkpm, all
 
 Library Includes and Locations
 
@@ -249,21 +253,38 @@ fi
 
 echo "Building APP " $APP
 
-if [ "$APP" = "moments" ]
+if [ "$APP" = "core" ]
+then
+    ALLTARGETS="core core-unit core-regression"
+    INSTALLTARGET="core-install"
+    FIN_APP_LIB_DIR=""
+    FIN_APP_LIB=""
+elif [ "$APP" = "moments" ]
 then
     ALLTARGETS="moments moments-unit moments-regression"
+    INSTALLTARGET="moments-install"
+    FIN_APP_LIB_DIR="-L../${BUILD_DIR}/moments"
+    FIN_APP_LIB="-lg0moments"
 elif [ "$APP" = "vlasov" ]
 then
     ALLTARGETS="vlasov vlasov-unit vlasov-regression"
+    INSTALLTARGET="vlasov-install"
+    FIN_APP_LIB_DIR="-L../${BUILD_DIR}/vlasov"
+    FIN_APP_LIB="-lg0vlasov"
 elif [ "$APP" = "gyrokinetic" ]
 then
     ALLTARGETS="gyrokinetic gyrokinetic-unit gyrokinetic-regression"
+    INSTALLTARGET="gyrokinetic-install"
+    FIN_APP_LIB_DIR="-L../${BUILD_DIR}/gyrokinetic"
+    FIN_APP_LIB="-lg0gyrokinetic"
 elif [ "$APP" = "pkpm" ]
 then
     ALLTARGETS="pkpm pkpm-unit pkpm-regression"
+    INSTALLTARGET="pkpm-install"
 else
     APP=all
     ALLTARGETS=gkeyll
+    INSTALLTARGET=gkeyll
 fi
 
 # Default lapack include and libraries: we prefer linking to static library
@@ -331,7 +352,15 @@ CONF_LUA_LIB=$CONF_LUA_LIB
 
 CUDAMATH_LIBDIR=$CUDAMATH_LIBDIR
 
+FIN_APP_LIB_DIR=$FIN_APP_LIB_DIR
+FIN_APP_LIB=$FIN_APP_LIB
+
+.PHONY:
 all: $ALLTARGETS ## Build only specified Apps ($APP)
+
+.PHONY: install
+install: $INSTALLTARGET ## Install gkeyll executable
+	cd gkeyll && \${MAKE} -f Makefile-gkeyll install
 
 EOF1
 

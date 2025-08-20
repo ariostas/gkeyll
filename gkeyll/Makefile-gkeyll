@@ -24,8 +24,8 @@ CORE_LIB_INSTALL_DIR :=
 CORE_LIB := -lg0core
 
 # We need to link to the most dependent App
-FINAL_APP_LIB_DIR := -L../${BUILD_DIR}/pkpm
-FINAL_APP_LIB := -lg0pkpm
+FINAL_APP_LIB_DIR := ${FIN_APP_LIB_DIR}
+FINAL_APP_LIB := ${FIN_APP_LIB}
 
 EXEC_LIB_DIRS = -L${SUPERLU_LIB_DIR} -L${MPI_LIB_DIR} -L${MPI_LIB_DIR} -L${LUA_LIB_DIR}
 EXEC_EXT_LIBS = -lsuperlu ${LAPACK_LIB} ${CUDA_LIBS} ${MPI_RPATH} ${MPI_LIBS} ${LUA_RPATH} ${LUA_LIBS} -lm -lpthread -ldl

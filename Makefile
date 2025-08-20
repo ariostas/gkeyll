@@ -23,6 +23,9 @@ LAPACK_INC = $(PREFIX)/OpenBLAS/include
 LAPACK_LIB_DIR = $(PREFIX)/OpenBLAS/lib
 LAPACK_LIB = -lopenblas
 
+FIN_APP_LIB_DIR = -L../${BUILD_DIR}/pkpm
+FIN_APP_LIB = -lg0pkpm
+
 # Include config.mak file (if it exists) to overide defaults above
 -include config.mak
 
@@ -312,10 +315,10 @@ pkpm-valcheck: pkpm ## Run valgrind on unit tests in PKPM
 	cd pkpm && $(MAKE) -f Makefile-pkpm valcheck
 
 ## Top-level Gkeyll target
-gkeyll: pkpm
+gkeyll: pkpm ## Build Gkeyll executable
 	cd gkeyll && ${MAKE} -f Makefile-gkeyll gkeyll
 
-gkeyll-install: pkpm-install gkeyll
+gkeyll-install: pkpm-install gkeyll ## Install Gkeyll executable
 	cd gkeyll && ${MAKE} -f Makefile-gkeyll install
 
 ## Targets to build things all parts of the code
@@ -325,9 +328,6 @@ unit: pkpm-unit gyrokinetic-unit vlasov-unit moments-unit core-unit ## Build all
 
 # build all regression tests 
 regression: pkpm-regression gyrokinetic-regression vlasov-regression moments-regression core-regression ## Build all regression tests
-
-# Install everything
-install: gkeyll-install  ## Install all code
 
 # Clean everything
 clean:
@@ -350,7 +350,7 @@ help: ## Show help
 	@echo "See ./configure --help for usage of configure script."
 	@echo ""
 	@echo "You can build only portions of the code using the specific targers below."
-	@echo "Typing \"make all\" will build the complete code"
+	@echo "Typing \"make everything\" will build the complete code"
 	@echo ""
 	@awk -F ':|##' '/^[^\t].+?:.*?##/ {\
         printf "\033[36m%-30s\033[0m %s\n", $$1, $$NF \
