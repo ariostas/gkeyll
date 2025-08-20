@@ -7,7 +7,7 @@ echo "# OS type is $OSTYPE on $MACHINE user $USER"
 
 # Defaults
 PREFIX=${HOME}/gkylsoft
-APP=all
+APP=pkpm
 ALLTARGETS=gkeyll
 INSTALLTARGET=gkeyll
 
