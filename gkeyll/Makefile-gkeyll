@@ -15,8 +15,11 @@ APP_LW_INCS := -I../core/apps -I../moments/apps -I../vlasov/apps -I../pkpm/apps 
 
 CORE_INCS := -I../core/minus -I../core/zero
 
-# Project install directory for all libraries
+# Project install directory for all libraries and includes
 PROJ_INSTALL_LIB_DIR := ${INSTALL_PREFIX}/${PROJ_NAME}/lib
+PROJ_INSTALL_INC := -I${INSTALL_PREFIX}/${PROJ_NAME}/include
+TCC_EXEC := ${PREFIX}/tcc/bin/tcc
+TCC_RUN_CMD := -run $$\1
 
 # Core libraries to link to
 CORE_LIB_DIR := -L../${BUILD_DIR}/core
@@ -48,11 +51,23 @@ gkeyll-install: gkeyll.c
 	$(MKDIR_P) ../${BUILD_DIR}/gkeyll/
 	${CC} ${CFLAGS} ${LDFLAGS} -o ../${BUILD_DIR}/gkeyll/gkeyll $< -I. ${ALL_INCS} ${EXT_INCS} ${APP_LW_INCS} ${INSTALLED_LDFLAGS} ${EXEC_LIB_DIRS} ${INSTALLED_EXEC_LIBS}
 
+.PHONY: cgkeyll-install
+cgkeyll-install:
+	$(MKDIR_P) ../${BUILD_DIR}/gkeyll/
+	rm -rf ../${BUILD_DIR}/gkeyll/cgkeyll
+	echo "#!/bin/sh" >> ../${BUILD_DIR}/gkeyll/cgkeyll
+	echo ${TCC_EXEC} ${CFLAGS} ${LDFLAGS} -o ../${BUILD_DIR}/gkeyll/gkeyll $< -I. ${EXT_INCS} ${PROJ_INSTALL_INC} ${PROJ_INSTALL_INC_DIR} ${INSTALLED_LDFLAGS} ${EXEC_LIB_DIRS} ${INSTALLED_EXEC_LIBS} ${TCC_RUN_CMD} >> ../${BUILD_DIR}/gkeyll/cgkeyll
+
 .PHONY: install
-install: gkeyll-install
-# Construct install 
+install: gkeyll-install cgkeyll-install
+# Construct install dir
 	${MKDIR_P} ${INSTALL_PREFIX}/${PROJ_NAME}/bin
+# Install rt_ary_parse.h
+	cp ../moments/creg/rt_arg_parse.h ${INSTALL_PREFIX}/${PROJ_NAME}/include
+# Install executables
 	cp ../${BUILD_DIR}/gkeyll/gkeyll ${INSTALL_PREFIX}/${PROJ_NAME}/bin/gkeyll
+	cp ../${BUILD_DIR}/gkeyll/cgkeyll ${INSTALL_PREFIX}/${PROJ_NAME}/bin/cgkeyll
+	chmod u+x ${INSTALL_PREFIX}/${PROJ_NAME}/bin/cgkeyll
 
 .PHONY: clean
 clean: ## Clean build output
