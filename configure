@@ -11,7 +11,7 @@ APP=all
 ALLTARGETS=gkeyll
 INSTALLTARGET=gkeyll
 
-FIN_APP_LIB_DIR="-L../${BUILD_DIR}/pkpm"
+FIN_APP_LIB_DIR="-L../\${BUILD_DIR}/pkpm"
 FIN_APP_LIB="-lg0pkpm"
 
 # default build options
