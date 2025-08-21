@@ -202,6 +202,25 @@ ${BUILD_DIR}/pkpm/unit/%: pkpm/unit/%.c ${BUILD_DIR}/pkpm/libg0pkpm.so
 # Declare sub-directories as phony targets
 .PHONY: core moments vlasov gyrokinetic pkpm
 
+# sed argument to replace path in Makefile for C input files outside gkeyll/.
+GKEYLL_SHARE_INSTALL_PREFIX=${INSTALL_PREFIX}/${PROJ_NAME}/share
+SED_REPS_STR1=s,GKEYLL_SHARE_INSTALL_PREFIX_TAG,${GKEYLL_SHARE_INSTALL_PREFIX},g
+MAKEFILE_FOR_EXT_C_INP_PHONY=
+ifeq (${BUILD_APP}, moments)
+	MAKEFILE_FOR_EXT_C_INP_PHONY = moments moments-unit moments-regression
+endif
+ifeq (${BUILD_APP}, vlasov)
+	MAKEFILE_FOR_EXT_C_INP_PHONY = vlasov vlasov-unit vlasov-regression
+endif
+ifeq (${BUILD_APP}, gyrokinetic)
+	MAKEFILE_FOR_EXT_C_INP_PHONY = gyrokinetic gyrokinetic-unit gyrokinetic-regression
+endif
+ifeq (${BUILD_APP}, pkpm)
+	MAKEFILE_FOR_EXT_C_INP_PHONY = pkpm pkpm-unit pkpm-regression
+endif
+SED_REPS_STR2=s,MAKEFILE_FOR_EXT_C_INP_PHONY_TAG,${MAKEFILE_FOR_EXT_C_INP_PHONY},g
+
+
 everything: regression unit gkeyll ## Build everything, including unit, regression and gkeyll exectuable
 
 ## Core infrastructure targets
@@ -217,6 +236,7 @@ core-regression: ## Build core regression tests
 core-install: ## Install core infrastructure code
 	cd core && $(MAKE) -f Makefile-core install
 	test -e config.mak && cp -f config.mak ${INSTALL_PREFIX}/${PROJ_NAME}/share/config.mak || echo "No config.mak"
+	sed '${SED_REPS_STR1};${SED_REPS_STR2}' Makefile_for_ext_C_input > ${INSTALL_PREFIX}/${PROJ_NAME}/share/Makefile
 
 core-clean: ## Clean core infrastructure code
 	cd core && $(MAKE) -f Makefile-core clean
@@ -242,6 +262,7 @@ moments-amr-regression: moments ## Build moments AMR regression tests
 
 moments-install: core-install ## Install moments infrastructure code
 	cd moments && $(MAKE) -f Makefile-moments install
+	cp -f moments/creg/rt_arg_parse.h ${INSTALL_PREFIX}/${PROJ_NAME}/include/rt_arg_parse.h
 
 moments-clean: ## Clean moments infrastructure code
 	cd moments && $(MAKE) -f Makefile-moments clean
@@ -264,6 +285,7 @@ vlasov-regression: vlasov moments-regression ## Build Vlasov regression tests
 
 vlasov-install: moments-install ## Install Vlasov infrastructure code
 	cd vlasov && $(MAKE) -f Makefile-vlasov install
+	cp -f vlasov/creg/rt_arg_parse.h ${INSTALL_PREFIX}/${PROJ_NAME}/include/rt_arg_parse.h
 
 vlasov-clean: ## Clean Vlasov infrastructure code
 	cd vlasov && $(MAKE) -f Makefile-vlasov clean
@@ -286,6 +308,7 @@ gyrokinetic-regression: gyrokinetic vlasov-regression ## Build Gyrokinetic regre
 
 gyrokinetic-install: vlasov-install ## Install Gyrokinetic infrastructure code
 	cd gyrokinetic && $(MAKE) -f Makefile-gyrokinetic install
+	cp -f gyrokinetic/creg/rt_arg_parse.h ${INSTALL_PREFIX}/${PROJ_NAME}/include/rt_arg_parse.h
 
 gyrokinetic-clean: ## Clean Gyrokinetic infrastructure code
 	cd gyrokinetic && $(MAKE) -f Makefile-gyrokinetic clean
@@ -308,6 +331,7 @@ pkpm-regression: pkpm gyrokinetic-regression ## Build PKM regression tests
 
 pkpm-install: gyrokinetic-install ## Install PKPM infrastructure code
 	cd pkpm && $(MAKE) -f Makefile-pkpm install
+	cp -f pkpm/creg/rt_arg_parse.h ${INSTALL_PREFIX}/${PROJ_NAME}/include/rt_arg_parse.h
 
 pkpm-clean: ## Clean PKPM infrastructure code
 	cd pkpm && $(MAKE) -f Makefile-pkpm clean
