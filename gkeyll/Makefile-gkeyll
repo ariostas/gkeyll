@@ -56,10 +56,15 @@ cgkeyll-install:
 	$(MKDIR_P) ../${BUILD_DIR}/gkeyll/
 	rm -rf ../${BUILD_DIR}/gkeyll/cgkeyll
 	echo "#!/bin/sh" >> ../${BUILD_DIR}/gkeyll/cgkeyll
-	echo ${TCC_EXEC} ${CFLAGS} ${LDFLAGS} -o ../${BUILD_DIR}/gkeyll/gkeyll $< -I. ${EXT_INCS} ${PROJ_INSTALL_INC} ${PROJ_INSTALL_INC_DIR} ${INSTALLED_LDFLAGS} ${EXEC_LIB_DIRS} ${INSTALLED_EXEC_LIBS} ${TCC_RUN_CMD} >> ../${BUILD_DIR}/gkeyll/cgkeyll
+	echo ${TCC_EXEC} ${CFLAGS} ${EXT_INCS} ${PROJ_INSTALL_INC} ${PROJ_INSTALL_INC_DIR} ${INSTALLED_LDFLAGS} ${EXEC_LIB_DIRS} ${INSTALLED_EXEC_LIBS} ${TCC_RUN_CMD} >> ../${BUILD_DIR}/gkeyll/cgkeyll
+
+.PHONY: gkeyll-header
+gkeyll-header:
+	$(MKDIR_P) ${BUILD_DIR}
+	../core/minus/gengkylzeroh.sh ${INSTALL_PREFIX}/${PROJ_NAME}/include > ${INSTALL_PREFIX}/${PROJ_NAME}/include/gkylzero.h
 
 .PHONY: install
-install: gkeyll-install cgkeyll-install
+install: gkeyll-install cgkeyll-install gkeyll-header
 # Construct install dir
 	${MKDIR_P} ${INSTALL_PREFIX}/${PROJ_NAME}/bin
 # Install rt_ary_parse.h
