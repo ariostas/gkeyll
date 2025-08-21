@@ -187,7 +187,7 @@ ${BUILD_DIR}/pkpm/creg/%: pkpm/creg/%.c ${BUILD_DIR}/pkpm/libg0pkpm.so
 ${BUILD_DIR}/core/unit/%: core/unit/%.c ${BUILD_DIR}/core/libg0core.so
 	cd core && $(MAKE) -f Makefile-core ../$@
 
-${BUILD_DIR}/moments/unit/%: core/moments/%.c ${BUILD_DIR}/moments/libg0moments.so
+${BUILD_DIR}/moments/unit/%: moments/unit/%.c ${BUILD_DIR}/moments/libg0moments.so
 	cd moments && $(MAKE) -f Makefile-moments ../$@
 
 ${BUILD_DIR}/vlasov/unit/%: vlasov/unit/%.c ${BUILD_DIR}/vlasov/libg0vlasov.so
