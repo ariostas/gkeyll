@@ -1,3 +1,5 @@
+# -*- makefile-gmake -*-
+
 # Makefile for C input files located outside of the gkeyll/ repository.
 
 ARCH_FLAGS ?= -march=native
