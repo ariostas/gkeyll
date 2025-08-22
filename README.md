@@ -336,6 +336,23 @@ or, for a specific layer (e.g. `moments`):
 make moments-check -j #
 ```
 
+Checking for memory errors
+--------------------------
+
+We strive for `Gkeyll` to have no memory errors, even if they are silent or benign. To
+ensure this is the case, please check that new solvers or simulations are valgrind clean
+on CPUs with e.g.
+
+```
+valgrind --leak-check=full <executable> <command_line_arguments>
+```
+
+and compute-sanitizer clean on GPUs with e.g.
+
+```
+compute-sanitizer --tool memcheck <executable> <command_line_arguments>
+```
+
 Development philosophy
 ---------------------
 
@@ -354,6 +371,5 @@ Most importantly, **please internalize and follow** the programming philosophy o
 the document
 ["A Minimalist Approach to Software"](https://www.ammar-hakim.org/sj/pn/pn0/pn0-minimalism.html).
 
-When contributing code to the project, we suggest using a template in our documentation to 
-promote adherence to our community standards.
+When opening issues and pull-requests, you can consider using a template as those in:
 [Suggested templates](https://gkeyll.readthedocs.io/en/latest/dev/suggested-templates.html).
