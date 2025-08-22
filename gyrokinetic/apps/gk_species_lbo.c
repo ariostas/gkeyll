@@ -218,9 +218,9 @@ gk_species_lbo_cross_init(struct gkyl_gyrokinetic_app *app, struct gk_species *s
     
     lbo->cross_nu_prim_moms = mkarr(app->use_gpu, 2*app->basis.num_basis, app->local_ext.volume);
 
-    // Set pointers to species we cross-collide with.
     lbo->my_idx_in_other = gkyl_malloc(lbo->num_cross_collisions*sizeof(int));
     for (int i=0; i<lbo->num_cross_collisions; ++i) {
+      // Set pointers to species we cross-collide with.
       lbo->collide_with[i] = gk_find_species(app, s->info.collisions.collide_with[i]);
       lbo->my_idx_in_other[i] = -1;
       for (int j=0; j<lbo->collide_with[i]->lbo.num_cross_collisions; ++j) {
@@ -343,12 +343,9 @@ gk_species_lbo_cross_moms(gkyl_gyrokinetic_app *app, const struct gk_species *sp
       lbo->self_mnu[i], 0, lbo->m0, &app->local);
     gkyl_array_accumulate(lbo->greene_den, 1.0, lbo->other_mnu_m0[i]);
 
-//    // greene_fac = 2*(beta+1) * greene_num/greene_den
-//    //            = 2*(beta+1) * n_s * nu_sr * m_r * n_r * nu_rs / (m_s * nu_sr * n_s + m_r * nu_rs * n_r) (normNu).
-//    //            = 2*(beta+1) * n_s * m_r * n_r * nu_rs / (m_s * nu_sr * n_s + m_r * nu_rs * n_r) (constNu).
-//    gkyl_dg_div_op_range(lbo->dg_div_mem, app->basis, 0, lbo->greene_factor, 0,
-//      lbo->greene_num, 0, lbo->greene_den, &app->local);
-//    gkyl_array_scale(lbo->greene_factor, 2*lbo->betaGreenep1);
+    // greene_fac = 2*(beta+1) * greene_num/greene_den
+    //            = 2*(beta+1) * n_s * nu_sr * m_r * n_r * nu_rs / (m_s * nu_sr * n_s + m_r * nu_rs * n_r) (normNu).
+    //            = 2*(beta+1) * n_s * m_r * n_r * nu_rs / (m_s * nu_sr * n_s + m_r * nu_rs * n_r) (constNu).
     gkyl_prim_cross_m0deltas_advance(lbo->prim_cross_m0deltas_op, 
       species->info.mass, lbo->m0, lbo->cross_nu[i],
       lbo->other_m[i], lbo->collide_with[i]->lbo.m0, lbo->collide_with[i]->lbo.cross_nu[lbo->my_idx_in_other[i]],

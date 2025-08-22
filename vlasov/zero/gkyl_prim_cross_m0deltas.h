@@ -11,9 +11,9 @@ typedef struct gkyl_prim_cross_m0deltas gkyl_prim_cross_m0deltas;
  * Create a new updater that computes the m0_s*delta_s*(beta+1) prefactor
  * in the calculation of cross-primitive moments for LBO and BGK
  * collisions. That is if the collision frequency is constant:
- *   n_s*delta_s*(beta+1) = 2*(beta+1) * n_s * m_r * n_r * nu_rs / (m_s * n_s * nu_sr + m_r * n_r * nu_rs)
+ *         n_s*delta_s*(beta+1) =         2*(beta+1) * n_s * m_r * n_r * nu_rs / (m_s * n_s * nu_sr + m_r * n_r * nu_rs)
  * and if the collision frequency varies in space and time:
- *   nu_sr*n_s*delta_s*(beta+1) = 2*(beta+1) * n_s * nu_sr * m_r * n_r * nu_rs / (m_s * n_s * nu_sr + m_r * n_r * nu_rs)
+ *   nu_sr*n_s*delta_s*(beta+1) = nu_sr * 2*(beta+1) * n_s * m_r * n_r * nu_rs / (m_s * n_s * nu_sr + m_r * n_r * nu_rs)
  *
  * @param normNu Whether we are using nu(x,t).
  * @param basis Basis object (configuration space).
@@ -28,9 +28,9 @@ gkyl_prim_cross_m0deltas* gkyl_prim_cross_m0deltas_new(bool normNu,
 
 /**
  * Compute 
- *   n_s*delta_s*(beta+1) = 2*(beta+1) * n_s * m_r * n_r * nu_rs / (m_s * n_s * nu_sr + m_r * n_r * nu_rs)
+ *         n_s*delta_s*(beta+1) =         2*(beta+1) * n_s * m_r * n_r * nu_rs / (m_s * n_s * nu_sr + m_r * n_r * nu_rs)
  * if collision frequency is constant, or
- *   nu_sr*n_s*delta_s*(beta+1) = 2*(beta+1) * n_s * nu_sr * m_r * n_r * nu_rs / (m_s * n_s * nu_sr + m_r * n_r * nu_rs)
+ *   nu_sr*n_s*delta_s*(beta+1) = nu_sr * 2*(beta+1) * n_s * m_r * n_r * nu_rs / (m_s * n_s * nu_sr + m_r * n_r * nu_rs)
  * if the collision frequency varies in space and time.
  *
  * @param up Struct defining this updater..
