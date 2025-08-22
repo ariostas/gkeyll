@@ -215,6 +215,7 @@ struct gk_lbo_collisions {
   struct gkyl_array *boundary_corrections_buff; // Buffer for boundary corrections (multiplied by nu).
   struct gkyl_array *moms_buff; // Buffer for moments (multiplied by nu).
 
+  int *my_idx_in_other; // Index of this species in another species' list of species. 
   double betaGreenep1; // value of Greene's factor beta + 1
   double other_m[GKYL_MAX_SPECIES]; // masses of species being collided with
   struct gkyl_array *other_prim_moms[GKYL_MAX_SPECIES]; // self-primitive moments of species being collided with

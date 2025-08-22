@@ -74,14 +74,8 @@ gklbo_cross_greene_num_normNu(gkyl_gyrokinetic_app *app, const struct gk_species
   struct gk_lbo_collisions *lbo, int cross_coll_idx)
 {
   // Calculate greene_num = n_s * nu_sr * m_r * n_r * nu_rs.
-  int my_idx_in_other = -1;
-  for (int j=0; j<lbo->collide_with[cross_coll_idx]->lbo.num_cross_collisions; ++j) {
-    if (0 == strcmp(species->info.name, lbo->collide_with[cross_coll_idx]->info.collisions.collide_with[j])) {
-      my_idx_in_other = j;
-      break;
-    }
-  }
-  gkyl_array_set(lbo->other_mnu[cross_coll_idx], 1.0, lbo->collide_with[cross_coll_idx]->lbo.self_mnu[my_idx_in_other]);
+  gkyl_array_set(lbo->other_mnu[cross_coll_idx], 1.0,
+    lbo->collide_with[cross_coll_idx]->lbo.self_mnu[lbo->my_idx_in_other[cross_coll_idx]]);
 
   gkyl_dg_mul_op_range(app->basis, 0, lbo->other_mnu_m0[cross_coll_idx], 0,
     lbo->other_mnu[cross_coll_idx], 0, lbo->collide_with[cross_coll_idx]->lbo.m0, &app->local);
@@ -225,8 +219,17 @@ gk_species_lbo_cross_init(struct gkyl_gyrokinetic_app *app, struct gk_species *s
     lbo->cross_nu_prim_moms = mkarr(app->use_gpu, 2*app->basis.num_basis, app->local_ext.volume);
 
     // Set pointers to species we cross-collide with.
+    lbo->my_idx_in_other = gkyl_malloc(lbo->num_cross_collisions*sizeof(int));
     for (int i=0; i<lbo->num_cross_collisions; ++i) {
       lbo->collide_with[i] = gk_find_species(app, s->info.collisions.collide_with[i]);
+      lbo->my_idx_in_other[i] = -1;
+      for (int j=0; j<lbo->collide_with[i]->lbo.num_cross_collisions; ++j) {
+        if (0 == strcmp(s->info.name, lbo->collide_with[i]->info.collisions.collide_with[j])) {
+          lbo->my_idx_in_other[i] = j;
+          break;
+        }
+      }
+
       if (s->info.collisions.normNu) {
         double nuFrac = s->info.collisions.nuFrac ? s->info.collisions.nuFrac : 1.0;
         double eps0 = s->info.collisions.eps0 ? s->info.collisions.eps0: GKYL_EPSILON0;
@@ -346,16 +349,9 @@ gk_species_lbo_cross_moms(gkyl_gyrokinetic_app *app, const struct gk_species *sp
 //    gkyl_dg_div_op_range(lbo->dg_div_mem, app->basis, 0, lbo->greene_factor, 0,
 //      lbo->greene_num, 0, lbo->greene_den, &app->local);
 //    gkyl_array_scale(lbo->greene_factor, 2*lbo->betaGreenep1);
-    int my_idx_in_other = -1;
-    for (int j=0; j<lbo->collide_with[i]->lbo.num_cross_collisions; ++j) {
-      if (0 == strcmp(species->info.name, lbo->collide_with[i]->info.collisions.collide_with[j])) {
-        my_idx_in_other = j;
-        break;
-      }
-    }
     gkyl_prim_cross_m0deltas_advance(lbo->prim_cross_m0deltas_op, 
       species->info.mass, lbo->m0, lbo->cross_nu[i],
-      lbo->other_m[i], lbo->collide_with[i]->lbo.m0, lbo->collide_with[i]->lbo.cross_nu[my_idx_in_other],
+      lbo->other_m[i], lbo->collide_with[i]->lbo.m0, lbo->collide_with[i]->lbo.cross_nu[lbo->my_idx_in_other[i]],
       lbo->greene_factor);
 
     // Compute cross primitive moments.
@@ -483,6 +479,7 @@ gk_species_lbo_release(const struct gkyl_gyrokinetic_app *app, const struct gk_l
   gkyl_array_release(lbo->moms_buff);
 
   if (lbo->num_cross_collisions) {
+    gkyl_free(lbo->my_idx_in_other);
     gkyl_array_release(lbo->cross_nu_prim_moms);
     for (int i=0; i<lbo->num_cross_collisions; ++i) {
       gkyl_array_release(lbo->cross_prim_moms[i]);
