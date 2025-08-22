@@ -238,6 +238,28 @@ gkylsoft/gkeyll/bin/cgkeyll gk_d3d_3x2v_p1.c
 
 # Developing for `Gkeyll`
 
+Development philosophy
+---------------------
+
+Out goal is to keep `Gkeyll` as simple and dependency-free as possible. Some dependencies
+are unavoidable, like MPI and linear algebra libraries. However, we must avoid an
+exponentially increasing dependency chain. Another goal is that `Gkeyll` itself should be
+written in pure, modern (C99/C11) C. Some parts of the code need C++ (since `nvcc` is a C++
+compiler for CUDA), but the core code itself should be in C.
+
+Developing in C (and C++) requires very strong focus and discipline. **Please consult**
+https://en.cppreference.com/w/ for standards documentation for these languages and their
+libraries. **Please use valgrind** to make sure all code is "valgrind clean" and
+"compute-sanitizer clean" (see section on memory errors below). Pay attention to all
+compiler warnings.
+
+Most importantly, **please internalize and follow** the programming philosophy outlined in
+the document
+["A Minimalist Approach to Software"](https://www.ammar-hakim.org/sj/pn/pn0/pn0-minimalism.html).
+
+When opening issues and pull-requests, you can consider using a template as those in:
+[Suggested templates](https://gkeyll.readthedocs.io/en/latest/dev/suggested-templates.html).
+
 Built-in tests
 --------------
 
@@ -352,24 +374,3 @@ and compute-sanitizer clean on GPUs with e.g.
 ```
 compute-sanitizer --tool memcheck <executable> <command_line_arguments>
 ```
-
-Development philosophy
----------------------
-
-Out goal is to keep `Gkeyll` as simple and dependency-free as possible. Some dependencies
-are unavoidable, like MPI and linear algebra libraries. However, we must avoid an
-exponentially increasing dependency chain. Another goal is that `Gkeyll` itself should be
-written in pure, modern (C99/C11) C. Some parts of the code need C++ (since `nvcc` is a C++
-compiler for CUDA), but the core code itself should be in C.
-
-Developing in C (and C++) requires very strong focus and discipline. **Please consult**
-https://en.cppreference.com/w/ for standards documentation for these languages and their
-libraries. **Please use valgrind** to make sure all code is "valgrind clean". Pay
-attention to all compiler warnings.
-
-Most importantly, **please internalize and follow** the programming philosophy outlined in
-the document
-["A Minimalist Approach to Software"](https://www.ammar-hakim.org/sj/pn/pn0/pn0-minimalism.html).
-
-When opening issues and pull-requests, you can consider using a template as those in:
-[Suggested templates](https://gkeyll.readthedocs.io/en/latest/dev/suggested-templates.html).
