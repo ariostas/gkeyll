@@ -96,7 +96,7 @@ flag in both the `/machines/mkdeps.<machine name>.sh` and
 `/machines/configure.<machine name>.sh` machine files, and also ensure that the paths to
 each dependency are correct in the latter file.
 
-### Installing only the solver you need
+### Installing a single solver
 
 The machine files in the repository build all solvers (e.g. moments, vlasov, gyrokinetic),
 but if you only want to build one of them, say vlasov, use the additional `--app` flag
