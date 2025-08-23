@@ -131,9 +131,10 @@ gkyl_calc_metric_mirror_advance_interior( gkyl_calc_metric_mirror *up, struct gk
         // Set Jacobian
         jFld_n[0] = mirror_geo_n->Jc;
         // Set curl(bhat)
-        curlbhat_n[0] = mirror_geo_n->curlbhat[0];
-        curlbhat_n[1] = mirror_geo_n->curlbhat[1];
-        curlbhat_n[2] = mirror_geo_n->curlbhat[2];
+        struct gkyl_vec3 curlbhat_cart = gkyl_vec3_polar_con_to_cart(mirror_rza_n[0], mirror_rza_n[2], mirror_geo_n->curlbhat);
+        curlbhat_n[0] = curlbhat_cart.x[0];
+        curlbhat_n[1] = curlbhat_cart.x[1];
+        curlbhat_n[2] = curlbhat_cart.x[2];
 
         // Set tangents and duals
         for(int ivec=0; ivec<3; ivec++) {
@@ -270,9 +271,10 @@ void gkyl_calc_metric_mirror_advance_surface( gkyl_calc_metric_mirror *up, int d
         // Set Jacobian
         jFld_n[0] = mirror_geo_n->Jc;
         // Set curl(bhat)
-        curlbhat_n[0] = mirror_geo_n->curlbhat[0];
-        curlbhat_n[1] = mirror_geo_n->curlbhat[1];
-        curlbhat_n[2] = mirror_geo_n->curlbhat[2];
+        struct gkyl_vec3 curlbhat_cart = gkyl_vec3_polar_con_to_cart(mirror_rza_n[0], mirror_rza_n[2], mirror_geo_n->curlbhat);
+        curlbhat_n[0] = curlbhat_cart.x[0];
+        curlbhat_n[1] = curlbhat_cart.x[1];
+        curlbhat_n[2] = curlbhat_cart.x[2];
         // Set tangents and duals
         for(int ivec=0; ivec<3; ivec++) {
           struct gkyl_vec3 tan = gkyl_vec3_polar_con_to_cart(mirror_rza_n[0], mirror_rza_n[2], mirror_geo_n->tang[ivec]);

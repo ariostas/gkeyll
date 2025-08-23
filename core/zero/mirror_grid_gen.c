@@ -43,6 +43,46 @@ static double calc_running_coord(double coord_lo, int i, double dx) {
   return coord;
 }
 
+static void
+curlbhat_func(double r_curr, double Z, double phi, struct gkyl_basis_ops_evalf *evcub, struct gkyl_vec3 *curlbhat)
+{
+  // Calculate psi's various derivatives
+  double Br = 0.0, Bz = 0.0, bmag = 0.0;
+  double dpsidR = 0.0, dpsidZ = 0.0;
+  double d2psidR2 = 0.0, d2psidZ2 = 0.0, d2psidRdZ = 0.0;
+  double dBdR = 0.0, dBdZ = 0.0;
+  double dBrdR = 0.0, dBrdZ = 0.0;
+  double dBzdR = 0.0, dBzdZ = 0.0;
+
+  double xn[2] = {r_curr, Z};
+  double fout[4];
+  evcub->eval_cubic_wgrad(0.0, xn, fout, evcub->ctx);
+  dpsidR = fout[1];
+  dpsidZ = fout[2];
+  evcub->eval_cubic_wgrad2(0.0, xn, fout, evcub->ctx);
+  d2psidR2 = fout[1];
+  d2psidZ2 = fout[2];
+  d2psidRdZ = fout[3];
+
+  Br = 1.0/r_curr*dpsidZ;
+  Bz = -1.0/r_curr*dpsidR;
+  bmag = sqrt(Br*Br+Bz*Bz);
+
+  dBrdR  = 1.0/r_curr*d2psidRdZ;
+  dBrdZ  = 1.0/r_curr*d2psidZ2;
+  dBzdR  = -1.0/r_curr*d2psidR2;
+  dBzdZ  = -1.0/r_curr*d2psidRdZ;
+
+  dBdR = 1/bmag*(Br*dBrdR + Bz*dBzdR);
+  dBdZ = 1/bmag*(Br*dBrdZ + Bz*dBzdZ);
+
+  // Get the polar components (contravariant, upperscript components on tangent basis)
+  curlbhat->x[0] =  0.0; // R component ^1
+  curlbhat->x[1] = 1.0/bmag*1.0/r_curr*(dBrdZ - dBzdR) + (-dBdR*Bz/r_curr + dBdZ*Br/r_curr); // Phi component ^2
+  curlbhat->x[2] = 0.0;
+}
+
+
 struct gkyl_mirror_grid_gen *
 gkyl_mirror_grid_gen_inew(const struct gkyl_mirror_grid_gen_inp *inp)
 {
@@ -222,6 +262,11 @@ gkyl_mirror_grid_gen_inew(const struct gkyl_mirror_grid_gen_inp *inp)
           g->B.x[0] = 0.0; // no radial component
           g->B.x[1] = 0.0;
           g->B.x[2] = fout2[DPSI_R_I]; // diff(psi,r,2)
+
+          // \nabla X \hat{b} = 0 on axis because field is purely in Z direction
+          g->curlbhat.x[0] = 0.0;
+          g->curlbhat.x[1] = 0.0;
+          g->curlbhat.x[2] = 0.0;
         }
         else {
           double fout[3]; // first derivative of psi is needed
@@ -271,6 +316,9 @@ gkyl_mirror_grid_gen_inew(const struct gkyl_mirror_grid_gen_inp *inp)
           g->B.x[0] = -fout[DPSI_Z_I]/rz[0];
           g->B.x[1] = 0.0;
           g->B.x[2] = fout[DPSI_R_I]/rz[0];
+
+          // \nabla X \hat{b}
+          curlbhat_func(rz[0], rz[1], rzp[2], evcub, &g->curlbhat);
         }
       }
     }
@@ -420,98 +468,56 @@ gkyl_mirror_grid_gen_int_inew(const struct gkyl_mirror_grid_gen_inp *inp)
         
         struct gkyl_mirror_grid_gen_geom *g = gkyl_array_fetch(geo->nodes_geom, loc);
         
-        if (inc_axis && (ipsi == 0)) {
-          double fout2[4]; // second derivative of psi is needed
-          evcub->eval_cubic_wgrad2(0.0, rz, fout2, evcub->ctx);
-
-          // On-axis the coordinate system breaks down. Below we choose
-          // some reasonable defaults for the tnagent and
-          // duals. However, the Jacobians and magnetic field are
-          // correct and computed using the estimated asymptotic
-          // behavior of psi as r -> 0.
-          
-          g->dual[0].x[0] = 1.0;
-          g->dual[0].x[1] = 0.0;
-          g->dual[0].x[2] = 0.0;
-
-          g->dual[1].x[0] = 0;
-          g->dual[1].x[1] = 1.0;
-          g->dual[1].x[2] = 0.0;
-
-          g->dual[2].x[0] = 0;
-          g->dual[2].x[1] = 0.0;
-          g->dual[2].x[2] = 1.0;        
-          
-          g->tang[0].x[0] = 1.0;
-          g->tang[0].x[1] = 0.0;
-          g->tang[0].x[2] = 0.0;
-
-          g->tang[1].x[0] = 0.0;
-          g->tang[1].x[1] = 1.0;
-          g->tang[1].x[2] = 0.0;        
-          
-          g->tang[2].x[0] = 0;
-          g->tang[2].x[1] = 0.0;
-          g->tang[2].x[2] = 1.0;
-          
-          if (inp->fl_coord == GKYL_MIRROR_GRID_GEN_SQRT_PSI_CART_Z)
-            g->Jc = 0; // assumes asymptotics of psi ~ r^2 as r -> 0
-          else
-            g->Jc = 1/fout2[DPSI_R_I];
-
-          g->B.x[0] = 0.0; // no radial component
-          g->B.x[1] = 0.0;
-          g->B.x[2] = fout2[DPSI_R_I]; // diff(psi,r,2)
-        }
-        else {
-          double fout[3]; // first derivative of psi is needed
-          evcub->eval_cubic_wgrad(0.0, rz, fout, evcub->ctx);
+        double fout[3]; // first derivative of psi is needed
+        evcub->eval_cubic_wgrad(0.0, rz, fout, evcub->ctx);
         
-          // e^1
-          g->dual[0].x[0] = fout[DPSI_R_I]; // dpsi/dr
-          g->dual[0].x[1] = 0.0; // no toroidal component
-          g->dual[0].x[2] = fout[DPSI_Z_I]; // dspi/dz
+        // e^1
+        g->dual[0].x[0] = fout[DPSI_R_I]; // dpsi/dr
+        g->dual[0].x[1] = 0.0; // no toroidal component
+        g->dual[0].x[2] = fout[DPSI_Z_I]; // dspi/dz
         
-          if (inp->fl_coord == GKYL_MIRROR_GRID_GEN_SQRT_PSI_CART_Z) {
-            // for sqrt(psi) as radial coordinate e^1 = grad(psi)/2*sqrt(psi)
-            g->dual[0].x[0] = g->dual[0].x[0]/(2*floor_sqrt(fout[0]));
-            g->dual[0].x[2] = g->dual[0].x[2]/(2*floor_sqrt(fout[0]));
-          }
-
-          // e^2 is just e^phi
-          g->dual[1].x[0] = 0;
-          g->dual[1].x[1] = 1.0/(rz[0]*rz[0]);
-          g->dual[1].x[2] = 0.0;
-
-          // e^3 is just sigma_3
-          g->dual[2].x[0] = 0;
-          g->dual[2].x[1] = 0.0;
-          g->dual[2].x[2] = 1.0;
-
-          // e_1 points along the radial direction
-          g->tang[0].x[0] = 1/g->dual[0].x[0];
-          g->tang[0].x[1] = 0.0;
-          g->tang[0].x[2] = 0.0;
-
-          // e_2
-          g->tang[1].x[0] = 0;
-          g->tang[1].x[1] = 1.0;
-          g->tang[1].x[2] = 0.0;
-
-          // e_3
-          g->tang[2].x[0] = -fout[DPSI_Z_I]/fout[DPSI_R_I];
-          g->tang[2].x[1] = 0.0;
-          g->tang[2].x[2] = 1.0;
-          
-          if (inp->fl_coord == GKYL_MIRROR_GRID_GEN_SQRT_PSI_CART_Z)
-            g->Jc = 2*floor_sqrt(fout[PSI_I])*rz[0]/fout[DPSI_R_I];
-          else
-            g->Jc = rz[0]/fout[DPSI_R_I];
-          
-          g->B.x[0] = -fout[DPSI_Z_I]/rz[0];
-          g->B.x[1] = 0.0;
-          g->B.x[2] = fout[DPSI_R_I]/rz[0];
+        if (inp->fl_coord == GKYL_MIRROR_GRID_GEN_SQRT_PSI_CART_Z) {
+          // for sqrt(psi) as radial coordinate e^1 = grad(psi)/2*sqrt(psi)
+          g->dual[0].x[0] = g->dual[0].x[0]/(2*floor_sqrt(fout[0]));
+          g->dual[0].x[2] = g->dual[0].x[2]/(2*floor_sqrt(fout[0]));
         }
+
+        // e^2 is just e^phi
+        g->dual[1].x[0] = 0;
+        g->dual[1].x[1] = 1.0/(rz[0]*rz[0]);
+        g->dual[1].x[2] = 0.0;
+
+        // e^3 is just sigma_3
+        g->dual[2].x[0] = 0;
+        g->dual[2].x[1] = 0.0;
+        g->dual[2].x[2] = 1.0;
+
+        // e_1 points along the radial direction
+        g->tang[0].x[0] = 1/g->dual[0].x[0];
+        g->tang[0].x[1] = 0.0;
+        g->tang[0].x[2] = 0.0;
+
+        // e_2
+        g->tang[1].x[0] = 0;
+        g->tang[1].x[1] = 1.0;
+        g->tang[1].x[2] = 0.0;
+
+        // e_3
+        g->tang[2].x[0] = -fout[DPSI_Z_I]/fout[DPSI_R_I];
+        g->tang[2].x[1] = 0.0;
+        g->tang[2].x[2] = 1.0;
+        
+        if (inp->fl_coord == GKYL_MIRROR_GRID_GEN_SQRT_PSI_CART_Z)
+          g->Jc = 2*floor_sqrt(fout[PSI_I])*rz[0]/fout[DPSI_R_I];
+        else
+          g->Jc = rz[0]/fout[DPSI_R_I];
+        
+        g->B.x[0] = -fout[DPSI_Z_I]/rz[0];
+        g->B.x[1] = 0.0;
+        g->B.x[2] = fout[DPSI_R_I]/rz[0];
+
+        // \nabla X \hat{b}
+        curlbhat_func(rz[0], rz[1], rzp[2], evcub, &g->curlbhat);
       }
     }
   }
@@ -671,7 +677,7 @@ gkyl_mirror_grid_gen_surf_inew(const struct gkyl_mirror_grid_gen_inp *inp)
         
         struct gkyl_mirror_grid_gen_geom *g = gkyl_array_fetch(geo->nodes_geom, loc);
         
-        if (inc_axis && (ipsi == 0)) {
+        if (inc_axis && (ipsi == 0) && inp->dir==0) {
           double fout2[4]; // second derivative of psi is needed
           evcub->eval_cubic_wgrad2(0.0, rz, fout2, evcub->ctx);
 
@@ -713,6 +719,11 @@ gkyl_mirror_grid_gen_surf_inew(const struct gkyl_mirror_grid_gen_inp *inp)
           g->B.x[0] = 0.0; // no radial component
           g->B.x[1] = 0.0;
           g->B.x[2] = fout2[DPSI_R_I]; // diff(psi,r,2)
+
+          // \nabla X \hat{b} = 0 on axis because field is purely in Z direction
+          g->curlbhat.x[0] = 0.0;
+          g->curlbhat.x[1] = 0.0;
+          g->curlbhat.x[2] = 0.0;
         }
         else {
           double fout[3]; // first derivative of psi is needed
@@ -762,6 +773,9 @@ gkyl_mirror_grid_gen_surf_inew(const struct gkyl_mirror_grid_gen_inp *inp)
           g->B.x[0] = -fout[DPSI_Z_I]/rz[0];
           g->B.x[1] = 0.0;
           g->B.x[2] = fout[DPSI_R_I]/rz[0];
+
+          // \nabla X \hat{b}
+          curlbhat_func(rz[0], rz[1], rzp[2], evcub, &g->curlbhat);
         }
       }
     }

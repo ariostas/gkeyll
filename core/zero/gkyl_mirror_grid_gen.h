@@ -15,7 +15,7 @@ struct gkyl_mirror_grid_gen_geom {
   struct gkyl_vec3 dual[3]; // dual vectors, e^i
   struct gkyl_vec3 B; // Magnetic field
   double Jc; // Jacobian = e_1*(e_2 X e_3)  = 1/e^1*(e^2 X e^3)
-  double curlbhat[3]; // \nabla X \hat{b}
+  struct gkyl_vec3 curlbhat; // \nabla X \hat{b}
 };
 
 struct gkyl_mirror_grid_gen {
