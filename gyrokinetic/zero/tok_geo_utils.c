@@ -218,6 +218,8 @@ tok_geo_set_extent(struct gkyl_tok_geo_grid_inp* inp, struct gkyl_tok_geo *geo, 
     .geo = geo
   };
 
+  double del = 1.0e-14;
+
   if (inp->ftype == GKYL_DN_SOL_OUT || inp->ftype == GKYL_DN_SOL_OUT_LO || inp->ftype == GKYL_DN_SOL_OUT_MID || inp->ftype == GKYL_DN_SOL_OUT_UP) {
     // Immediately set rclose
     arc_ctx.rclose = inp->rright;
@@ -238,20 +240,20 @@ tok_geo_set_extent(struct gkyl_tok_geo_grid_inp* inp, struct gkyl_tok_geo *geo, 
     double arcL_mid = integrate_psi_contour_memo(geo, geo->psisep, zxpt_lo, zxpt_up, arc_ctx.rclose, false, false, arc_memo);
     double arcL_up = integrate_psi_contour_memo(geo, geo->psisep, zxpt_up, arc_ctx.zmax, arc_ctx.rclose, false, false, arc_memo);
     if (inp->ftype == GKYL_DN_SOL_OUT) {
-      *theta_lo = -M_PI+1e-14;
-      *theta_up = M_PI-1e-14;
+      *theta_lo = -M_PI+del;
+      *theta_up = M_PI-del;
     }
     else if (inp->ftype == GKYL_DN_SOL_OUT_LO) {
-      *theta_lo = -M_PI+1e-14;
-      *theta_up = -M_PI+1e-14 + arcL_lo/arcL_tot*2.0*M_PI;
+      *theta_lo = -M_PI+del;
+      *theta_up = -M_PI+del + arcL_lo/arcL_tot*2.0*M_PI;
     }
     else if (inp->ftype == GKYL_DN_SOL_OUT_MID) {
-      *theta_lo = -M_PI+1e-14 + arcL_lo/arcL_tot*2.0*M_PI;
-      *theta_up = M_PI-1e-14 - arcL_up/arcL_tot*2.0*M_PI;
+      *theta_lo = -M_PI+del + arcL_lo/arcL_tot*2.0*M_PI;
+      *theta_up = inp->half_domain ? 0.0 : M_PI-del - arcL_up/arcL_tot*2.0*M_PI;
     }
     else if (inp->ftype == GKYL_DN_SOL_OUT_UP) {
-      *theta_lo = M_PI-1e-14 - arcL_up/arcL_tot*2.0*M_PI;
-      *theta_up = M_PI-1e-14;
+      *theta_lo = M_PI-del - arcL_up/arcL_tot*2.0*M_PI;
+      *theta_up = M_PI-del;
     }
   }
 
@@ -275,20 +277,20 @@ tok_geo_set_extent(struct gkyl_tok_geo_grid_inp* inp, struct gkyl_tok_geo *geo, 
     double arcL_mid = integrate_psi_contour_memo(geo, geo->psisep, zxpt_lo, zxpt_up, arc_ctx.rclose, false, false, arc_memo);
     double arcL_up = integrate_psi_contour_memo(geo, geo->psisep, zxpt_up, arc_ctx.zmax, arc_ctx.rclose, false, false, arc_memo);
     if (inp->ftype == GKYL_DN_SOL_IN) {
-      *theta_lo = -M_PI+1e-14;
-      *theta_up = M_PI-1e-14;
+      *theta_lo = -M_PI+del;
+      *theta_up = M_PI-del;
     }
     else if (inp->ftype == GKYL_DN_SOL_IN_UP) {
-      *theta_lo = -M_PI+1e-14;
-      *theta_up = -M_PI+1e-14 + arcL_lo/arcL_tot*2.0*M_PI;
+      *theta_lo = -M_PI+del;
+      *theta_up = -M_PI+del + arcL_lo/arcL_tot*2.0*M_PI;
     }
     else if (inp->ftype == GKYL_DN_SOL_IN_MID) {
-      *theta_lo = -M_PI+1e-14 + arcL_lo/arcL_tot*2.0*M_PI;
-      *theta_up = M_PI-1e-14 - arcL_up/arcL_tot*2.0*M_PI;
+      *theta_lo = inp->half_domain ? 0.0 : -M_PI+del + arcL_lo/arcL_tot*2.0*M_PI;
+      *theta_up = M_PI-del - arcL_up/arcL_tot*2.0*M_PI;
     }
     else if (inp->ftype == GKYL_DN_SOL_IN_LO) {
-      *theta_lo = M_PI-1e-14 - arcL_up/arcL_tot*2.0*M_PI;
-      *theta_up = M_PI-1e-14;
+      *theta_lo = M_PI-del - arcL_up/arcL_tot*2.0*M_PI;
+      *theta_up = M_PI-del;
     }
   }
   else if(inp->ftype == GKYL_CORE || inp->ftype == GKYL_CORE_R || inp->ftype ==  GKYL_CORE_L){
@@ -315,16 +317,16 @@ tok_geo_set_extent(struct gkyl_tok_geo_grid_inp* inp, struct gkyl_tok_geo *geo, 
     double arcL_tot = arcL_l + arcL_r;
 
     if (inp->ftype == GKYL_CORE) {
-      *theta_lo = -M_PI+1e-14;
-      *theta_up = M_PI-1e-14;
+      *theta_lo = -M_PI+del;
+      *theta_up = M_PI-del;
     }
     else if (inp->ftype == GKYL_CORE_R) {
-      *theta_lo = -M_PI+1e-14;
-      *theta_up = -M_PI+1e-14 + arcL_r/arcL_tot*2.0*M_PI;
+      *theta_lo = -M_PI+del;
+      *theta_up = inp->half_domain? -M_PI+del + arcL_r/arcL_tot*2.0*M_PI/2.0 : -M_PI+del + arcL_r/arcL_tot*2.0*M_PI;
     }
     else if (inp->ftype == GKYL_CORE_L) {
-      *theta_lo = M_PI-1e-14 - arcL_l/arcL_tot*2.0*M_PI;
-      *theta_up = M_PI-1e-14;
+      *theta_lo = inp->half_domain ? M_PI-del - arcL_l/arcL_tot*2.0*M_PI/2.0 : M_PI-del - arcL_l/arcL_tot*2.0*M_PI;
+      *theta_up = M_PI-del;
     }
   }
   else if(inp->ftype==GKYL_LSN_SOL || inp->ftype == GKYL_LSN_SOL_LO || inp->ftype == GKYL_LSN_SOL_MID || inp->ftype == GKYL_LSN_SOL_UP){
@@ -385,20 +387,20 @@ tok_geo_set_extent(struct gkyl_tok_geo_grid_inp* inp, struct gkyl_tok_geo *geo, 
     double arcL_tot = arcL_lo + arcL_mid_l + arcL_mid_r + arcL_up;
 
     if (inp->ftype == GKYL_LSN_SOL) {
-      *theta_lo = -M_PI+1e-14;
-      *theta_up = M_PI-1e-14;
+      *theta_lo = -M_PI+del;
+      *theta_up = M_PI-del;
     }
     else if (inp->ftype == GKYL_LSN_SOL_LO) {
-      *theta_lo = -M_PI+1e-14;
-      *theta_up = -M_PI+1e-14 + arcL_lo/arcL_tot*2.0*M_PI;
+      *theta_lo = -M_PI+del;
+      *theta_up = -M_PI+del + arcL_lo/arcL_tot*2.0*M_PI;
     }
     else if (inp->ftype == GKYL_LSN_SOL_MID) {
-      *theta_lo = -M_PI+1e-14 + arcL_lo/arcL_tot*2.0*M_PI;
-      *theta_up = M_PI+1e-14 - arcL_up/arcL_tot*2.0*M_PI;
+      *theta_lo = -M_PI+del + arcL_lo/arcL_tot*2.0*M_PI;
+      *theta_up = M_PI+del - arcL_up/arcL_tot*2.0*M_PI;
     }
     else if (inp->ftype == GKYL_LSN_SOL_UP) {
-      *theta_lo = M_PI+1e-14 - arcL_up/arcL_tot*2.0*M_PI;
-      *theta_up = M_PI-1e-14;
+      *theta_lo = M_PI+del - arcL_up/arcL_tot*2.0*M_PI;
+      *theta_up = M_PI-del;
     }
   }
 
@@ -459,12 +461,12 @@ tok_geo_set_extent(struct gkyl_tok_geo_grid_inp* inp, struct gkyl_tok_geo *geo, 
     double arcL_tot = arcL_l + arcL_r;
 
     if (inp->ftype == GKYL_PF_LO_R) {
-      *theta_lo = -M_PI+1e-14;
-      *theta_up = -M_PI+1e-14 + arcL_r/arcL_tot*2.0*M_PI;
+      *theta_lo = -M_PI+del;
+      *theta_up = -M_PI+del + arcL_r/arcL_tot*2.0*M_PI;
     }
     else if (inp->ftype == GKYL_PF_LO_L) {
-      *theta_lo = M_PI-1e-14 - arcL_l/arcL_tot*2.0*M_PI;
-      *theta_up = M_PI-1e-14;
+      *theta_lo = M_PI-del - arcL_l/arcL_tot*2.0*M_PI;
+      *theta_up = M_PI-del;
     }
   }
 
@@ -524,12 +526,12 @@ tok_geo_set_extent(struct gkyl_tok_geo_grid_inp* inp, struct gkyl_tok_geo *geo, 
     double arcL_tot = arcL_r + arcL_l;
 
     if (inp->ftype == GKYL_PF_UP_L) {
-      *theta_lo = -M_PI+1e-14;
-      *theta_up = -M_PI+1e-14 + arcL_l/arcL_tot*2.0*M_PI;
+      *theta_lo = -M_PI+del;
+      *theta_up = -M_PI+del + arcL_l/arcL_tot*2.0*M_PI;
     }
     else if (inp->ftype == GKYL_PF_UP_R) {
-      *theta_lo = M_PI-1e-14 - arcL_r/arcL_tot*2.0*M_PI;
-      *theta_up = M_PI-1e-14;
+      *theta_lo = M_PI-del - arcL_r/arcL_tot*2.0*M_PI;
+      *theta_up = M_PI-del;
     }
 
   }
@@ -575,13 +577,13 @@ tok_find_endpoints(struct gkyl_tok_geo_grid_inp* inp, struct gkyl_tok_geo *geo, 
     // Adjust the starting point (theta=0) so that the core blocks
     // are up-down symmetric
     if (inp->ftype == GKYL_CORE_R) {
-      double theta_extent = inp->cgrid.upper[TH_IDX] - inp->cgrid.lower[TH_IDX];
+      double theta_extent = inp->half_domain ?  2.0*(inp->cgrid.upper[TH_IDX] - inp->cgrid.lower[TH_IDX]) : inp->cgrid.upper[TH_IDX] - inp->cgrid.lower[TH_IDX];
       double arcL_extent = theta_extent/(2.0*M_PI)*arc_ctx->arcL_tot;
       double extra_arcL = arcL_extent - arc_ctx->arcL_right;
       arc_ctx->arcL_start = extra_arcL/2.0;
     }
     else if (inp->ftype == GKYL_CORE_L){
-      double theta_extent = 2.0*M_PI - (inp->cgrid.upper[TH_IDX] - inp->cgrid.lower[TH_IDX]);
+      double theta_extent = inp->half_domain ? 2.0*M_PI - 2.0*(inp->cgrid.upper[TH_IDX] - inp->cgrid.lower[TH_IDX]) : 2.0*M_PI - (inp->cgrid.upper[TH_IDX] - inp->cgrid.lower[TH_IDX]);
       double arcL_extent = theta_extent/(2.0*M_PI)*arc_ctx->arcL_tot;
       double extra_arcL = arcL_extent - arc_ctx->arcL_right;
       arc_ctx->arcL_start = extra_arcL/2.0;

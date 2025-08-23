@@ -129,6 +129,9 @@ struct gkyl_tok_geo_grid_inp {
   struct gkyl_rect_grid cgrid;
   struct gkyl_basis cbasis;
   enum gkyl_tok_geo_type ftype; // type of geometry
+  bool half_domain; // For use in double null simulations
+                    // If true, will set the domain to be the lower
+                    // half of the tokamak (below Z=0)
   
   double rclose; // closest R to region of interest to discriminate
   double rleft; // closest R to inboard SOL

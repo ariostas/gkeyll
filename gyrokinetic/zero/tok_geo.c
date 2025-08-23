@@ -688,22 +688,50 @@ void gkyl_tok_geo_calc(struct gk_geometry* up, struct gkyl_range *nrange, struct
         double z_curr = res.res;
         ((struct gkyl_tok_geo *)geo)->stat.nroot_cont_calls += res.nevals;
 
-        if (psi_curr == geo->psisep) {
-          if (it == nrange->upper[TH_IDX] && (up->local.upper[TH_IDX]== up->global.upper[TH_IDX])) {
-            if (inp->ftype == GKYL_PF_UP_L || inp->ftype == GKYL_CORE_R || inp->ftype == GKYL_DN_SOL_OUT_MID || inp->ftype == GKYL_DN_SOL_IN_UP)
-              z_curr = geo->efit->Zxpt[1];
-            else if (inp->ftype == GKYL_PF_LO_R || inp->ftype == GKYL_CORE_L || inp->ftype == GKYL_DN_SOL_OUT_LO|| inp->ftype == GKYL_DN_SOL_IN_MID)
-              z_curr = geo->efit->Zxpt[0];
-            else if (inp->ftype == GKYL_LSN_SOL_LO || inp->ftype == GKYL_LSN_SOL_MID || inp->ftype == GKYL_CORE)
-              z_curr = geo->efit->Zxpt[0];
+        if (inp->half_domain) { //Alternative for half domain
+          if (psi_curr == geo->psisep) {
+            if (it == nrange->upper[TH_IDX] && (up->local.upper[TH_IDX]== up->global.upper[TH_IDX])) {
+              if (inp->ftype == GKYL_PF_LO_R || inp->ftype == GKYL_CORE_L || inp->ftype == GKYL_DN_SOL_OUT_LO|| inp->ftype == GKYL_DN_SOL_IN_MID)
+                z_curr = geo->efit->Zxpt[0];
+              else if (inp->ftype == GKYL_LSN_SOL_LO || inp->ftype == GKYL_LSN_SOL_MID || inp->ftype == GKYL_CORE)
+                z_curr = geo->efit->Zxpt[0];
+            }
+            if (it == nrange->lower[TH_IDX] && (up->local.lower[TH_IDX]== up->global.lower[TH_IDX])) {
+              if (inp->ftype == GKYL_PF_LO_L || inp->ftype == GKYL_CORE_R || inp->ftype == GKYL_DN_SOL_OUT_MID|| inp->ftype == GKYL_DN_SOL_IN_LO)
+                z_curr = geo->efit->Zxpt[0];
+              else if (inp->ftype == GKYL_LSN_SOL_UP || inp->ftype == GKYL_LSN_SOL_MID || inp->ftype == GKYL_CORE)
+                z_curr = geo->efit->Zxpt[0];
+            }
           }
-          if (it == nrange->lower[TH_IDX] && (up->local.lower[TH_IDX]== up->global.lower[TH_IDX])) {
-            if (inp->ftype == GKYL_PF_UP_R || inp->ftype == GKYL_CORE_L || inp->ftype == GKYL_DN_SOL_OUT_UP|| inp->ftype == GKYL_DN_SOL_IN_MID)
-              z_curr = geo->efit->Zxpt[1];
-            else if (inp->ftype == GKYL_PF_LO_L || inp->ftype == GKYL_CORE_R || inp->ftype == GKYL_DN_SOL_OUT_MID|| inp->ftype == GKYL_DN_SOL_IN_LO)
-              z_curr = geo->efit->Zxpt[0];
-            else if (inp->ftype == GKYL_LSN_SOL_UP || inp->ftype == GKYL_LSN_SOL_MID || inp->ftype == GKYL_CORE)
-              z_curr = geo->efit->Zxpt[0];
+        }
+        else { // For full domain
+          if (psi_curr == geo->psisep) {
+            if (it == nrange->upper[TH_IDX] && (up->local.upper[TH_IDX]== up->global.upper[TH_IDX])) {
+              if (inp->ftype == GKYL_PF_UP_L || inp->ftype == GKYL_CORE_R || inp->ftype == GKYL_DN_SOL_OUT_MID || inp->ftype == GKYL_DN_SOL_IN_UP)
+                z_curr = geo->efit->Zxpt[1];
+              else if (inp->ftype == GKYL_PF_LO_R || inp->ftype == GKYL_CORE_L || inp->ftype == GKYL_DN_SOL_OUT_LO|| inp->ftype == GKYL_DN_SOL_IN_MID)
+                z_curr = geo->efit->Zxpt[0];
+              else if (inp->ftype == GKYL_LSN_SOL_LO || inp->ftype == GKYL_LSN_SOL_MID || inp->ftype == GKYL_CORE)
+                z_curr = geo->efit->Zxpt[0];
+            }
+            if (it == nrange->lower[TH_IDX] && (up->local.lower[TH_IDX]== up->global.lower[TH_IDX])) {
+              if (inp->ftype == GKYL_PF_UP_R || inp->ftype == GKYL_CORE_L || inp->ftype == GKYL_DN_SOL_OUT_UP|| inp->ftype == GKYL_DN_SOL_IN_MID)
+                z_curr = geo->efit->Zxpt[1];
+              else if (inp->ftype == GKYL_PF_LO_L || inp->ftype == GKYL_CORE_R || inp->ftype == GKYL_DN_SOL_OUT_MID|| inp->ftype == GKYL_DN_SOL_IN_LO)
+                z_curr = geo->efit->Zxpt[0];
+              else if (inp->ftype == GKYL_LSN_SOL_UP || inp->ftype == GKYL_LSN_SOL_MID || inp->ftype == GKYL_CORE)
+                z_curr = geo->efit->Zxpt[0];
+            }
+          }
+        }
+
+        // Ensure that node at the lower Xpt (lower end of right core/upper end of left core) is at the same location
+        if (psi_curr != geo->psisep) {
+          if (it == nrange->upper[TH_IDX] && inp->ftype == GKYL_CORE_L && up->local.upper[TH_IDX]== up->global.upper[TH_IDX]) {
+            z_curr = arc_ctx.zmin;
+          }
+          if (it == nrange->lower[TH_IDX] && inp->ftype == GKYL_CORE_R && up->local.lower[TH_IDX]== up->global.lower[TH_IDX]) {
+            z_curr = arc_ctx.zmin;
           }
         }
 
@@ -1176,6 +1204,16 @@ void gkyl_tok_geo_calc_surface(struct gk_geometry* up, int dir, struct gkyl_rang
             geo->root_param.max_iter, 1e-10);
           double z_curr = res.res;
           ((struct gkyl_tok_geo *)geo)->stat.nroot_cont_calls += res.nevals;
+
+          // Ensure that node at the lower Xpt (lower end of right core/upper end of left core) is at the same location
+          if (psi_curr != geo->psisep) {
+            if (it == nrange->upper[TH_IDX] && inp->ftype == GKYL_CORE_L && up->local.upper[TH_IDX]== up->global.upper[TH_IDX]) {
+              z_curr = arc_ctx.zmin;
+            }
+            if (it == nrange->lower[TH_IDX] && inp->ftype == GKYL_CORE_R  && up->local.lower[TH_IDX]== up->global.lower[TH_IDX]) {
+              z_curr = arc_ctx.zmin;
+            }
+          }
 
           double R[4] = { 0 }, dR[4] = { 0 };
           int nr = gkyl_tok_geo_R_psiZ(geo, psi_curr, z_curr, 4, R, dR);
