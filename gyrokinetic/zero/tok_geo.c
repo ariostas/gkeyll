@@ -389,11 +389,10 @@ bmag_func(double r_curr, double Z, void *ctx)
 }
 
 static void
-curlbhat_func(double r_curr, double Z, double phi, double *curlbhat, void *ctx)
+curlbhat_func(double psi, double r_curr, double Z, double phi, double *curlbhat, void *ctx)
 {
   struct arc_length_ctx *actx = ctx;
   double *arc_memo = actx->arc_memo;
-  double psi = actx->psi, rclose = actx->rclose, zmin = actx->zmin, arcL = actx->arcL, zmax = actx->zmax;
   // Calculate fpol and fpolprime
   // First get the location on the flux grid
   double psi_fpol = psi;
@@ -427,7 +426,7 @@ curlbhat_func(double r_curr, double Z, double phi, double *curlbhat, void *ctx)
     actx->geo->efit->evf->eval_cubic_wgrad(0.0, xn, fout, actx->geo->efit->evf->ctx);
     dpsidR = fout[1];
     dpsidZ = fout[2];
-    actx->geo->efit->evf->eval_cubic_wgrad(0.0, xn, fout, actx->geo->efit->evf->ctx);
+    actx->geo->efit->evf->eval_cubic_wgrad2(0.0, xn, fout, actx->geo->efit->evf->ctx);
     d2psidR2 = fout[1];
     d2psidZ2 = fout[2];
     d2psidRdZ = fout[3];
@@ -868,7 +867,7 @@ void gkyl_tok_geo_calc_interior(struct gk_geometry* up, struct gkyl_range *nrang
   gkyl_position_map_optimize(position_map, up->grid, up->global);
 
   int cidx[3] = { 0 };
-  for(int ia=nrange->lower[AL_IDX]; ia<=nrange->lower[AL_IDX]+1; ++ia){
+  for(int ia=nrange->lower[AL_IDX]; ia<nrange->lower[AL_IDX]+1; ++ia){
     cidx[AL_IDX] = ia;
     double alpha_curr = calc_running_coord(alpha_lo, ia-nrange->lower[AL_IDX], dalpha);
     // This is the convention described in Noah Mandell's Thesis Eq 5.104. comp coord y = -alpha.
@@ -969,7 +968,7 @@ void gkyl_tok_geo_calc_interior(struct gk_geometry* up, struct gkyl_range *nrang
             mc2p_n[lidx+Y_IDX] = z_curr;
             mc2p_n[lidx+Z_IDX] = phi_curr;
             bmag_n[0] = bmag_func(r_curr, z_curr, &arc_ctx);
-            curlbhat_func(r_curr, z_curr, phi_curr, curlbhat_n, &arc_ctx);
+            curlbhat_func(psi_curr, r_curr, z_curr, phi_curr, curlbhat_n, &arc_ctx);
           }
         }
       }
@@ -988,6 +987,7 @@ void gkyl_tok_geo_calc_interior(struct gk_geometry* up, struct gkyl_range *nrang
       cidx[PSI_IDX] = ip;
       int ip_delta_max = 3;
       for(int ip_delta = 0; ip_delta < ip_delta_max; ip_delta++){
+        double psi_curr = calc_running_coord(psi_lo, ip-nrange->lower[PSI_IDX], dpsi) + modifiers[ip_delta]*delta_psi;
         for (int it=nrange->lower[TH_IDX]; it<=nrange->upper[TH_IDX]; ++it) {
           cidx[TH_IDX] = it;
             int lidx = 0;
@@ -1020,11 +1020,9 @@ void gkyl_tok_geo_calc_interior(struct gk_geometry* up, struct gkyl_range *nrang
             ddtheta_n[2] = donor_ddtheta_n[2];
             mc2p_n[lidx+X_IDX] = donor_mc2p_n[lidx+X_IDX];
             mc2p_n[lidx+Y_IDX] = donor_mc2p_n[lidx+Y_IDX];
-            mc2p_n[lidx+Z_IDX] = donor_mc2p_n[lidx+Z_IDX];
+            mc2p_n[lidx+Z_IDX] = donor_mc2p_n[lidx+Z_IDX] + alpha_diff;
             bmag_n[0] = donor_bmag_n[0];
-            curlbhat_n[0] = donor_curlbhat_n[0];
-            curlbhat_n[1] = donor_curlbhat_n[1];
-            curlbhat_n[2] = donor_curlbhat_n[2];
+            curlbhat_func(psi_curr, mc2p_n[lidx+X_IDX], mc2p_n[lidx+Y_IDX], mc2p_n[lidx+Z_IDX], curlbhat_n, &arc_ctx);
           }
         }
       }
@@ -1111,7 +1109,7 @@ void gkyl_tok_geo_calc_surface(struct gk_geometry* up, int dir, struct gkyl_rang
   gkyl_position_map_optimize(position_map, up->grid, up->global);
 
   int cidx[3] = { 0 };
-  for(int ia=nrange->lower[AL_IDX]; ia<=nrange->lower[AL_IDX]+1; ++ia){
+  for(int ia=nrange->lower[AL_IDX]; ia<nrange->lower[AL_IDX]+1; ++ia){
     cidx[AL_IDX] = ia;
     double alpha_curr = dir==1 ? alpha_lo + ia*dalpha : calc_running_coord(alpha_lo, ia-nrange->lower[AL_IDX], dalpha);
     // This is the convention described in Noah Mandell's Thesis Eq 5.104. comp coord y = -alpha.
@@ -1221,7 +1219,7 @@ void gkyl_tok_geo_calc_surface(struct gk_geometry* up, int dir, struct gkyl_rang
             ddtheta_n[1] = cos(atan(dr_curr))*arc_ctx.arcL_tot/2.0/M_PI*dTheta_dtheta;
             ddtheta_n[2] = dphidtheta_func(z_curr, &arc_ctx)*dTheta_dtheta;
             bmag_n[0] = bmag_func(r_curr, z_curr, &arc_ctx);
-            curlbhat_func(r_curr, z_curr, phi_curr, curlbhat_n, &arc_ctx);
+            curlbhat_func(psi_curr, r_curr, z_curr, phi_curr, curlbhat_n, &arc_ctx);
           }
         }
       }
@@ -1236,10 +1234,26 @@ void gkyl_tok_geo_calc_surface(struct gk_geometry* up, int dir, struct gkyl_rang
     double alpha_donor= dir==1 ? alpha_lo + nrange->lower[AL_IDX]*dalpha : calc_running_coord(alpha_lo, 0, dalpha);
     alpha_donor*=-1.0;
     double alpha_diff = alpha_curr -  alpha_donor;
+
     for (int ip=nrange->lower[PSI_IDX]; ip<=nrange->upper[PSI_IDX]; ++ip) {
       cidx[PSI_IDX] = ip;
-      int ip_delta_max = 3;
+      int ip_delta_max = 5;
       for(int ip_delta = 0; ip_delta < ip_delta_max; ip_delta++){
+        if((ip == nrange->lower[PSI_IDX]) && (up->local.lower[PSI_IDX]== up->global.lower[PSI_IDX]) && dir==0){
+          if(ip_delta == 1 || ip_delta == 3)
+            continue; // one sided stencils at edge
+        }
+        else if((ip == nrange->upper[PSI_IDX]) && (up->local.upper[PSI_IDX]== up->global.upper[PSI_IDX]) && dir==0){
+          if(ip_delta == 2 || ip_delta == 4)
+            continue; // one sided stencils at edge
+        }
+        else{ // interior 
+          if( ip_delta == 3 || ip_delta == 4)
+            continue;
+        }
+        double psi_curr = dir == 0 ? psi_lo + ip*dpsi : calc_running_coord(psi_lo, ip-nrange->lower[PSI_IDX], dpsi) ;
+        psi_curr += modifiers[ip_delta]*delta_psi;
+
         for (int it=nrange->lower[TH_IDX]; it<=nrange->upper[TH_IDX]; ++it) {
           cidx[TH_IDX] = it;
             int lidx = 0;
@@ -1259,7 +1273,6 @@ void gkyl_tok_geo_calc_surface(struct gk_geometry* up, int dir, struct gkyl_rang
           double *donor_mc2p_fd_n = gkyl_array_fetch(up->geo_surf[dir].mc2p_nodal_fd, gkyl_range_idx(nrange, donor_cidx));
           double *donor_ddtheta_n = gkyl_array_fetch(up->geo_surf[dir].ddtheta_nodal, gkyl_range_idx(nrange, donor_cidx));
           double *donor_bmag_n = gkyl_array_fetch(up->geo_surf[dir].bmag_nodal, gkyl_range_idx(nrange, donor_cidx));
-          double *donor_curlbhat_n = gkyl_array_fetch(up->geo_surf[dir].curlbhat_nodal, gkyl_range_idx(nrange, donor_cidx));
 
           mc2p_fd_n[lidx+X_IDX] =  donor_mc2p_fd_n[lidx+X_IDX];
           mc2p_fd_n[lidx+Y_IDX] =  donor_mc2p_fd_n[lidx+Y_IDX];
@@ -1269,9 +1282,7 @@ void gkyl_tok_geo_calc_surface(struct gk_geometry* up, int dir, struct gkyl_rang
             ddtheta_n[1] = donor_ddtheta_n[1];
             ddtheta_n[2] = donor_ddtheta_n[2];
             bmag_n[0] = donor_bmag_n[0];
-            curlbhat_n[0] = donor_curlbhat_n[0];
-            curlbhat_n[1] = donor_curlbhat_n[1];
-            curlbhat_n[2] = donor_curlbhat_n[2];
+            curlbhat_func(psi_curr, mc2p_fd_n[X_IDX], mc2p_fd_n[Y_IDX], mc2p_fd_n[Z_IDX], curlbhat_n, &arc_ctx);
           }
         }
       }
