@@ -46,6 +46,16 @@ calc_dual(double J, const double e_2[3], const double e_3[3], double e1[3])
   e1[2] = (e_2[0]*e_3[1] - e_2[1]*e_3[0] )/J;
 }
 
+static inline void
+matTvec(double M[3][3], double v[3], double result[3]) {
+  for (int i = 0; i < 3; i++) {
+    result[i] = 0.0;
+    for (int j = 0; j < 3; j++) {
+      result[i] += M[j][i] * v[j];
+    }
+  }
+}
+
 void gkyl_calc_metric_advance_rz(
   gkyl_calc_metric *up, struct gkyl_range *nrange,
   struct gkyl_array *mc2p_nodal_fd, struct gkyl_array *ddtheta_nodal,
@@ -1320,18 +1330,21 @@ void gkyl_calc_metric_advance_interior(gkyl_calc_metric *up, struct gk_geometry 
          normFld_n[7] = dualFld_n[7]/norm3;
          normFld_n[8] = dualFld_n[8]/norm3;
 
-
          double *bmag_n= gkyl_array_fetch(gk_geom->geo_int.bmag_nodal, gkyl_range_idx(&gk_geom->nrange_int, cidx));
          // Set e^m \dot curl(bhat) 
          double *curlbhat_n = gkyl_array_fetch(gk_geom->geo_int.curlbhat_nodal, gkyl_range_idx(&gk_geom->nrange_int, cidx));
-         curlbhat_n[0] = (dbhatdz[2][1] - dbhatdz[1][2]);
-         curlbhat_n[1] = (dbhatdz[0][2] - dbhatdz[2][0]);
-         curlbhat_n[2] = (dbhatdz[1][0] - dbhatdz[0][1]);
+         // I first need the derivatives of B_X,Y,Z wrt XYZ
+         double dbhatdX[3][3];
+         matTvec(dzdx, dbhatdz[0], dbhatdX[0]);
+         matTvec(dzdx, dbhatdz[1], dbhatdX[1]);
+         matTvec(dzdx, dbhatdz[2], dbhatdX[2]);
+         curlbhat_n[0] = (dbhatdX[2][1] - dbhatdX[1][2]);
+         curlbhat_n[1] = (dbhatdX[0][2] - dbhatdX[2][0]);
+         curlbhat_n[2] = (dbhatdX[1][0] - dbhatdX[0][1]);
          double *dualcurlbhat_n = gkyl_array_fetch(gk_geom->geo_int.dualcurlbhat_nodal, gkyl_range_idx(&gk_geom->nrange_int, cidx));
          dualcurlbhat_n[0] = dualFld_n[0]*curlbhat_n[0] +  dualFld_n[1]*curlbhat_n[1] + dualFld_n[2]*curlbhat_n[2];
          dualcurlbhat_n[1] = dualFld_n[3]*curlbhat_n[0] +  dualFld_n[4]*curlbhat_n[1] + dualFld_n[5]*curlbhat_n[2];
          dualcurlbhat_n[2] = dualFld_n[6]*curlbhat_n[0] +  dualFld_n[7]*curlbhat_n[1] + dualFld_n[8]*curlbhat_n[2];
-
 
          // Set e^3 \dot B 
          double *B3_n = gkyl_array_fetch(gk_geom->geo_int.B3_nodal, gkyl_range_idx(&gk_geom->nrange_int, cidx));
@@ -1559,9 +1572,14 @@ void gkyl_calc_metric_advance_surface(gkyl_calc_metric *up, int dir, struct gk_g
 
         // Set n^m \dot curl(bhat) 
         double *curlbhat_n = gkyl_array_fetch(gk_geom->geo_surf[dir].curlbhat_nodal, gkyl_range_idx(&gk_geom->nrange_surf[dir], cidx));
-        curlbhat_n[0] = (dbhatdz[2][1] - dbhatdz[1][2]);
-        curlbhat_n[1] = (dbhatdz[0][2] - dbhatdz[2][0]);
-        curlbhat_n[2] = (dbhatdz[1][0] - dbhatdz[0][1]);
+        // I first need the derivatives of B_X,Y,Z wrt XYZ
+        double dbhatdX[3][3];
+        matTvec(dzdx, dbhatdz[0], dbhatdX[0]);
+        matTvec(dzdx, dbhatdz[1], dbhatdX[1]);
+        matTvec(dzdx, dbhatdz[2], dbhatdX[2]);
+        curlbhat_n[0] = (dbhatdX[2][1] - dbhatdX[1][2]);
+        curlbhat_n[1] = (dbhatdX[0][2] - dbhatdX[2][0]);
+        curlbhat_n[2] = (dbhatdX[1][0] - dbhatdX[0][1]);
         double *normcurlbhat_n = gkyl_array_fetch(gk_geom->geo_surf[dir].normcurlbhat_nodal, gkyl_range_idx(&gk_geom->nrange_surf[dir], cidx));
         normcurlbhat_n[0] = normFld_n[3*dir+0]*curlbhat_n[0] +  normFld_n[3*dir+1]*curlbhat_n[1] + normFld_n[3*dir+2]*curlbhat_n[2];
 
