@@ -68,6 +68,8 @@ struct gkyl_bc_twistshift {
   struct gkyl_basis basis; // Basis the shifted field is defined with.
   struct gkyl_range local_bcdir_ext_r; // Local range.
   struct gkyl_rect_grid grid; // Grid the shifted field is defined in.
+  evalf_t shift_func; // Function defining the shift.
+  void *shift_func_ctx; // Context for shift_func.
   bool use_gpu; // Whether to apply the BC on the GPU.
 
   struct gkyl_rect_grid shift_grid; // 1D grid in the direction of the shift.
