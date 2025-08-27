@@ -1397,7 +1397,7 @@ void gkyl_calc_metric_advance_surface(gkyl_calc_metric *up, int dir, struct gk_g
         double dxdz[3][3]; // tan vecs at node
         double dzdx[3][3]; // duals at node
 
-        const double *bhat_n = gkyl_array_cfetch(gk_geom->geo_int.b_i_nodal_fd, gkyl_range_idx(&gk_geom->nrange_int, cidx));
+        const double *bhat_n = gkyl_array_cfetch(gk_geom->geo_surf[dir].b_i_nodal_fd, gkyl_range_idx(&gk_geom->nrange_surf[dir], cidx));
         double dbhatdz[3][3]; // tan vecs at node
 
         if((ip == gk_geom->nrange_surf[dir].lower[PSI_IDX]) && (up->local.lower[PSI_IDX]== up->global.lower[PSI_IDX]) && dir==0) {
