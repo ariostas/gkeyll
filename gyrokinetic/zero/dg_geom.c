@@ -25,11 +25,13 @@ dg_geom_free(const struct gkyl_ref_count *ref)
 
   gkyl_array_release(dgg->vol_geom);
 
-  gkyl_free(dgg->vol_weights);
-  gkyl_free(dgg->vol_ords);
+  if (!dg_geom_is_cu_dev(dgg)) {
+    gkyl_free(dgg->vol_weights);
+    gkyl_free(dgg->vol_ords);
 
-  gkyl_free(dgg->surf_weights);
-  gkyl_free(dgg->surf_ords);
+    gkyl_free(dgg->surf_weights);
+    gkyl_free(dgg->surf_ords);
+  }
   
   if (dg_geom_is_cu_dev(dgg)) 
     gkyl_cu_free(dgg->on_dev); 
