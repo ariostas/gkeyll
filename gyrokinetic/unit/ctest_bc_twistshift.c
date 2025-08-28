@@ -129,7 +129,9 @@ void eval_bmag_3x(double t, const double *xn, double* GKYL_RESTRICT fout, void *
   struct test_bc_twistshift_ctx *pars = ctx;
   double B0 = pars->B0;
 
-  fout[0] = B0;
+  fout[0] = 0.0;
+  fout[1] = 0.0;
+  fout[2] = B0;
 }
 
 void
@@ -623,8 +625,8 @@ test_bc_twistshift_3x2v_fig6_wcells(const int *cells, enum gkyl_edge_loc edge,
     .geometry_id = GKYL_MAPC2P,
     .c2p_ctx = 0,
     .mapc2p = mapc2p,
-    .bmag_ctx = &proj_ctx,
-    .bmag_func = eval_bmag_3x,
+    .bfield_ctx = &proj_ctx,
+    .bfield_func = eval_bmag_3x,
     .grid = grid_conf,
     .local = local_conf,
     .local_ext = local_ext_conf,
@@ -1364,8 +1366,8 @@ test_bc_twistshift_3x2v_fig11_wcells(const int *cells, enum gkyl_edge_loc edge,
     .geometry_id = GKYL_MAPC2P,
     .c2p_ctx = 0,
     .mapc2p = mapc2p,
-    .bmag_ctx = &proj_ctx,
-    .bmag_func = eval_bmag_3x,
+    .bfield_ctx = &proj_ctx,
+    .bfield_func = eval_bmag_3x,
     .grid = grid_conf,
     .local = local_conf,
     .local_ext = local_ext_conf,

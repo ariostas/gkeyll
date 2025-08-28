@@ -112,8 +112,10 @@ void exact_gij(double t, const double *xn, double* GKYL_RESTRICT fout, void *ctx
   fout[5] = 1.0;
 }
 
-void bmag_func(double t, const double *xn, double* GKYL_RESTRICT fout, void *ctx){
-  fout[0] = 0.0398;
+void bfield_func(double t, const double *xn, double* GKYL_RESTRICT fout, void *ctx){
+  fout[0] = 0.0;
+  fout[1] = 0.0;
+  fout[2] = 0.0398;
 }
 
 void
@@ -144,8 +146,8 @@ test_3x_p1()
     .geometry_id = GKYL_MAPC2P,
     .mapc2p = mapc2p, // mapping of computational to physical space
     .c2p_ctx = 0,
-    .bmag_func = bmag_func, // magnetic field magnitude
-    .bmag_ctx =0 ,
+    .bfield_func = bfield_func, // magnetic field magnitude
+    .bfield_ctx =0 ,
     .grid = grid,
     .local = range,
     .local_ext = ext_range,
@@ -256,7 +258,7 @@ test_3x_p1()
         double xn[3] = {psi, alpha, theta};
         double *bmag_n = gkyl_array_fetch(bmag_nodal, gkyl_range_idx(&nrange_quad_interior, cidx));
         double bmag_anal[1];
-        bmag_func(0, xn, bmag_anal, 0);
+        bfield_func(0, xn, bmag_anal, 0);
         TEST_CHECK( gkyl_compare( bmag_n[0], bmag_anal[0], 1e-8) );
       }
     }
@@ -372,8 +374,8 @@ test_3x_p1_pmap()
     .geometry_id = GKYL_MAPC2P,
     .mapc2p = mapc2p, // mapping of computational to physical space
     .c2p_ctx = 0,
-    .bmag_func = bmag_func, // magnetic field magnitude
-    .bmag_ctx =0 ,
+    .bfield_func = bfield_func, // magnetic field magnitude
+    .bfield_ctx =0 ,
     .grid = grid,
     .local = range,
     .local_ext = ext_range,
@@ -463,7 +465,7 @@ test_3x_p1_pmap()
         double xn[3] = {psi, alpha, theta};
         double *bmag_n = gkyl_array_fetch(bmag_nodal, gkyl_range_idx(&nrange, cidx));
         double bmag_anal[1];
-        bmag_func(0, xn, bmag_anal, 0);
+        bfield_func(0, xn, bmag_anal, 0);
         TEST_CHECK( gkyl_compare( bmag_n[0], bmag_anal[0], 1e-8) );
       }
     }

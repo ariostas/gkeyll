@@ -387,12 +387,12 @@ double psi_rho(double rho, double psi_axis, double psi_sep)
   return pow(rho,2) * (psi_sep - psi_axis) + psi_axis;
 }
 
-struct gkyl_block_geom*
-create_asdex_lsn_block_geom(void *ctx)
+struct gkyl_gk_block_geom*
+create_asdex_lsn_gk_block_geom(void *ctx)
 {
   struct gk_asdex_ctx *params = ctx;
 
-  struct gkyl_block_geom *bgeom = gkyl_block_geom_new(params->cdim, params->num_blocks);
+  struct gkyl_gk_block_geom *bgeom = gkyl_gk_block_geom_new(params->cdim, params->num_blocks);
 
   /* Block layout and coordinates.
 
@@ -455,7 +455,7 @@ create_asdex_lsn_block_geom(void *ctx)
   int Ntheta_sol      = params->Ntheta_sol     ;
 
   // Block 0: outer private flux (PF) region.
-  gkyl_block_geom_set_block(bgeom, 0, &(struct gkyl_block_geom_info) {
+  gkyl_gk_block_geom_set_block(bgeom, 0, &(struct gkyl_gk_block_geom_info) {
       .lower = { psi_min_pf, theta_min },
       .upper = { psi_sep, theta_max },
       .cells = { Npsi_pf, Ntheta_divertor },
@@ -492,7 +492,7 @@ create_asdex_lsn_block_geom(void *ctx)
   );
 
   // Block 1: lower outer SOL.
-  gkyl_block_geom_set_block(bgeom, 1, &(struct gkyl_block_geom_info) {
+  gkyl_gk_block_geom_set_block(bgeom, 1, &(struct gkyl_gk_block_geom_info) {
       .lower = { psi_sep, theta_min },
       .upper = { psi_max_sol, theta_max },
       .cells = { Npsi_sol, Ntheta_divertor },
@@ -528,7 +528,7 @@ create_asdex_lsn_block_geom(void *ctx)
   );
 
   // Block 2: mid SOL.
-  gkyl_block_geom_set_block(bgeom, 2, &(struct gkyl_block_geom_info) {
+  gkyl_gk_block_geom_set_block(bgeom, 2, &(struct gkyl_gk_block_geom_info) {
       .lower = { psi_sep, theta_min },
       .upper = { psi_max_sol, theta_max },
       .cells = { Npsi_sol, Ntheta_sol },
@@ -564,7 +564,7 @@ create_asdex_lsn_block_geom(void *ctx)
   );
 
   // Block 3: lower inner SOL.
-  gkyl_block_geom_set_block(bgeom, 3, &(struct gkyl_block_geom_info) {
+  gkyl_gk_block_geom_set_block(bgeom, 3, &(struct gkyl_gk_block_geom_info) {
       .lower = { psi_sep, theta_min },
       .upper = { psi_max_sol, theta_max },
       .cells = { Npsi_sol, Ntheta_divertor },
@@ -600,7 +600,7 @@ create_asdex_lsn_block_geom(void *ctx)
   );
 
   // Block 4: inner private flux (PF) region.
-  gkyl_block_geom_set_block(bgeom, 4, &(struct gkyl_block_geom_info) {
+  gkyl_gk_block_geom_set_block(bgeom, 4, &(struct gkyl_gk_block_geom_info) {
       .lower = { psi_min_pf, theta_min },
       .upper = { psi_sep, theta_max },
       .cells = { Npsi_pf, Ntheta_divertor },
@@ -637,7 +637,7 @@ create_asdex_lsn_block_geom(void *ctx)
   );
 
   // Block 5: core region.
-  gkyl_block_geom_set_block(bgeom, 5, &(struct gkyl_block_geom_info) {
+  gkyl_gk_block_geom_set_block(bgeom, 5, &(struct gkyl_gk_block_geom_info) {
       .lower = { psi_min_core, theta_min },
       .upper = { psi_sep, theta_max },
       .cells = { Npsi_core, Ntheta_sol },
@@ -1116,7 +1116,7 @@ main(int argc, char **argv)
   struct gk_asdex_ctx ctx = create_ctx(); // Context for init functions.
                     
   // Construct block geometry
-  struct gkyl_block_geom *bgeom = create_asdex_lsn_block_geom(&ctx);
+  struct gkyl_gk_block_geom *bgeom = create_asdex_lsn_gk_block_geom(&ctx);
 
   int cells_v[ctx.vdim];
   for (int d=0; d<ctx.vdim; d++)
@@ -1394,7 +1394,7 @@ main(int argc, char **argv)
     .basis_type = app_args.basis_type,
     .cfl_frac = 1.0,
 
-    .block_geom = bgeom,
+    .gk_block_geom = bgeom,
     
     .num_species = 2,
     .species = { elc, ion},
@@ -1508,7 +1508,7 @@ main(int argc, char **argv)
   freeresources:
   // Free resources after simulation completion.
   gkyl_comm_release(comm);
-  gkyl_block_geom_release(bgeom);
+  gkyl_gk_block_geom_release(bgeom);
   gkyl_gyrokinetic_multib_app_release(app);
 
 #ifdef GKYL_HAVE_MPI

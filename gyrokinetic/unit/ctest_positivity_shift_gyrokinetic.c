@@ -50,7 +50,9 @@ void eval_bmag_1x(double t, const double *xn, double* restrict fout, void *ctx)
   struct test_ctx *tctx = ctx;
   double B0 = tctx->B0;
 
-  fout[0] = B0;
+  fout[0] = 0.0;
+  fout[1] = 0.0;
+  fout[2] = B0;
 }
 
 void eval_distf_1x2v(double t, const double *xn, double* restrict fout, void *ctx)
@@ -166,7 +168,7 @@ test_1x2v(int poly_order, bool use_gpu)
   struct gkyl_gk_geometry_inp geometry_input = {
     .geometry_id = GKYL_MAPC2P,
     .world = {0.0},  .mapc2p = mapc2p,  .c2p_ctx = 0,
-    .bmag_func = eval_bmag_1x,  .bmag_ctx = &proj_ctx,
+    .bfield_func = eval_bmag_1x,  .bfield_ctx = &proj_ctx,
     .basis = confBasis,  .grid = confGrid,
     .local = confLocal,  .local_ext = confLocal_ext,
     .global = confLocal, .global_ext = confLocal_ext,
