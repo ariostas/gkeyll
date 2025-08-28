@@ -753,6 +753,7 @@ main(int argc, char **argv)
       .temp_shape = heat_temp_shape_func_elc,
       .temp_shape_ctx = &ctx,
       .power = ctx.heating_power_elc, 
+      .write_diagnostics = true,
     },
 
     .bcx = {
@@ -835,6 +836,7 @@ main(int argc, char **argv)
       .temp_shape = heat_temp_shape_func_ion,
       .temp_shape_ctx = &ctx,
       .power = ctx.heating_power_ion, 
+      .write_diagnostics = true,
     },
 
     .bcx = {

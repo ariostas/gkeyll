@@ -1300,6 +1300,16 @@ gkyl_gyrokinetic_app_write_neut_species_source_integrated_mom(gkyl_gyrokinetic_a
 }
 
 //
+// ............. Heating outputs ............... //
+// 
+void
+gkyl_gyrokinetic_app_write_species_heating_diagnostics(gkyl_gyrokinetic_app* app, int sidx, double tm, int frame)
+{
+  struct gk_species *gks = &app->species[sidx];
+  gk_species_heating_write_diags(app, gks, &gks->heat_src, tm, frame);
+}
+
+//
 // ............. LTE outputs ............... //
 // 
 
@@ -1420,6 +1430,8 @@ gkyl_gyrokinetic_app_write_species_conf(gkyl_gyrokinetic_app* app, int sidx, dou
 
   gkyl_gyrokinetic_app_write_species_source_mom(app, sidx, tm, frame);
 
+  gkyl_gyrokinetic_app_write_species_heating_diagnostics(app, sidx, tm, frame);
+
   gkyl_gyrokinetic_app_write_species_lbo_mom(app, sidx, tm, frame);
 
   gkyl_gyrokinetic_app_write_species_rad_emissivity(app, sidx, tm, frame);
@@ -1465,6 +1477,7 @@ gkyl_gyrokinetic_app_write_mom(gkyl_gyrokinetic_app* app, double tm, int frame)
   for (int i=0; i<app->num_species; ++i) {
     gkyl_gyrokinetic_app_write_species_mom(app, i, tm, frame);
     gkyl_gyrokinetic_app_write_species_source_mom(app, i, tm, frame);
+    gkyl_gyrokinetic_app_write_species_heating_diagnostics(app, i, tm, frame);
     gkyl_gyrokinetic_app_write_species_lbo_mom(app, i, tm, frame);
     gkyl_gyrokinetic_app_write_species_rad_emissivity(app, i, tm, frame);
     gkyl_gyrokinetic_app_write_species_boundary_flux_mom(app, i, tm, frame);

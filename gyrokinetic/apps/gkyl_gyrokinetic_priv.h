@@ -616,12 +616,17 @@ struct gk_heating {
   struct gkyl_array *Jrate_mom; // Jrate times a velocity moment.
   struct gkyl_array_integrate *vol_integ_op; // Volume integrator.
   double *volint_local, *volint_global; // Local and global volume integrals.
+  double vtsq_amplitude; // Amplitude of squared thermal speed.
   struct gkyl_bgk_collisions *bgk_op; // BGK operator.
   bool implicit_step; // Whether or not to take an implcit BGK step.
   double dt_implicit; // Timestep used by the implicit collisions.
+  gkyl_dynvec vtsq_amp_diag; // Stores vtsq_amplitude for diagnostics.
+  bool is_first_diag_dynvec_write_call; // Whether dynvec is being written for the first time.
   // Methods chosen at runtime.
   void (*rhs_func)(gkyl_gyrokinetic_app *app, struct gk_species *species,
     struct gk_heating *src, const struct gkyl_array *fin, struct gkyl_array *rhs);
+  void (*write_diags_func)(gkyl_gyrokinetic_app* app, struct gk_species *gks,
+    struct gk_heating *src, double tm, int frame);
 };
 
 // Species data.
@@ -2212,6 +2217,18 @@ void gk_species_heating_init(struct gkyl_gyrokinetic_app *app, struct gk_species
  */
 void gk_species_heating_rhs(gkyl_gyrokinetic_app *app, struct gk_species *species,
   struct gk_heating *src, const struct gkyl_array *fin, struct gkyl_array *rhs);
+
+/**
+ * Write out diagnostics from the heating source.
+ *
+ * @param app Gyrokinetic app object.
+ * @param species Pointer to species.
+ * @param src Pointer to source.
+ * @param tm Current simulation time.
+ * @param frame Current I/O frame.
+ */
+void gk_species_heating_write_diags(gkyl_gyrokinetic_app* app, struct gk_species *gks,
+  struct gk_heating *src, double tm, int frame);
 
 /**
  * Release species heating object.
