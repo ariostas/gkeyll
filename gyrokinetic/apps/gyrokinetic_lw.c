@@ -1620,7 +1620,7 @@ gk_app_new(lua_State *L)
     gk.geometry.bfield_func = 0;
     bool has_bfield_func = false;
     int bfield_func_ref = LUA_NOREF;
-    if (glua_tbl_get_func(L, "bmagFunc")) {
+    if (glua_tbl_get_func(L, "bfieldFunc")) {
       has_bfield_func = true;
       bfield_func_ref = luaL_ref(L, LUA_REGISTRYINDEX);
     }
@@ -1673,7 +1673,7 @@ gk_app_new(lua_State *L)
       app_lw->bfield_ctx = (struct lua_func_ctx) {
         .func_ref = bfield_func_ref,
         .ndim = 3,
-        .nret = 1,
+        .nret = 3,
         .L = L,
       };
       gk.geometry.bfield_func = gkyl_lw_eval_cb;
