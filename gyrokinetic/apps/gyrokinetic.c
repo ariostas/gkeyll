@@ -1717,6 +1717,7 @@ gkyl_gyrokinetic_app_stat(gkyl_gyrokinetic_app* app)
     + stat->neut_species_react_mom_tm + stat->species_rad_mom_tm + stat->species_gyroavg_tm + stat->species_collisionless_tm
     + stat->species_coll_tm + stat->species_diffusion_tm + stat->species_rad_tm + stat->species_react_tm
     + stat->species_bflux_calc_tm+stat->species_bflux_moms_tm + stat->species_omega_cfl_tm + stat->species_src_tm
+    + stat->species_heat_tm
     + stat->neut_species_collisionless_tm + stat->neut_species_coll_tm + stat->neut_species_react_tm
     + stat->neut_species_omega_cfl_tm + stat->neut_species_src_tm + stat->dfdt_dt_reduce_tm + stat->fwd_euler_step_f_tm;
   stat->field_sum_tm = stat->field_phi_rhs_tm  + stat->field_phi_solve_tm;
@@ -1763,6 +1764,7 @@ gkyl_gyrokinetic_app_print_timings(gkyl_gyrokinetic_app* app, FILE *iostream)
   gkyl_gyrokinetic_app_cout(app, iostream, "      ^ Boundary fluxes (charged):     %.4e sec. / %4.2f %%.\n", bflux_tm                           , ratio_to_percent(bflux_tm                           ,stat->fwd_euler_tm, 0.0));
   gkyl_gyrokinetic_app_cout(app, iostream, "      ^ omega_cfl (charged):           %.4e sec. / %4.2f %%.\n", stat->species_omega_cfl_tm         , ratio_to_percent(stat->species_omega_cfl_tm         ,stat->fwd_euler_tm, 0.0));
   gkyl_gyrokinetic_app_cout(app, iostream, "      ^ Sources (charged):             %.4e sec. / %4.2f %%.\n", stat->species_src_tm               , ratio_to_percent(stat->species_src_tm               ,stat->fwd_euler_tm, 0.0));
+  gkyl_gyrokinetic_app_cout(app, iostream, "      ^ Heating (charged):             %.4e sec. / %4.2f %%.\n", stat->species_heat_tm               , ratio_to_percent(stat->species_heat_tm               ,stat->fwd_euler_tm, 0.0));
   gkyl_gyrokinetic_app_cout(app, iostream, "      ^ Collisionless terms (neutral): %.4e sec. / %4.2f %%.\n", stat->neut_species_collisionless_tm, ratio_to_percent(stat->neut_species_collisionless_tm,stat->fwd_euler_tm, 0.0));
   gkyl_gyrokinetic_app_cout(app, iostream, "      ^ Collision terms (neutral):     %.4e sec. / %4.2f %%.\n", stat->neut_species_coll_tm         , ratio_to_percent(stat->neut_species_coll_tm         ,stat->fwd_euler_tm, 0.0));
   gkyl_gyrokinetic_app_cout(app, iostream, "      ^ Reaction terms (neutral):      %.4e sec. / %4.2f %%.\n", stat->neut_species_react_tm        , ratio_to_percent(stat->neut_species_react_tm        ,stat->fwd_euler_tm, 0.0));
@@ -1906,7 +1908,7 @@ comm_reduce_app_stat(const gkyl_gyrokinetic_app* app,
     SPECIES_COLLISIONLESS_TM, SPECIES_LTE_TM, SPECIES_GYROAVG_TM,
     SPECIES_BFLUX_CALC_TM, SPECIES_BFLUX_MOMS_TM, SPECIES_DIFFUSION_TM,
     SPECIES_COLL_MOM_TM, SPECIES_COLL_TM, 
-    SPECIES_RAD_MOM_TM, SPECIES_RAD_TM, SPECIES_REACT_MOM_TM, SPECIES_REACT_TM, SPECIES_SRC_TM, SPECIES_OMEGA_CFL_TM,
+    SPECIES_RAD_MOM_TM, SPECIES_RAD_TM, SPECIES_REACT_MOM_TM, SPECIES_REACT_TM, SPECIES_SRC_TM, SPECIES_HEAT_TM, SPECIES_OMEGA_CFL_TM,
     NEUT_SPECIES_COLLISIONLESS_TM, NEUT_SPECIES_LTE_TM, NEUT_SPECIES_BFLUX_CALC_TM, NEUT_SPECIES_BFLUX_MOMS_TM,
     NEUT_SPECIES_COLL_MOM_TM, NEUT_SPECIES_COLL_TM, 
     NEUT_SPECIES_REACT_MOM_TM,  NEUT_SPECIES_REACT_TM, NEUT_SPECIES_SRC_TM, NEUT_SPECIES_OMEGA_CFL_TM,
@@ -1940,6 +1942,7 @@ comm_reduce_app_stat(const gkyl_gyrokinetic_app* app,
     [SPECIES_REACT_MOM_TM] = local->species_react_mom_tm,
     [SPECIES_REACT_TM] = local->species_react_tm,
     [SPECIES_SRC_TM] = local->species_src_tm,
+    [SPECIES_HEAT_TM] = local->species_heat_tm,
     [SPECIES_OMEGA_CFL_TM] = local->species_omega_cfl_tm,
     [NEUT_SPECIES_COLLISIONLESS_TM] = local->neut_species_collisionless_tm,
     [NEUT_SPECIES_LTE_TM] = local->neut_species_lte_tm,
@@ -1999,6 +2002,7 @@ comm_reduce_app_stat(const gkyl_gyrokinetic_app* app,
   global->species_react_mom_tm = d_red_global[SPECIES_REACT_MOM_TM];
   global->species_react_tm = d_red_global[SPECIES_REACT_TM];
   global->species_src_tm = d_red_global[SPECIES_SRC_TM];
+  global->species_heat_tm = d_red_global[SPECIES_HEAT_TM];
   global->species_omega_cfl_tm = d_red_global[SPECIES_OMEGA_CFL_TM];
 
   global->neut_species_collisionless_tm = d_red_global[NEUT_SPECIES_COLLISIONLESS_TM];
@@ -2134,6 +2138,7 @@ gkyl_gyrokinetic_app_stat_write(gkyl_gyrokinetic_app* app)
   gkyl_gyrokinetic_app_cout(app, fp, " species_react_mom_tm : %lg,\n", stat.species_react_mom_tm);
   gkyl_gyrokinetic_app_cout(app, fp, " species_react_tm : %lg,\n", stat.species_react_tm);
   gkyl_gyrokinetic_app_cout(app, fp, " species_src_tm : %lg,\n", stat.species_src_tm);
+  gkyl_gyrokinetic_app_cout(app, fp, " species_heat_tm : %lg,\n", stat.species_heat_tm);
   gkyl_gyrokinetic_app_cout(app, fp, " species_omega_cfl_tm : %lg\n", stat.species_omega_cfl_tm);
 
   gkyl_gyrokinetic_app_cout(app, fp, " neut_species_collisionless_tm : %lg,\n", stat.neut_species_collisionless_tm);
