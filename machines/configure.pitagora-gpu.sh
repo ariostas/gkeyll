@@ -1,4 +1,4 @@
-# Trying the only available version of cuda, openmpi, nccl in pitagora
+# Loading modules, pitagora currently only supports cuda 12.6
 
 module load cuda/12.6
 module load openmpi/4.1.6--gcc--12.3.0
