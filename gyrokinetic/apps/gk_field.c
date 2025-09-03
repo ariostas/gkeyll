@@ -788,6 +788,7 @@ gk_field_release(const gkyl_gyrokinetic_app* app, struct gk_field *f)
       gkyl_bc_twistshift_release(f->bc_T_LU_lo);
     }
     gkyl_skin_surf_from_ghost_release(f->ssfg_z_lo);
+    gkyl_skin_surf_from_ghost_release(f->ssfg_x_lo);
   }
 
   gkyl_dynvec_release(f->integ_energy);
