@@ -15,7 +15,7 @@ typedef struct gkyl_dg_calc_gyrokinetic_vars gkyl_dg_calc_gyrokinetic_vars;
 /**
  * Create new updater to compute gyrokinetic variables needed in 
  * updates and used for diagnostics. Methods compute:
- * alpha_surf : Surface expansion of phase space flux alpha
+ * flux_surf : Surface expansion of phase space flux
  * 
  * @param phase_grid Phase space grid (for getting cell spacing and cell center)
  * @param conf_basis Configuration space basis functions
@@ -39,8 +39,9 @@ gkyl_dg_calc_gyrokinetic_vars_new(const struct gkyl_rect_grid *phase_grid,
 
 /**
  * Compute surface expansion of phase space flux alpha
- * Computes the Poisson bracket of alpha = dz/dt = {z, H} and then evaluates the resulting polynomial
- * expansion at a surface and projects the evaluated quantity onto the surface basis.
+ * Computes the Poisson bracket of alpha = dz/dt = {z, H}, multiplies it by the upwindinded Jf,
+ * and then evaluates the resulting polynomial expansion at a surface and projects the evaluated quantity 
+ * onto the surface basis.
  * 
  * Note: Each cell stores the surface expansion on the *lower* edge of the cell
  * @param up Updater for computing gyrokinetic variables 
@@ -49,10 +50,8 @@ gkyl_dg_calc_gyrokinetic_vars_new(const struct gkyl_rect_grid *phase_grid,
  * @param conf_ext_range Extended configuration space range (so we obtain geo quantities at all the needed surfaces).
  * @param phase_ext_range Extended Phase space range (so we obtain alpha_surf at all the needed surfaces)
  * @param phi Electrostatic potential
- * @param alpha_surf Output surface expansion in a cell on the *lower* edge in each direction 
- * @param sgn_alpha_surf Output sign(alpha) at quadrature points along a surface 
- * @param const_sgn_alpha Output boolean array for if sign(alpha) is a constant on the surface
- *                        If sign(alpha) is a constant, kernels are simpler and we exploit this fact.
+ * @param flux_surf Output surface expansion in a cell on the *lower* edge in each direction 
+ * @param clfrate Output CFL rate
  */
 void gkyl_dg_calc_gyrokinetic_vars_flux_surf(struct gkyl_dg_calc_gyrokinetic_vars *up, 
   const struct gkyl_range *conf_range, const struct gkyl_range *phase_range,
