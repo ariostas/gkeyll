@@ -122,7 +122,7 @@ mapc2p(double t, const double *xc, double* GKYL_RESTRICT xp, void *ctx)
   xp[0] = xc[0]; xp[1] = xc[1]; xp[2] = xc[2];
 }
 
-void eval_bmag_3x(double t, const double *xn, double* GKYL_RESTRICT fout, void *ctx)
+void eval_bfield_3x(double t, const double *xn, double* GKYL_RESTRICT fout, void *ctx)
 {
   double x = xn[0], y = xn[1], z = xn[2];
 
@@ -626,7 +626,7 @@ test_bc_twistshift_3x2v_fig6_wcells(const int *cells, enum gkyl_edge_loc edge,
     .c2p_ctx = 0,
     .mapc2p = mapc2p,
     .bfield_ctx = &proj_ctx,
-    .bfield_func = eval_bmag_3x,
+    .bfield_func = eval_bfield_3x,
     .grid = grid_conf,
     .local = local_conf,
     .local_ext = local_ext_conf,
@@ -1367,7 +1367,7 @@ test_bc_twistshift_3x2v_fig11_wcells(const int *cells, enum gkyl_edge_loc edge,
     .c2p_ctx = 0,
     .mapc2p = mapc2p,
     .bfield_ctx = &proj_ctx,
-    .bfield_func = eval_bmag_3x,
+    .bfield_func = eval_bfield_3x,
     .grid = grid_conf,
     .local = local_conf,
     .local_ext = local_ext_conf,
