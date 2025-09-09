@@ -1632,7 +1632,8 @@ gk_species_init(struct gkyl_gk *gk_app_inp, struct gkyl_gyrokinetic_app *app, st
 
   // Allocate distribution function arrays.
   gks->f = mkarr(app->use_gpu, gks->basis.num_basis, gks->local_ext.volume);
-  gks->fghost_vol = mkarr(app->use_gpu, gks->basis.num_basis, gks->local_ext.volume);
+  if (gks->info.diffusion.num_diff_dir)
+    gks->fghost_vol = mkarr(app->use_gpu, gks->basis.num_basis, gks->local_ext.volume);
 
   gks->f_host = gks->f;
   if (app->use_gpu) {
@@ -2038,7 +2039,8 @@ gk_species_release(const gkyl_gyrokinetic_app* app, const struct gk_species *s)
   // Release resources for charged species.
 
   gkyl_array_release(s->f);
-  gkyl_array_release(s->fghost_vol);
+  if (s->info.diffusion.num_diff_dir)
+    gkyl_array_release(s->fghost_vol);
 
   if (s->info.init_from_file.type == 0) {
     gk_species_projection_release(app, &s->proj_init);
