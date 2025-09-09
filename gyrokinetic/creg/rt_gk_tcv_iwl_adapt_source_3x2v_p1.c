@@ -833,7 +833,7 @@ main(int argc, char **argv)
     .world = {0.},
     .mapc2p = mapc2p, // mapping of cCOREutational to physical space
     .c2p_ctx = &ctx,
-    .bfield_func = bfield_func, // magnetic field magnitude
+    .bfield_func = bfield_func, // magnetic field
     .bfield_ctx = &ctx,
     .has_LCFS = true,
     .x_LCFS = ctx.x_LCFS,

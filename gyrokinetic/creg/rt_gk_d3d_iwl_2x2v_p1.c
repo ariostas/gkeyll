@@ -804,7 +804,7 @@ main(int argc, char **argv)
       .world = {0.},
       .mapc2p = mapc2p, // Mapping of computational to physical space.
       .c2p_ctx = &ctx,
-      .bfield_func = bfield_func, // Magnetic field magnitude.
+      .bfield_func = bfield_func, // Magnetic field
       .bfield_ctx = &ctx,
       .has_LCFS = true,
       .x_LCFS = ctx.x_LCFS, // Location of last closed flux surface.

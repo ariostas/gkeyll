@@ -635,7 +635,7 @@ int main(int argc, char **argv)
       .world = {0., 0.},
       .mapc2p = mapc2p, // mapping of computational to physical space
       .c2p_ctx = &ctx,
-      .bfield_func = bfield_func, // magnetic field magnitude
+      .bfield_func = bfield_func, // magnetic field
       .bfield_ctx = &ctx
     },
 

@@ -896,7 +896,7 @@ main(int argc, char **argv)
       .geometry_id = GKYL_MAPC2P,
       .mapc2p = mapc2p, // mapping of computational to physical space
       .c2p_ctx = &ctx,
-      .bfield_func = bfield_func, // magnetic field magnitude
+      .bfield_func = bfield_func, // magnetic field
       .bfield_ctx = &ctx,
       .has_LCFS = true,
       .x_LCFS = ctx.x_LCFS, // Location of last closed flux surface.
