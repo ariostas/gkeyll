@@ -486,6 +486,8 @@ bfield_func(double t, const double *xc, double *GKYL_RESTRICT fout, void *ctx)
   Bfield_psiZ(psi, Z, ctx, &BRad, &BZ, &Bmag);
 
   double phi = xc[1];
+  // zc are computational coords. 
+  // Set Cartesian components of magnetic field.
   fout[0] = BRad*cos(phi);
   fout[1] = BRad*sin(phi);
   fout[2] = BZ;

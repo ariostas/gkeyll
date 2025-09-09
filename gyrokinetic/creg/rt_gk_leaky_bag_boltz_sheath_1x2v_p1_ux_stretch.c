@@ -176,6 +176,8 @@ void
 bfield_func(double t, const double* GKYL_RESTRICT zc, double* GKYL_RESTRICT fout, void* ctx)
 {
   struct boundary_ctx *app = ctx;
+  // zc are computational coords. 
+  // Set Cartesian components of magnetic field.
   fout[0] = 0.0;
   fout[1] = 0.0;
   fout[2] = app->B0;

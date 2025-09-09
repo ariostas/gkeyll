@@ -308,7 +308,8 @@ bfield_func(double t, const double* GKYL_RESTRICT zc, double* GKYL_RESTRICT fout
 
   double B0 = app->B0;
 
-  // Set magnetic field strength.
+  // zc are computational coords. 
+  // Set Cartesian components of magnetic field.
   fout[0] = 0.0;
   fout[1] = 0.0;
   fout[2] = app->B0;
