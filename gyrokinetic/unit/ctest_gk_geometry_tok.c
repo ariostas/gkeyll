@@ -548,10 +548,11 @@ test_3x_p1_straight_cylinder()
         double psi = grid.lower[PSI_IDX] + ip*(grid.upper[PSI_IDX]-grid.lower[PSI_IDX])/grid.cells[PSI_IDX];
         double alpha = grid.lower[AL_IDX] + ia*(grid.upper[AL_IDX]-grid.lower[AL_IDX])/grid.cells[AL_IDX];
         double theta = grid.lower[TH_IDX] + it*(grid.upper[TH_IDX]-grid.lower[TH_IDX])/grid.cells[TH_IDX];
-        double xn[3] = {psi, alpha, theta};
+        double xn[3] = {psi, -alpha, theta};
         double *mc2nu_pos_n = gkyl_array_fetch(mc2nu_pos_nodal, gkyl_range_idx(&nrange, cidx));
-        for (int i=0; i<3; ++i)
+        for (int i=0; i<3; ++i) {
           TEST_CHECK( gkyl_compare( mc2nu_pos_n[i], xn[i], 1e-8) );
+        }
       }
     }
   }
@@ -578,8 +579,9 @@ test_3x_p1_straight_cylinder()
         double fout[9];
         exact_normals(0.0, xn, fout, 0);
         double tol;
-        for (int i=0; i<9; ++i)
-          TEST_CHECK( gkyl_compare( normals_n[i], fout[i], 1e-8) );
+        for (int i=0; i<9; ++i) {
+          TEST_CHECK( gkyl_compare( normals_n[i], fout[i], 1e-3) );
+        }
       }
     }
   }

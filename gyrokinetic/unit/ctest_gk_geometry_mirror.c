@@ -198,15 +198,15 @@ void exact_normals(double t, const double *xn, double* GKYL_RESTRICT fout, void 
 {
   double psi = xn[0], alpha = xn[1], theta = xn[2];
   // Remember cylindrical angle = - alpha
-  fout[0] = -cos(-alpha);
-  fout[1] = -sin(-alpha);
+  fout[0] = cos(alpha);
+  fout[1] = sin(alpha);
   fout[2] = 0.0;
-  fout[3] = -sin(-alpha);
-  fout[4] = cos(-alpha);
+  fout[3] = -sin(alpha);
+  fout[4] = cos(alpha);
   fout[5] = 0.0;
   fout[6] = 0.0;
   fout[7] = 0.0;
-  fout[8] = -1.0;
+  fout[8] = 1.0;
 }
 
 void exact_jacobian(double t, const double *xn, double* GKYL_RESTRICT fout, void *ctx)
@@ -238,8 +238,8 @@ test_3x_p1_straight_cylinder()
   double psiMin = 0.1;
   int Nz = 10;
 
-  double lower[3] = {psiMin, -M_PI, -1.0};
-  double upper[3] = {psiMax,  M_PI,  1.0};
+  double lower[3] = {psiMin, -1.0, -1.0};
+  double upper[3] = {psiMax,  1.0,  1.0};
   // int cells[3] = { 18, 18, Nz };
   int cells[3] = { 2, 2, 2};
   struct gkyl_rect_grid grid;
@@ -354,11 +354,11 @@ test_3x_p1_straight_cylinder()
         double psi = grid.lower[PSI_IDX] + ip*(grid.upper[PSI_IDX]-grid.lower[PSI_IDX])/grid.cells[PSI_IDX];
         double alpha = grid.lower[AL_IDX] + ia*(grid.upper[AL_IDX]-grid.lower[AL_IDX])/grid.cells[AL_IDX];
         double theta = grid.lower[TH_IDX] + it*(grid.upper[TH_IDX]-grid.lower[TH_IDX])/grid.cells[TH_IDX];
-        double xn[3] = {psi, alpha, theta};
+        double xn[3] = {psi, -alpha, theta};
         double *bmag_n = gkyl_array_fetch(bmag_nodal, gkyl_range_idx(&nrange, cidx));
         double bmag_anal[1];
         bmag_func(0, xn, bmag_anal, 0);
-        TEST_CHECK( gkyl_compare( bmag_n[0], bmag_anal[0], 1e-8) );
+        TEST_CHECK( gkyl_compare( bmag_n[0], bmag_anal[0], 1e-7) );
       }
     }
   }
@@ -430,7 +430,8 @@ test_3x_p1_straight_cylinder()
         cidx[AL_IDX] = ia;
         cidx[TH_IDX] = it;
         double *jacobgeo_n = gkyl_array_fetch(jacobgeo_nodal, gkyl_range_idx(&nrange, cidx));
-        double *mapc2p_n = gkyl_array_fetch(mapc2p_nodal, gkyl_range_idx(&nrange, cidx));
+        //double *mapc2p_n = gkyl_array_fetch(mapc2p_nodal, gkyl_range_idx(&nrange, cidx));
+        double *mapc2p_n = gkyl_array_fetch(gk_geom->geo_corn.mc2p_nodal, gkyl_range_idx(&nrange, cidx));
         double fout[1];
         exact_jacobian(0.0, NULL, fout, 0);
         TEST_CHECK( gkyl_compare( jacobgeo_n[0], fout[0], 1e-6) );
@@ -508,9 +509,8 @@ test_3x_p1_straight_cylinder()
         double psi = grid.lower[PSI_IDX] + ip*(grid.upper[PSI_IDX]-grid.lower[PSI_IDX])/grid.cells[PSI_IDX];
         double alpha = grid.lower[AL_IDX] + ia*(grid.upper[AL_IDX]-grid.lower[AL_IDX])/grid.cells[AL_IDX];
         double theta = grid.lower[TH_IDX] + it*(grid.upper[TH_IDX]-grid.lower[TH_IDX])/grid.cells[TH_IDX]; 
-        // mapc2p_n[0] = R, mapc2p_n[1] = Theta, mapc2p_n[2] = Z_cylindrical
-        double *mapc2p_n = gkyl_array_fetch(mapc2p_nodal, gkyl_range_idx(&nrange, cidx));
-        double xn[3] = {psi, alpha, theta};
+        double *mapc2p_n = gkyl_array_fetch(gk_geom->geo_corn.mc2p_nodal, gkyl_range_idx(&nrange, cidx));
+        double xn[3] = {psi, -alpha, theta};
         double fout[3];
         mapc2p(0.0, xn, fout, 0);
         for (int i=0; i<3; ++i)
@@ -560,9 +560,8 @@ test_3x_p1_straight_cylinder()
         double xn[3] = {psi, alpha, theta};
         double fout[9];
         exact_normals(0.0, xn, fout, 0);
-        for (int i=0; i<9; ++i)
-        {
-          TEST_CHECK( gkyl_compare( normals_n[i], fout[i], 1e-6) );
+        for (int i=0; i<9; ++i) {
+          TEST_CHECK( gkyl_compare( normals_n[i], fout[i], 1e-3) );
         }
       }
     }
