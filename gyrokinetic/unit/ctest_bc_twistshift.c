@@ -662,15 +662,15 @@ test_bc_twistshift_3x2v_fig6_wcells(const int *cells, enum gkyl_edge_loc edge,
   struct gkyl_array *marr = mkarr(use_gpu, num_mom, local_ext_conf.volume);
   double *red_integ_mom_skin, *red_integ_mom_ghost;
   if (use_gpu) {
-    red_integ_mom_skin = gkyl_cu_malloc(sizeof(double[vdim+2]));
-    red_integ_mom_ghost = gkyl_cu_malloc(sizeof(double[vdim+2]));
+    red_integ_mom_skin = gkyl_cu_malloc(sizeof(double[num_mom]));
+    red_integ_mom_ghost = gkyl_cu_malloc(sizeof(double[num_mom]));
   }
   else {
-    red_integ_mom_skin = gkyl_malloc(sizeof(double[vdim+2]));
-    red_integ_mom_ghost = gkyl_malloc(sizeof(double[vdim+2]));
+    red_integ_mom_skin = gkyl_malloc(sizeof(double[num_mom]));
+    red_integ_mom_ghost = gkyl_malloc(sizeof(double[num_mom]));
   }
-  double *red_integ_mom_skin_ho = gkyl_malloc(sizeof(double[vdim+2]));
-  double *red_integ_mom_ghost_ho = gkyl_malloc(sizeof(double[vdim+2]));
+  double *red_integ_mom_skin_ho = gkyl_malloc(sizeof(double[num_mom]));
+  double *red_integ_mom_ghost_ho = gkyl_malloc(sizeof(double[num_mom]));
 
   gkyl_dg_updater_moment_gyrokinetic_advance(mcalc,
       &skin_rng, &skin_rng_conf, distf, marr);
@@ -681,15 +681,15 @@ test_bc_twistshift_3x2v_fig6_wcells(const int *cells, enum gkyl_edge_loc edge,
   gkyl_array_reduce_range(red_integ_mom_ghost, marr, GKYL_SUM, &ghost_rng_conf);
 
   if (use_gpu) {
-    gkyl_cu_memcpy(red_integ_mom_skin_ho, red_integ_mom_skin, sizeof(double[2+vdim]), GKYL_CU_MEMCPY_D2H);
-    gkyl_cu_memcpy(red_integ_mom_ghost_ho, red_integ_mom_ghost, sizeof(double[2+vdim]), GKYL_CU_MEMCPY_D2H);
+    gkyl_cu_memcpy(red_integ_mom_skin_ho, red_integ_mom_skin, sizeof(double[num_mom]), GKYL_CU_MEMCPY_D2H);
+    gkyl_cu_memcpy(red_integ_mom_ghost_ho, red_integ_mom_ghost, sizeof(double[num_mom]), GKYL_CU_MEMCPY_D2H);
   }
   else {
-    memcpy(red_integ_mom_skin_ho, red_integ_mom_skin, sizeof(double[2+vdim]));
-    memcpy(red_integ_mom_ghost_ho, red_integ_mom_ghost, sizeof(double[2+vdim]));
+    memcpy(red_integ_mom_skin_ho, red_integ_mom_skin, sizeof(double[num_mom]));
+    memcpy(red_integ_mom_ghost_ho, red_integ_mom_ghost, sizeof(double[num_mom]));
   }
 
-  for (int k=0; k<vdim+2; k++) {
+  for (int k=0; k<num_mom; k++) {
     TEST_CHECK( gkyl_compare(red_integ_mom_skin_ho[k], red_integ_mom_ghost_ho[k], 1e-12));
     TEST_MSG( "integ_mom %d | Expected: %.14e | Got: %.14e\n",k,red_integ_mom_skin_ho[k],red_integ_mom_ghost_ho[k]);
   }
@@ -752,11 +752,11 @@ test_bc_twistshift_3x2v_fig6_wcells(const int *cells, enum gkyl_edge_loc edge,
   gkyl_array_reduce_range(red_integ_mom_ghost, marr, GKYL_SUM, &ghost_rng_conf);
 
   if (use_gpu)
-    gkyl_cu_memcpy(red_integ_mom_ghost_ho, red_integ_mom_ghost, sizeof(double[2+vdim]), GKYL_CU_MEMCPY_D2H);
+    gkyl_cu_memcpy(red_integ_mom_ghost_ho, red_integ_mom_ghost, sizeof(double[num_mom]), GKYL_CU_MEMCPY_D2H);
   else
-    memcpy(red_integ_mom_ghost_ho, red_integ_mom_ghost, sizeof(double[2+vdim]));
+    memcpy(red_integ_mom_ghost_ho, red_integ_mom_ghost, sizeof(double[num_mom]));
 
-  for (int k=0; k<vdim+2; k++) {
+  for (int k=0; k<num_mom; k++) {
     TEST_CHECK( gkyl_compare(red_integ_mom_skin_ho[k], red_integ_mom_ghost_ho[k], 1e-12));
     TEST_MSG( "integ_mom %d | Expected: %.14e | Got: %.14e\n",k,red_integ_mom_skin_ho[k],red_integ_mom_ghost_ho[k]);
   }
@@ -1403,15 +1403,15 @@ test_bc_twistshift_3x2v_fig11_wcells(const int *cells, enum gkyl_edge_loc edge,
   struct gkyl_array *marr = mkarr(use_gpu, num_mom, local_ext_conf.volume);
   double *red_integ_mom_skin, *red_integ_mom_ghost;
   if (use_gpu) {
-    red_integ_mom_skin = gkyl_cu_malloc(sizeof(double[vdim+2]));
-    red_integ_mom_ghost = gkyl_cu_malloc(sizeof(double[vdim+2]));
+    red_integ_mom_skin = gkyl_cu_malloc(sizeof(double[num_mom]));
+    red_integ_mom_ghost = gkyl_cu_malloc(sizeof(double[num_mom]));
   }
   else {
-    red_integ_mom_skin = gkyl_malloc(sizeof(double[vdim+2]));
-    red_integ_mom_ghost = gkyl_malloc(sizeof(double[vdim+2]));
+    red_integ_mom_skin = gkyl_malloc(sizeof(double[num_mom]));
+    red_integ_mom_ghost = gkyl_malloc(sizeof(double[num_mom]));
   }
-  double *red_integ_mom_skin_ho = gkyl_malloc(sizeof(double[vdim+2]));
-  double *red_integ_mom_ghost_ho = gkyl_malloc(sizeof(double[vdim+2]));
+  double *red_integ_mom_skin_ho = gkyl_malloc(sizeof(double[num_mom]));
+  double *red_integ_mom_ghost_ho = gkyl_malloc(sizeof(double[num_mom]));
 
   gkyl_dg_updater_moment_gyrokinetic_advance(mcalc,
       &skin_rng, &skin_rng_conf, distf, marr);
@@ -1422,15 +1422,15 @@ test_bc_twistshift_3x2v_fig11_wcells(const int *cells, enum gkyl_edge_loc edge,
   gkyl_array_reduce_range(red_integ_mom_ghost, marr, GKYL_SUM, &ghost_rng_conf);
 
   if (use_gpu) {
-    gkyl_cu_memcpy(red_integ_mom_skin_ho, red_integ_mom_skin, sizeof(double[2+vdim]), GKYL_CU_MEMCPY_D2H);
-    gkyl_cu_memcpy(red_integ_mom_ghost_ho, red_integ_mom_ghost, sizeof(double[2+vdim]), GKYL_CU_MEMCPY_D2H);
+    gkyl_cu_memcpy(red_integ_mom_skin_ho, red_integ_mom_skin, sizeof(double[num_mom]), GKYL_CU_MEMCPY_D2H);
+    gkyl_cu_memcpy(red_integ_mom_ghost_ho, red_integ_mom_ghost, sizeof(double[num_mom]), GKYL_CU_MEMCPY_D2H);
   }
   else {
-    memcpy(red_integ_mom_skin_ho, red_integ_mom_skin, sizeof(double[2+vdim]));
-    memcpy(red_integ_mom_ghost_ho, red_integ_mom_ghost, sizeof(double[2+vdim]));
+    memcpy(red_integ_mom_skin_ho, red_integ_mom_skin, sizeof(double[num_mom]));
+    memcpy(red_integ_mom_ghost_ho, red_integ_mom_ghost, sizeof(double[num_mom]));
   }
 
-  for (int k=0; k<vdim+2; k++) {
+  for (int k=0; k<num_mom; k++) {
     TEST_CHECK( gkyl_compare(red_integ_mom_skin_ho[k], red_integ_mom_ghost_ho[k], 1e-12));
     TEST_MSG( "integ_mom %d | Expected: %.14e | Got: %.14e\n",k,red_integ_mom_skin_ho[k],red_integ_mom_ghost_ho[k]);
   }
