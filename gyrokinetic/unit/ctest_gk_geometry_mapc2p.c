@@ -257,9 +257,9 @@ test_3x_p1()
         double theta = grid.lower[TH_IDX] + it*(grid.upper[TH_IDX]-grid.lower[TH_IDX])/grid.cells[TH_IDX];
         double xn[3] = {psi, alpha, theta};
         double *bmag_n = gkyl_array_fetch(bmag_nodal, gkyl_range_idx(&nrange_quad_interior, cidx));
-        double bmag_anal[1];
+        double bmag_anal[3];
         bfield_func(0, xn, bmag_anal, 0);
-        TEST_CHECK( gkyl_compare( bmag_n[0], bmag_anal[0], 1e-8) );
+        TEST_CHECK( gkyl_compare( bmag_n[0], bmag_anal[2], 1e-8) );
       }
     }
   }
@@ -464,9 +464,9 @@ test_3x_p1_pmap()
         mapz(0.0, &theta, &theta, 0);
         double xn[3] = {psi, alpha, theta};
         double *bmag_n = gkyl_array_fetch(bmag_nodal, gkyl_range_idx(&nrange, cidx));
-        double bmag_anal[1];
+        double bmag_anal[3];
         bfield_func(0, xn, bmag_anal, 0);
-        TEST_CHECK( gkyl_compare( bmag_n[0], bmag_anal[0], 1e-8) );
+        TEST_CHECK( gkyl_compare( bmag_n[0], bmag_anal[2], 1e-8) );
       }
     }
   }
