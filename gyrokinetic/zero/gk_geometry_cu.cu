@@ -115,37 +115,37 @@ gk_geometry_set_surf_cu_kernel(struct gk_geometry *gk_geom, int dir,
   struct gkyl_array *lenr_nodal 
  )
 {
- // Expansions.
- gk_geom->geo_surf[dir].bmag = bmag;
- gk_geom->geo_surf[dir].jacobgeo = jacobgeo;
- gk_geom->geo_surf[dir].jacobgeo_sync = jacobgeo_sync;
- gk_geom->geo_surf[dir].b_i = b_i;
- gk_geom->geo_surf[dir].cmag = cmag;
- gk_geom->geo_surf[dir].jacobtot_inv = jacobtot_inv;
- gk_geom->geo_surf[dir].B3 = B3;
- gk_geom->geo_surf[dir].normcurlbhat = normcurlbhat;
- gk_geom->geo_surf[dir].normals = normals;
- gk_geom->geo_surf[dir].lenr = lenr;
- // Nodal.
- gk_geom->geo_surf[dir].mc2p_nodal_fd = mc2p_nodal_fd;
- gk_geom->geo_surf[dir].mc2p_nodal = mc2p_nodal;
- gk_geom->geo_surf[dir].bmag_nodal = bmag_nodal;
- gk_geom->geo_surf[dir].curlbhat_nodal = curlbhat_nodal;
- gk_geom->geo_surf[dir].normcurlbhat_nodal = normcurlbhat_nodal;
- gk_geom->geo_surf[dir].ddtheta_nodal = ddtheta_nodal;
- gk_geom->geo_surf[dir].jacobgeo_nodal = jacobgeo_nodal;
- gk_geom->geo_surf[dir].b_i_nodal = b_i_nodal;
- gk_geom->geo_surf[dir].b_i_nodal_fd = b_i_nodal_fd;
- gk_geom->geo_surf[dir].cmag_nodal = cmag_nodal;
- gk_geom->geo_surf[dir].jacobtot_inv_nodal = jacobtot_inv_nodal;
- gk_geom->geo_surf[dir].g_ij_nodal = g_ij_nodal;
- gk_geom->geo_surf[dir].dxdz_nodal = dxdz_nodal;
- gk_geom->geo_surf[dir].dzdx_nodal = dzdx_nodal;
- gk_geom->geo_surf[dir].normals_nodal = normals_nodal;
- gk_geom->geo_surf[dir].dualmag_nodal = dualmag_nodal;
- gk_geom->geo_surf[dir].bcart_nodal = bcart_nodal;
- gk_geom->geo_surf[dir].B3_nodal = B3_nodal;
- gk_geom->geo_surf[dir].lenr_nodal = lenr_nodal;
+  // Expansions.
+  gk_geom->geo_surf[dir].bmag = bmag;
+  gk_geom->geo_surf[dir].jacobgeo = jacobgeo;
+  gk_geom->geo_surf[dir].jacobgeo_sync = jacobgeo_sync;
+  gk_geom->geo_surf[dir].b_i = b_i;
+  gk_geom->geo_surf[dir].cmag = cmag;
+  gk_geom->geo_surf[dir].jacobtot_inv = jacobtot_inv;
+  gk_geom->geo_surf[dir].B3 = B3;
+  gk_geom->geo_surf[dir].normcurlbhat = normcurlbhat;
+  gk_geom->geo_surf[dir].normals = normals;
+  gk_geom->geo_surf[dir].lenr = lenr;
+  // Nodal.
+  gk_geom->geo_surf[dir].mc2p_nodal_fd = mc2p_nodal_fd;
+  gk_geom->geo_surf[dir].mc2p_nodal = mc2p_nodal;
+  gk_geom->geo_surf[dir].bmag_nodal = bmag_nodal;
+  gk_geom->geo_surf[dir].curlbhat_nodal = curlbhat_nodal;
+  gk_geom->geo_surf[dir].normcurlbhat_nodal = normcurlbhat_nodal;
+  gk_geom->geo_surf[dir].ddtheta_nodal = ddtheta_nodal;
+  gk_geom->geo_surf[dir].jacobgeo_nodal = jacobgeo_nodal;
+  gk_geom->geo_surf[dir].b_i_nodal = b_i_nodal;
+  gk_geom->geo_surf[dir].b_i_nodal_fd = b_i_nodal_fd;
+  gk_geom->geo_surf[dir].cmag_nodal = cmag_nodal;
+  gk_geom->geo_surf[dir].jacobtot_inv_nodal = jacobtot_inv_nodal;
+  gk_geom->geo_surf[dir].g_ij_nodal = g_ij_nodal;
+  gk_geom->geo_surf[dir].dxdz_nodal = dxdz_nodal;
+  gk_geom->geo_surf[dir].dzdx_nodal = dzdx_nodal;
+  gk_geom->geo_surf[dir].normals_nodal = normals_nodal;
+  gk_geom->geo_surf[dir].dualmag_nodal = dualmag_nodal;
+  gk_geom->geo_surf[dir].bcart_nodal = bcart_nodal;
+  gk_geom->geo_surf[dir].B3_nodal = B3_nodal;
+  gk_geom->geo_surf[dir].lenr_nodal = lenr_nodal;
 }
 
 // Host-side wrapper for set_corn_cu_kernel
