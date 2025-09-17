@@ -490,7 +490,7 @@ gkyl_gk_geometry_free(const struct gkyl_ref_count *ref)
   gkyl_array_release(up->geo_int.bioverJB);
   gkyl_array_release(up->geo_int.B3);
 
-  for(int dir = 0; dir < up->grid.ndim; dir++) {
+  for (int dir = 0; dir < up->grid.ndim; dir++) {
     gkyl_array_release(up->geo_surf[dir].jacobgeo);
     gkyl_array_release(up->geo_surf[dir].jacobgeo_sync);
     gkyl_array_release(up->geo_surf[dir].bmag);
