@@ -183,17 +183,17 @@ gkyl_geometry_set_int_cu(struct gk_geometry *gk_geom, struct gk_geom_int *geo_in
 void
 gkyl_geometry_set_surf_cu(struct gk_geometry *gk_geom, struct gk_geom_surf *geo_surf, int dir)
 {
- gk_geometry_set_surf_cu_kernel<<<1,1>>>(gk_geom, dir,
-   geo_surf->bmag->on_dev, geo_surf->jacobgeo->on_dev, geo_surf->jacobgeo_sync->on_dev, 
-   geo_surf->b_i->on_dev, geo_surf->cmag->on_dev, geo_surf->jacobtot_inv->on_dev, geo_surf->B3->on_dev,
-   geo_surf->normcurlbhat->on_dev, geo_surf->normals->on_dev, geo_surf->lenr->on_dev,
-   geo_surf->mc2p_nodal_fd->on_dev, geo_surf->mc2p_nodal->on_dev, geo_surf->bmag_nodal->on_dev,
-   geo_surf->curlbhat_nodal->on_dev, geo_surf->normcurlbhat_nodal->on_dev, geo_surf->ddtheta_nodal->on_dev,
-   geo_surf->jacobgeo_nodal->on_dev, geo_surf->b_i_nodal->on_dev, geo_surf->b_i_nodal_fd->on_dev,
-   geo_surf->cmag_nodal->on_dev, geo_surf->jacobtot_inv_nodal->on_dev, geo_surf->g_ij_nodal->on_dev,
-   geo_surf->dxdz_nodal->on_dev, geo_surf->dzdx_nodal->on_dev, geo_surf->normals_nodal->on_dev,
-   geo_surf->dualmag_nodal->on_dev, geo_surf->bcart_nodal->on_dev, geo_surf->B3_nodal->on_dev,
-   geo_surf->lenr_nodal->on_dev);
+  gk_geometry_set_surf_cu_kernel<<<1,1>>>(gk_geom, dir,
+    geo_surf->bmag->on_dev, geo_surf->jacobgeo->on_dev, geo_surf->jacobgeo_sync->on_dev, 
+    geo_surf->b_i->on_dev, geo_surf->cmag->on_dev, geo_surf->jacobtot_inv->on_dev, geo_surf->B3->on_dev,
+    geo_surf->normcurlbhat->on_dev, geo_surf->normals->on_dev, geo_surf->lenr->on_dev,
+    geo_surf->mc2p_nodal_fd->on_dev, geo_surf->mc2p_nodal->on_dev, geo_surf->bmag_nodal->on_dev,
+    geo_surf->curlbhat_nodal->on_dev, geo_surf->normcurlbhat_nodal->on_dev, geo_surf->ddtheta_nodal->on_dev,
+    geo_surf->jacobgeo_nodal->on_dev, geo_surf->b_i_nodal->on_dev, geo_surf->b_i_nodal_fd->on_dev,
+    geo_surf->cmag_nodal->on_dev, geo_surf->jacobtot_inv_nodal->on_dev, geo_surf->g_ij_nodal->on_dev,
+    geo_surf->dxdz_nodal->on_dev, geo_surf->dzdx_nodal->on_dev, geo_surf->normals_nodal->on_dev,
+    geo_surf->dualmag_nodal->on_dev, geo_surf->bcart_nodal->on_dev, geo_surf->B3_nodal->on_dev,
+    geo_surf->lenr_nodal->on_dev);
 }
 
 struct gk_geom_corn*
