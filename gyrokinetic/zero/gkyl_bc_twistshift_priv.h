@@ -59,6 +59,13 @@ struct gkyl_bc_twistshift_kernels {
   twistshift_fullcell_t fullcell;
 };
 
+struct ts_shift_dg_eval_ctx {
+  struct gkyl_array *shift; // DG representation of the shift function.
+  struct gkyl_basis *shift_b; // Basis for the shift.
+  struct gkyl_rect_grid *shear_grid; // shear grid along x.
+  struct gkyl_range *shear_r; // Shear grid range.
+};
+
 // Primary struct in this updater.
 struct gkyl_bc_twistshift {
   int bc_dir; // Direction of the BC is applied in.
@@ -70,6 +77,7 @@ struct gkyl_bc_twistshift {
   struct gkyl_rect_grid grid; // Grid the shifted field is defined in.
   evalf_t shift_func; // Function defining the shift.
   void *shift_func_ctx; // Context for shift_func.
+  struct ts_shift_dg_eval_ctx shift_dg_eval_ctx; // Context for DG shift_func.
   bool use_gpu; // Whether to apply the BC on the GPU.
 
   struct gkyl_rect_grid shift_grid; // 1D grid in the direction of the shift.
