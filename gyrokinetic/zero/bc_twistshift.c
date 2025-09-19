@@ -105,18 +105,31 @@ ts_p2l(double coord, double cell_center, double dx)
   return 2.0*(coord - cell_center)/dx;
 }
 
-struct ts_shift_eval_ctx {
+struct ts_shift_eval_dg_ctx {
   struct gkyl_array *shift; // DG representation of the shift function.
   const struct gkyl_basis shift_b; // Basis for the shift.
   const struct gkyl_rect_grid shear_grid; // shear grid along x.
   const struct gkyl_range shear_r; // Shear grid range.
 };
 
+static inline struct ts_shift_eval_dg_ctx
+ts_shift_eval_dg_ctx_fill(struct gkyl_bc_twistshift *up)
+{
+  // Fill the context used in evaluating the DG representation of the shift.
+  struct ts_shift_eval_dg_ctx shift_eval_ctx = {
+    .shift = up->shift,
+    .shift_b = up->shift_b,
+    .shear_grid = up->shear_grid,
+    .shear_r = up->shear_r,
+  };
+  return shift_eval_ctx;
+}
+
 // Evaluation of the shift through the DG representation.
 void
 ts_shift_eval(double t, double *coord, double *fout, void *ctx)
 {
-  struct ts_shift_eval_ctx *tsectx = ctx;
+  struct ts_shift_eval_dg_ctx *tsectx = ctx;
   int cell_idx[GKYL_MAX_DIM];
   gkyl_rect_grid_coord_idx(&tsectx->shear_grid, coord, cell_idx);
   // Ensure that we do not go outside of the range 
@@ -383,7 +396,7 @@ double ts_shifted_coord_loss_func(double shearCoord, void *ctx)
   struct ts_shifted_coord_loss_func_ctx *tsctx = ctx;
 
   double shift;
-  struct ts_shift_eval_ctx shift_eval_ctx = {
+  struct ts_shift_eval_dg_ctx shift_eval_ctx = {
     .shift = tsctx->shift,
     .shift_b = tsctx->shift_b,
     .shear_grid = tsctx->shear_grid,
@@ -417,12 +430,7 @@ ts_donor_target_offset(struct gkyl_bc_twistshift *up, const double *xc_do, const
   double x_eval = xc_do[up->shear_dir];
   double shift;
 
-  struct ts_shift_eval_ctx shift_eval_ctx = {
-    .shift = up->shift,
-    .shift_b = up->shift_b,
-    .shear_grid = up->shear_grid,
-    .shear_r = up->shear_r,
-  };
+  struct ts_shift_eval_dg_ctx shift_eval_ctx = ts_shift_eval_dg_ctx_fill(up);
   ts_shift_eval(0.0, (double[]){x_eval}, &shift, &shift_eval_ctx);
 
   int shift_sign = ts_sign(shift);
@@ -491,12 +499,8 @@ ts_find_intersect(struct gkyl_bc_twistshift *up, double shiftCoordTar, double sh
       double xp = shearDirBounds[0] + sI*step_sz;
       double xp_shift;
       up->shift_func(0.0, (double[]){xp}, &xp_shift, up->shift_func_ctx);
-      struct ts_shift_eval_ctx shift_eval_ctx = {
-        .shift = up->shift,
-        .shift_b = up->shift_b,
-        .shear_grid = up->shear_grid,
-        .shear_r = up->shear_r,
-      };
+
+      struct ts_shift_eval_dg_ctx shift_eval_ctx = ts_shift_eval_dg_ctx_fill(up);
       ts_shift_eval(0.0, (double[]){xp}, &xp_shift, &shift_eval_ctx);
 
       double ex_shift = xp_shift<0.? ((shiftCoordTar-xp_shift)-shiftDirLimits[0])/shiftDirL
@@ -664,7 +668,7 @@ ts_shift_coord_shifted_log(double t, const double *xn, double *fout, void *ctx)
   double shear_coord_phys = xc_tar[shear_dir] + 0.5*dx[shear_dir]*xi;
   double shift;
 
-  struct ts_shift_eval_ctx shift_eval_ctx = {
+  struct ts_shift_eval_dg_ctx shift_eval_ctx = {
     .shift = tsctx->shift,
     .shift_b = tsctx->shift_b,
     .shear_grid = tsctx->shear_grid,
@@ -801,21 +805,10 @@ ts_subcellint_si_sii(struct gkyl_bc_twistshift *up, struct ts_val_found *inter_p
   double x_lo = cellb_tar[cellb_lo(up->shear_dir_in_ts_grid)];
   double shift_lo, shift_up;
 
-  struct ts_shift_eval_ctx shift_eval_ctx_lo = {
-    .shift = up->shift,
-    .shift_b = up->shift_b,
-    .shear_grid = up->shear_grid,
-    .shear_r = up->shear_r,
-  };
+  struct ts_shift_eval_dg_ctx shift_eval_ctx_lo = ts_shift_eval_dg_ctx_fill(up);
   ts_shift_eval(0.0, (double[]){x_lo}, &shift_lo, &shift_eval_ctx_lo);
 
-  struct ts_shift_eval_ctx shift_eval_ctx_up = {
-    .shift_b = up->shift_b,
-    // .shift_c = shift_c,
-    .shear_grid = up->shear_grid,
-    .shift = up->shift,
-    .shear_r = up->shear_r,
-  };
+  struct ts_shift_eval_dg_ctx shift_eval_ctx_up = ts_shift_eval_dg_ctx_fill(up);
   ts_shift_eval(0.0, (double[]){x_up}, &shift_up, &shift_eval_ctx_up);
 
   bool is_si = -shift_lo < -shift_up;
@@ -883,20 +876,10 @@ ts_subcellint_siii_siv(struct gkyl_bc_twistshift *up, struct ts_val_found *inter
   double x_up = cellb_tar[cellb_up(up->shear_dir_in_ts_grid)];
   double shift_lo, shift_up;
 
-  struct ts_shift_eval_ctx shift_eval_ctx_lo = {
-    .shift = up->shift,
-    .shift_b = up->shift_b,
-    .shear_grid = up->shear_grid,
-    .shear_r = up->shear_r,
-  };
+  struct ts_shift_eval_dg_ctx shift_eval_ctx_lo = ts_shift_eval_dg_ctx_fill(up);
   ts_shift_eval(0.0, (double[]){x_lo}, &shift_lo, &shift_eval_ctx_lo);
 
-  struct ts_shift_eval_ctx shift_eval_ctx_up = {
-    .shift = up->shift,
-    .shift_b = up->shift_b,
-    .shear_grid = up->shear_grid,
-    .shear_r = up->shear_r,
-  };
+  struct ts_shift_eval_dg_ctx shift_eval_ctx_up = ts_shift_eval_dg_ctx_fill(up);
   ts_shift_eval(0.0, (double[]){x_up}, &shift_up, &shift_eval_ctx_up);
 
   bool is_siii = -shift_lo > -shift_up;
@@ -1298,21 +1281,10 @@ ts_subcellint_sxiii_sxiv(struct gkyl_bc_twistshift *up, struct ts_val_found *int
   double x_up = cellb_tar[cellb_up(up->shear_dir_in_ts_grid)];
   double shift_lo, shift_up;
 
-  struct ts_shift_eval_ctx shift_eval_ctx_lo = {
-    .shift = up->shift,
-    .shift_b = up->shift_b,
-    .shear_grid = up->shear_grid,
-    .shear_r = up->shear_r,
-  };
+  struct ts_shift_eval_dg_ctx shift_eval_ctx_lo = ts_shift_eval_dg_ctx_fill(up);
   ts_shift_eval(0.0, (double[]){x_lo}, &shift_lo, &shift_eval_ctx_lo);
 
-  struct ts_shift_eval_ctx shift_eval_ctx_up = {
-    .shift_b = up->shift_b,
-    // .shift_c = shift_c,
-    .shear_grid = up->shear_grid,
-    .shift = up->shift,
-    .shear_r = up->shear_r,
-  };
+  struct ts_shift_eval_dg_ctx shift_eval_ctx_up = ts_shift_eval_dg_ctx_fill(up);
   ts_shift_eval(0.0, (double[]){x_up}, &shift_up, &shift_eval_ctx_up);
 
   bool is_sxiii = -shift_lo < -shift_up;
@@ -1408,12 +1380,7 @@ ts_subcellint_sxv_sxvi(struct gkyl_bc_twistshift *up, struct ts_val_found *inter
   double x_eval = xc_do[up->shear_dir_in_ts_grid];
   double shift;
 
-  struct ts_shift_eval_ctx shift_eval_ctx = {
-    .shift = up->shift,
-    .shift_b = up->shift_b,
-    .shear_grid = up->shear_grid,
-    .shear_r = up->shear_r,
-  };
+  struct ts_shift_eval_dg_ctx shift_eval_ctx = ts_shift_eval_dg_ctx_fill(up);
   ts_shift_eval(0.0, (double[]){x_eval}, &shift, &shift_eval_ctx);
 
   double shifted_coord = cellb_tar[cellb_lo(up->shift_dir_in_ts_grid)] - shift;
