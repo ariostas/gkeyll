@@ -60,7 +60,7 @@ struct gkyl_bc_twistshift_kernels {
 };
 
 struct ts_shift_dg_eval_ctx {
-  struct gkyl_array *shift; // DG representation of the shift function.
+  struct gkyl_array *shift_dg; // DG representation of the shift function.
   struct gkyl_basis *shift_b; // Basis for the shift.
   struct gkyl_rect_grid *shear_grid; // shear grid along x.
   struct gkyl_range *shear_r; // Shear grid range.
@@ -93,7 +93,7 @@ struct gkyl_bc_twistshift {
 
   int shift_poly_order; // Poly order of the DG representation of the shift.
   struct gkyl_basis shift_b; // 1D Basis for the DG shift.
-  struct gkyl_array *shift; // DG shift.
+  struct gkyl_array *shift_dg; // DG shift.
 
   int *num_do; // Number of donors at each cell in shear_dir;
   int *shift_dir_idx_do; // Indices of donor cells, in the direction of the

@@ -130,7 +130,7 @@ ts_shift_dg_eval(double t, const double *coord, double *fout, void *ctx)
   gkyl_rect_grid_cell_center(tsectx->shear_grid, cell_idx, xc);
 
   long shift_loc = gkyl_range_idx(tsectx->shear_r, cell_idx);
-  double *shift_c = (double *) gkyl_array_fetch(tsectx->shift, shift_loc);
+  double *shift_c = (double *) gkyl_array_fetch(tsectx->shift_dg, shift_loc);
   double xp = ts_p2l(coord[0], xc[0], tsectx->shear_grid->dx[0]);
 
   fout[0] = tsectx->shift_b->eval_expand(&(double) {xp}, shift_c);
@@ -290,7 +290,7 @@ ts_find_donors(struct gkyl_bc_twistshift *up)
     int shear_idx[] = {iter.idx[up->shear_dir_in_ts_grid]};
     int shift_idx[] = {iter.idx[up->shift_dir_in_ts_grid]};
     long shift_loc = gkyl_range_idx(&up->shear_r, shear_idx);
-    double *shift_c = (double *) gkyl_array_fetch(up->shift, shift_loc);
+    double *shift_c = (double *) gkyl_array_fetch(up->shift_dg, shift_loc);
 
     int num_do_curr = 0;
 
@@ -410,7 +410,6 @@ ts_donor_target_offset(struct gkyl_bc_twistshift *up, const double *xc_do, const
   int shift_dir = up->shift_dir_in_ts_grid;
   double x_eval = xc_do[up->shear_dir];
   double shift;
-
   up->shift_func(0.0, (double[]){x_eval}, &shift, up->shift_func_ctx);
 
   int shift_sign = ts_sign(shift);
@@ -1410,7 +1409,7 @@ ts_calc_mats(struct gkyl_bc_twistshift *up)
     gkyl_rect_grid_cell_center(&up->ts_grid, idx_tar, xc_tar);
 
     long shift_loc = gkyl_range_idx(&up->shear_r, iter.idx);
-    double *shift_c = (double *) gkyl_array_fetch(up->shift, shift_loc);
+    double *shift_c = (double *) gkyl_array_fetch(up->shift_dg, shift_loc);
 
     long linidx_do = ts_shift_dir_idx_do_linidx(up->num_do, iter.idx[0], shift_dir_idx_tar,
       up->ts_grid.cells[up->shift_dir_in_ts_grid], up->shear_r.lower[0]);
@@ -1777,16 +1776,16 @@ gkyl_bc_twistshift_new(const struct gkyl_bc_twistshift_inp *inp)
 
   // Project the shift onto the shift basis.
   gkyl_cart_modal_serendip(&up->shift_b, 1, up->shift_poly_order);
-  up->shift = gkyl_array_new(GKYL_DOUBLE, up->shift_b.num_basis, up->shear_r.volume);
+  up->shift_dg = gkyl_array_new(GKYL_DOUBLE, up->shift_b.num_basis, up->shear_r.volume);
   gkyl_eval_on_nodes *evup = gkyl_eval_on_nodes_new(&up->shear_grid, &up->shift_b, 1,
     inp->shift_func, inp->shift_func_ctx);
-  gkyl_eval_on_nodes_advance(evup, 0.0, &up->shear_r, up->shift);
+  gkyl_eval_on_nodes_advance(evup, 0.0, &up->shear_r, up->shift_dg);
   gkyl_eval_on_nodes_release(evup);
 
   // Function defining the shift (and its context).
   if (shift_func_op == 0) {
     up->shift_func = ts_shift_dg_eval;
-    up->shift_dg_eval_ctx.shift = up->shift           ;
+    up->shift_dg_eval_ctx.shift_dg = up->shift_dg     ;
     up->shift_dg_eval_ctx.shift_b = &up->shift_b      ;
     up->shift_dg_eval_ctx.shear_grid = &up->shear_grid;
     up->shift_dg_eval_ctx.shear_r = &up->shear_r      ;
@@ -1992,7 +1991,7 @@ void gkyl_bc_twistshift_release(struct gkyl_bc_twistshift *up) {
 
   gkyl_free(up->kernels);
 
-  gkyl_array_release(up->shift);
+  gkyl_array_release(up->shift_dg);
 
   gkyl_free(up->num_do);
   gkyl_free(up->shift_dir_idx_do);
