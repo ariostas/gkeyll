@@ -124,6 +124,30 @@ struct gkyl_bc_twistshift {
   struct gkyl_range ghost_r; // Ghost range this BC fills.
 };
 
+void
+gkyl_bc_twistshift_choose_kernels(struct gkyl_basis basis, int cdim,
+  struct gkyl_bc_twistshift_kernels *kers)
+{
+  int dim = basis.ndim;
+  int vdim = dim - cdim;
+  enum gkyl_basis_type basis_type = basis.b_type;
+  int poly_order = basis.poly_order;
+  switch (basis_type) {
+    case GKYL_BASIS_MODAL_GKHYBRID:
+    case GKYL_BASIS_MODAL_SERENDIPITY:
+      kers->xlimdg   = vdim==0? ser_twistshift_xlimdg_list_0v[cdim-2].kernels[poly_order]
+                              : ser_twistshift_xlimdg_list_2v[cdim-2].kernels[poly_order];
+      kers->ylimdg   = vdim==0? ser_twistshift_ylimdg_list_0v[cdim-2].kernels[poly_order]
+                              : ser_twistshift_ylimdg_list_2v[cdim-2].kernels[poly_order];
+      kers->fullcell = vdim==0? ser_twistshift_fullcell_list_0v[cdim-2].kernels[poly_order]
+                              : ser_twistshift_fullcell_list_2v[cdim-2].kernels[poly_order];
+      return;
+    default:
+      assert(false);
+      break;
+  }
+}
+
 #ifdef GKYL_HAVE_CUDA
 /**
  * Apply the twist-shift on the NVIDIA GPU. It assumes that periodicity along bc_dir has been
