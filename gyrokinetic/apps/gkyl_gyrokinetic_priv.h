@@ -1042,8 +1042,9 @@ struct gk_field {
   struct gkyl_range lower_skin_x, lower_ghost_x;
   struct gkyl_skin_surf_from_ghost *ssfg_x_lo;
   
-  // Pointer to function for the twist-and-shift BCs.
+  // Pointer to functions for the twist-and-shift BCs.
   void (*enforce_zbc) (const gkyl_gyrokinetic_app *app, const struct gk_field *field, struct gkyl_array *finout);
+  void (*enforce_xbc) (const gkyl_gyrokinetic_app *app, const struct gk_field *field, struct gkyl_array *finout);
 };
 
 // Gyrokinetic object: used as opaque pointer in user code.
