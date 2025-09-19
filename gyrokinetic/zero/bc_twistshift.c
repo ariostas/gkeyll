@@ -382,27 +382,16 @@ struct ts_shifted_coord_loss_func_ctx {
   double shiftDirL; // Length of the domain in shift_dir.
   int periodicCopyIdx; // Used to search a periodic copy of the domain (signed).
   int shear_dir; // Shear direction.
-  // Arguments to evaluate the DG shift representation.
-  struct gkyl_array *shift;
-  struct gkyl_basis shift_b;
-  struct gkyl_rect_grid shear_grid;
-  const struct gkyl_range shear_r;
+  struct ts_shift_eval_dg_ctx shift_eval_dg_ctx; // Arguments to evaluate the DG shift representation.
 };
 
 double ts_shifted_coord_loss_func(double shearCoord, void *ctx)
 {
-  // Loss function used to find the shear
-  // coord
+  // Loss function used to find the shear coord.
   struct ts_shifted_coord_loss_func_ctx *tsctx = ctx;
 
   double shift;
-  struct ts_shift_eval_dg_ctx shift_eval_ctx = {
-    .shift = tsctx->shift,
-    .shift_b = tsctx->shift_b,
-    .shear_grid = tsctx->shear_grid,
-    .shear_r = tsctx->shear_r,
-  };
-  double shift_DG;
+  struct ts_shift_eval_dg_ctx shift_eval_ctx = tsctx->shift_eval_dg_ctx;
   ts_shift_eval(0.0, (double[]){shearCoord}, &shift, &shift_eval_ctx);
 
   return tsctx->shiftCoordTar - shift
@@ -473,16 +462,15 @@ ts_find_intersect(struct gkyl_bc_twistshift *up, double shiftCoordTar, double sh
 
   double shiftDirL = shiftDirLimits[1] - shiftDirLimits[0];
 
+  struct ts_shift_eval_dg_ctx shift_eval_ctx = ts_shift_eval_dg_ctx_fill(up);
+
   struct ts_shifted_coord_loss_func_ctx func_ctx = {
     .shiftCoordTar = shiftCoordTar,
     .shiftCoordDo = shiftCoordDo,
     .shiftDirL = shiftDirL,
     .periodicCopyIdx = 0,
     .shear_dir = up->shear_dir_in_ts_grid,
-    .shear_grid = up->shear_grid,
-    .shift = up->shift,
-    .shift_b = up->shift_b,
-    .shear_r = up->shear_r,
+    .shift_eval_dg_ctx = shift_eval_ctx,
   };
   struct gkyl_qr_res rootfind_res = ts_root_find(ts_shifted_coord_loss_func, &func_ctx,
     shearDirBounds, max_iter, tol);
@@ -500,7 +488,6 @@ ts_find_intersect(struct gkyl_bc_twistshift *up, double shiftCoordTar, double sh
       double xp_shift;
       up->shift_func(0.0, (double[]){xp}, &xp_shift, up->shift_func_ctx);
 
-      struct ts_shift_eval_dg_ctx shift_eval_ctx = ts_shift_eval_dg_ctx_fill(up);
       ts_shift_eval(0.0, (double[]){xp}, &xp_shift, &shift_eval_ctx);
 
       double ex_shift = xp_shift<0.? ((shiftCoordTar-xp_shift)-shiftDirLimits[0])/shiftDirL
@@ -634,11 +621,7 @@ struct ts_shift_coord_shifted_log_ctx {
   bool pick_upper;
   int shear_dir, shift_dir; // Shear and shift directions.
   double shift_dir_bounds[2]; // Domain boundaries in shift_dir.
-  // Arguments to evaluate the DG shift representation.
-  struct gkyl_array *shift;
-  struct gkyl_basis shift_b;
-  struct gkyl_rect_grid shear_grid;
-  const struct gkyl_range shear_r;
+  struct ts_shift_eval_dg_ctx shift_eval_dg_ctx; // Arguments to evaluate the DG shift representation.
 };
 
 void
@@ -667,13 +650,7 @@ ts_shift_coord_shifted_log(double t, const double *xn, double *fout, void *ctx)
 
   double shear_coord_phys = xc_tar[shear_dir] + 0.5*dx[shear_dir]*xi;
   double shift;
-
-  struct ts_shift_eval_dg_ctx shift_eval_ctx = {
-    .shift = tsctx->shift,
-    .shift_b = tsctx->shift_b,
-    .shear_grid = tsctx->shear_grid,
-    .shear_r = tsctx->shear_r,
-  };
+  struct ts_shift_eval_dg_ctx shift_eval_ctx = tsctx->shift_eval_dg_ctx;
   ts_shift_eval(0.0, (double[]){shear_coord_phys}, &shift, &shift_eval_ctx);
 
   double shift_coord_shifted = shift_coord_tar - shift_sign_fac * shift;
@@ -699,6 +676,8 @@ ts_subcellint_sNi_sNii(struct gkyl_bc_twistshift *up, struct ts_val_found *inter
 
   bool is_sNi = inter_pts[2].value < inter_pts[0].value;
 
+  struct ts_shift_eval_dg_ctx shift_eval_ctx = ts_shift_eval_dg_ctx_fill(up);
+
   struct ts_shift_coord_shifted_log_ctx eta_lims_ctx = {
     .shift_sign_fac = 1,
     .xc_do = xc_do,
@@ -709,10 +688,7 @@ ts_subcellint_sNi_sNii(struct gkyl_bc_twistshift *up, struct ts_val_found *inter
     .shift_dir = up->shift_dir_in_ts_grid,
     .shift_dir_bounds = {up->ts_grid.lower[up->shift_dir_in_ts_grid], 
                          up->ts_grid.upper[up->shift_dir_in_ts_grid]},
-    .shift = up->shift,
-    .shift_b = up->shift_b,
-    .shear_grid = up->shear_grid,
-    .shear_r = up->shear_r,
+    .shift_eval_dg_ctx = shift_eval_ctx,
   };
 
   double xi_b[2]; // Limits of xi integral.
@@ -805,11 +781,10 @@ ts_subcellint_si_sii(struct gkyl_bc_twistshift *up, struct ts_val_found *inter_p
   double x_lo = cellb_tar[cellb_lo(up->shear_dir_in_ts_grid)];
   double shift_lo, shift_up;
 
-  struct ts_shift_eval_dg_ctx shift_eval_ctx_lo = ts_shift_eval_dg_ctx_fill(up);
-  ts_shift_eval(0.0, (double[]){x_lo}, &shift_lo, &shift_eval_ctx_lo);
+  struct ts_shift_eval_dg_ctx shift_eval_ctx = ts_shift_eval_dg_ctx_fill(up);
 
-  struct ts_shift_eval_dg_ctx shift_eval_ctx_up = ts_shift_eval_dg_ctx_fill(up);
-  ts_shift_eval(0.0, (double[]){x_up}, &shift_up, &shift_eval_ctx_up);
+  ts_shift_eval(0.0, (double[]){x_lo}, &shift_lo, &shift_eval_ctx);
+  ts_shift_eval(0.0, (double[]){x_up}, &shift_up, &shift_eval_ctx);
 
   bool is_si = -shift_lo < -shift_up;
 
@@ -840,10 +815,7 @@ ts_subcellint_si_sii(struct gkyl_bc_twistshift *up, struct ts_val_found *inter_p
     .shift_dir = up->shift_dir_in_ts_grid,
     .shift_dir_bounds = {up->ts_grid.lower[up->shift_dir_in_ts_grid], 
                          up->ts_grid.upper[up->shift_dir_in_ts_grid]},
-    .shift = up->shift,
-    .shift_b = up->shift_b,
-    .shear_grid = up->shear_grid,
-    .shear_r = up->shear_r,
+    .shift_eval_dg_ctx = shift_eval_ctx,
   };
 
   double etalo_xi[up->shift_b.num_basis], etaup_xi[up->shift_b.num_basis];
@@ -876,11 +848,10 @@ ts_subcellint_siii_siv(struct gkyl_bc_twistshift *up, struct ts_val_found *inter
   double x_up = cellb_tar[cellb_up(up->shear_dir_in_ts_grid)];
   double shift_lo, shift_up;
 
-  struct ts_shift_eval_dg_ctx shift_eval_ctx_lo = ts_shift_eval_dg_ctx_fill(up);
-  ts_shift_eval(0.0, (double[]){x_lo}, &shift_lo, &shift_eval_ctx_lo);
+  struct ts_shift_eval_dg_ctx shift_eval_ctx = ts_shift_eval_dg_ctx_fill(up);
 
-  struct ts_shift_eval_dg_ctx shift_eval_ctx_up = ts_shift_eval_dg_ctx_fill(up);
-  ts_shift_eval(0.0, (double[]){x_up}, &shift_up, &shift_eval_ctx_up);
+  ts_shift_eval(0.0, (double[]){x_lo}, &shift_lo, &shift_eval_ctx);
+  ts_shift_eval(0.0, (double[]){x_up}, &shift_up, &shift_eval_ctx);
 
   bool is_siii = -shift_lo > -shift_up;
 
@@ -911,10 +882,7 @@ ts_subcellint_siii_siv(struct gkyl_bc_twistshift *up, struct ts_val_found *inter
     .shift_dir = up->shift_dir_in_ts_grid,
     .shift_dir_bounds = {up->ts_grid.lower[up->shift_dir_in_ts_grid], 
                          up->ts_grid.upper[up->shift_dir_in_ts_grid]},
-    .shift = up->shift,
-    .shift_b = up->shift_b,
-    .shear_grid = up->shear_grid,
-    .shear_r = up->shear_r,
+    .shift_eval_dg_ctx = shift_eval_ctx,
   };
 
   double etalo_xi[up->shift_b.num_basis], etaup_xi[up->shift_b.num_basis];
@@ -945,6 +913,8 @@ ts_subcellint_sv_svi(struct gkyl_bc_twistshift *up, struct ts_val_found *inter_p
 
   bool is_sv = inter_pts[3].value < inter_pts[1].value;
 
+  struct ts_shift_eval_dg_ctx shift_eval_ctx = ts_shift_eval_dg_ctx_fill(up);
+
   struct ts_shift_coord_shifted_log_ctx eta_lims_ctx = {
     .shift_sign_fac = 1,
     .xc_do = xc_do,
@@ -955,10 +925,7 @@ ts_subcellint_sv_svi(struct gkyl_bc_twistshift *up, struct ts_val_found *inter_p
     .shift_dir = up->shift_dir_in_ts_grid,
     .shift_dir_bounds = {up->ts_grid.lower[up->shift_dir_in_ts_grid], 
                          up->ts_grid.upper[up->shift_dir_in_ts_grid]},
-    .shift = up->shift,
-    .shift_b = up->shift_b,
-    .shear_grid = up->shear_grid,
-    .shear_r = up->shear_r,
+    .shift_eval_dg_ctx = shift_eval_ctx,
   };
 
   double xi_b[2]; // Limits of xi integral.
@@ -1049,6 +1016,8 @@ ts_subcellint_svii_sviii(struct gkyl_bc_twistshift *up, struct ts_val_found *int
 
   bool is_svii = inter_pts[0].value < inter_pts[2].value;
 
+  struct ts_shift_eval_dg_ctx shift_eval_ctx = ts_shift_eval_dg_ctx_fill(up);
+
   struct ts_shift_coord_shifted_log_ctx eta_lims_ctx = {
     .shift_sign_fac = 1,
     .xc_do = xc_do,
@@ -1059,10 +1028,7 @@ ts_subcellint_svii_sviii(struct gkyl_bc_twistshift *up, struct ts_val_found *int
     .shift_dir = up->shift_dir_in_ts_grid,
     .shift_dir_bounds = {up->ts_grid.lower[up->shift_dir_in_ts_grid], 
                          up->ts_grid.upper[up->shift_dir_in_ts_grid]},
-    .shift = up->shift,
-    .shift_b = up->shift_b,
-    .shear_grid = up->shear_grid,
-    .shear_r = up->shear_r,
+    .shift_eval_dg_ctx = shift_eval_ctx,
   };
 
   double xi_b[2]; // Limits of xi integral.
@@ -1168,6 +1134,8 @@ ts_subcellint_six_sx(struct gkyl_bc_twistshift *up, struct ts_val_found *inter_p
     xi_b[1] = ts_p2l(inter_pts[0].value, xc_do[up->shear_dir_in_ts_grid], up->ts_grid.dx[up->shear_dir_in_ts_grid]);
   }
 
+  struct ts_shift_eval_dg_ctx shift_eval_ctx = ts_shift_eval_dg_ctx_fill(up);
+
   struct ts_shift_coord_shifted_log_ctx eta_lims_ctx = {
     .shift_coord_tar = cellb_tar[cellb_lo(up->shift_dir_in_ts_grid)],
     .shift_sign_fac = 1,
@@ -1179,10 +1147,7 @@ ts_subcellint_six_sx(struct gkyl_bc_twistshift *up, struct ts_val_found *inter_p
     .shift_dir = up->shift_dir_in_ts_grid,
     .shift_dir_bounds = {up->ts_grid.lower[up->shift_dir_in_ts_grid], 
                          up->ts_grid.upper[up->shift_dir_in_ts_grid]},
-    .shift = up->shift,
-    .shift_b = up->shift_b,
-    .shear_grid = up->shear_grid,
-    .shear_r = up->shear_r,
+    .shift_eval_dg_ctx = shift_eval_ctx,
   };
 
   evalf_t eta_lims[2]; // Table of functions definting the limits of eta integral.
@@ -1230,6 +1195,8 @@ ts_subcellint_sxi_sxii(struct gkyl_bc_twistshift *up, struct ts_val_found *inter
     xi_b[1] = ts_p2l(inter_pts[3].value, xc_do[up->shear_dir_in_ts_grid], up->ts_grid.dx[up->shear_dir_in_ts_grid]);
   }
 
+  struct ts_shift_eval_dg_ctx shift_eval_ctx = ts_shift_eval_dg_ctx_fill(up);
+
   struct ts_shift_coord_shifted_log_ctx eta_lims_ctx = {
     .shift_coord_tar = cellb_tar[cellb_up(up->shift_dir_in_ts_grid)],
     .shift_sign_fac = 1,
@@ -1241,10 +1208,7 @@ ts_subcellint_sxi_sxii(struct gkyl_bc_twistshift *up, struct ts_val_found *inter
     .shift_dir = up->shift_dir_in_ts_grid,
     .shift_dir_bounds = {up->ts_grid.lower[up->shift_dir_in_ts_grid], 
                          up->ts_grid.upper[up->shift_dir_in_ts_grid]},
-    .shift = up->shift,
-    .shift_b = up->shift_b,
-    .shear_grid = up->shear_grid,
-    .shear_r = up->shear_r,
+    .shift_eval_dg_ctx = shift_eval_ctx,
   };
 
   evalf_t eta_lims[2]; // Table of functions definting the limits of eta integral.
@@ -1281,11 +1245,10 @@ ts_subcellint_sxiii_sxiv(struct gkyl_bc_twistshift *up, struct ts_val_found *int
   double x_up = cellb_tar[cellb_up(up->shear_dir_in_ts_grid)];
   double shift_lo, shift_up;
 
-  struct ts_shift_eval_dg_ctx shift_eval_ctx_lo = ts_shift_eval_dg_ctx_fill(up);
-  ts_shift_eval(0.0, (double[]){x_lo}, &shift_lo, &shift_eval_ctx_lo);
+  struct ts_shift_eval_dg_ctx shift_eval_ctx = ts_shift_eval_dg_ctx_fill(up);
 
-  struct ts_shift_eval_dg_ctx shift_eval_ctx_up = ts_shift_eval_dg_ctx_fill(up);
-  ts_shift_eval(0.0, (double[]){x_up}, &shift_up, &shift_eval_ctx_up);
+  ts_shift_eval(0.0, (double[]){x_lo}, &shift_lo, &shift_eval_ctx);
+  ts_shift_eval(0.0, (double[]){x_up}, &shift_up, &shift_eval_ctx);
 
   bool is_sxiii = -shift_lo < -shift_up;
 
@@ -1299,10 +1262,7 @@ ts_subcellint_sxiii_sxiv(struct gkyl_bc_twistshift *up, struct ts_val_found *int
     .shift_dir = up->shift_dir_in_ts_grid,
     .shift_dir_bounds = {up->ts_grid.lower[up->shift_dir_in_ts_grid], 
                          up->ts_grid.upper[up->shift_dir_in_ts_grid]},
-    .shift = up->shift,
-    .shift_b = up->shift_b,
-    .shear_grid = up->shear_grid,
-    .shear_r = up->shear_r,
+    .shift_eval_dg_ctx = shift_eval_ctx,
   };
 
   double xi_b[2]; // Limits of xi integral.
@@ -1397,10 +1357,7 @@ ts_subcellint_sxv_sxvi(struct gkyl_bc_twistshift *up, struct ts_val_found *inter
     .shift_dir = up->shift_dir_in_ts_grid,
     .shift_dir_bounds = {up->ts_grid.lower[up->shift_dir_in_ts_grid], 
                          up->ts_grid.upper[up->shift_dir_in_ts_grid]},
-    .shift = up->shift,
-    .shift_b = up->shift_b,
-    .shear_grid = up->shear_grid,
-    .shear_r = up->shear_r,
+    .shift_eval_dg_ctx = shift_eval_ctx,
   };
 
   evalf_t eta_lims[2]; // Table of functions definting the limits of eta integral.
