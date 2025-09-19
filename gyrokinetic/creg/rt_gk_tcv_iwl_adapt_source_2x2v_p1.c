@@ -48,19 +48,12 @@ double r_x(double x, double a_mid, double x_inner)
   return x+a_mid-x_inner;
 }
 
-// 8 interval piecewise linear fit of the experimental q-profile for TCV NT
+// cubic polynomial fit to TCV NT q profile (discharge #65130)
 double qprofile(double r, double R_axis) {
   double R = r + R_axis;
-  double q = 0.0;
-  if (R <= 1.0747973082573) q = 21.528778497046 * R + -21.171953767196;
-  if (R >= 1.0747973082573 && R <= 1.0897973082573) q = 27.005109113043 * R + -27.057899172396;
-  if (R >= 1.0897973082573 && R <= 1.1047973082573) q = 33.134922877298 * R + -33.7381537128;
-  if (R >= 1.1047973082573 && R <= 1.1197973082573) q = 39.918219789934 * R + -41.23232188299;
-  if (R >= 1.1197973082573 && R <= 1.1347973082573) q = 47.354999850752 * R + -49.560008177196;
-  if (R >= 1.1347973082573 && R <= 1.1497973082573) q = 55.445263059922 * R + -58.740817090056;
-  if (R >= 1.1497973082573 && R <= 1.1647973082573) q = 64.189009417395 * R + -68.794353115963;
-  if (R >= 1.1647973082573) q = 73.586238923069 * R + -79.740220749248;
-  return q;
+  double qfit[4] = {484.0615913225881, -1378.25993228584, 
+                    1309.3099150729233, -414.13270311478726};
+  return qfit[0] + qfit[1]*R + qfit[2]*R*R + qfit[3]*R*R*R;
 }
 
 double R_rtheta(double r, double theta, void *ctx)
@@ -410,7 +403,7 @@ struct gk_app_ctx create_ctx(void)
   double z_max     =  Lz/2.;
 
   // Collision frequencies
-  double nuFrac = 0.5;
+  double nuFrac = 0.1;
   // Electron-electron collision freq.
   double logLambdaElc = 6.6 - 0.5 * log(n0/1e20) + 1.5 * log(Ti0/eV);
   double nuElc = nuFrac * logLambdaElc * pow(eV, 4) * n0 /
@@ -422,12 +415,13 @@ struct gk_app_ctx create_ctx(void)
 
   // Source parameters
   double num_sources = 2;
+  double P_exp = 0.34e6; // P_sol measured [W]
   // Core source:
   // - Injects energy only in the core region (0.25MW per species).
   // - The particles injection is only the one that are lost through the inner radial boundary.
   bool adapt_energy_srcCORE = true; // The source will compensate the losses in energy according to given boundaries.
   bool adapt_particle_srcCORE = true; // The source will compensate the losses in particle according to given boundaries.
-  double energy_srcCORE = 0.25e6; // What the source must inject in energy [W]
+  double energy_srcCORE = P_exp; // What the source must inject in energy [W]
   double particle_srcCORE = 0.0;// What the source must inject in particle [1/s]
   double center_srcCORE[2] = {x_min, -Lz/4}; // This is the position of the ion source,
   double sigma_srcCORE[2] = {0.03*Lx, Lz/6}; //  the electron source will be at +Lz/2.
@@ -445,16 +439,16 @@ struct gk_app_ctx create_ctx(void)
 
   // Grid parameters
   int num_cell_x = 9; // The LCFS is positionned at 1/3 of the domain -> the resolution must be divisible by 3.
-  int num_cell_z = 6;
-  int num_cell_vpar = 6;
-  int num_cell_mu = 4;
+  int num_cell_z = 8;
+  int num_cell_vpar = 8;
+  int num_cell_mu = 8;
   int poly_order = 1;
   // Velocity box dimensions
   double vpar_max_elc = 5.*vte;
   double mu_max_elc   = 1.*me*pow(4*vte,2)/(2*B0);
   double vpar_max_ion = 5.*vti;
   double mu_max_ion   = 1.*mi*pow(4*vti,2)/(2*B0);
-  double final_time = 1.e-6;
+  double final_time = 1.e-3; // Should take 60 time steps
   int num_frames = 1;
   double write_phase_freq = 1.0;
   int int_diag_calc_num = num_frames*100;

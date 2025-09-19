@@ -17,6 +17,7 @@ struct gk_app_ctx {
     // Geometry and magnetic field parameters
     double a_shift, Z_axis, R_axis, R0, a_mid, x_inner, r0, B0, kappa, delta, q0, Bref, x_LCFS;
     // Plasma parameters
+    int num_species;
     double me, qe, mi, qi, n0, Te0, Ti0;
     // Collision parameters
     double nuFrac, nuElc, nuIon;
@@ -48,19 +49,12 @@ double r_x(double x, double a_mid, double x_inner)
   return x+a_mid-x_inner;
 }
 
-// 8 interval piecewise linear fit of the experimental q-profile for TCV NT
+// cubic polynomial fit to TCV NT q profile (discharge #65130)
 double qprofile(double r, double R_axis) {
   double R = r + R_axis;
-  double q = 0.0;
-  if (R <= 1.0747973082573) q = 21.528778497046 * R + -21.171953767196;
-  if (R >= 1.0747973082573 && R <= 1.0897973082573) q = 27.005109113043 * R + -27.057899172396;
-  if (R >= 1.0897973082573 && R <= 1.1047973082573) q = 33.134922877298 * R + -33.7381537128;
-  if (R >= 1.1047973082573 && R <= 1.1197973082573) q = 39.918219789934 * R + -41.23232188299;
-  if (R >= 1.1197973082573 && R <= 1.1347973082573) q = 47.354999850752 * R + -49.560008177196;
-  if (R >= 1.1347973082573 && R <= 1.1497973082573) q = 55.445263059922 * R + -58.740817090056;
-  if (R >= 1.1497973082573 && R <= 1.1647973082573) q = 64.189009417395 * R + -68.794353115963;
-  if (R >= 1.1647973082573) q = 73.586238923069 * R + -79.740220749248;
-  return q;
+  double qfit[4] = {484.0615913225881, -1378.25993228584, 
+                    1309.3099150729233, -414.13270311478726};
+  return qfit[0] + qfit[1]*R + qfit[2]*R*R + qfit[3]*R*R*R;
 }
 
 double R_rtheta(double r, double theta, void *ctx)
@@ -405,6 +399,7 @@ struct gk_app_ctx create_ctx(void)
   // Plasma parameters. Chosen based on the value of a cubic sline
   // between the last TS data inside the LCFS and the probe data in
   // in the far SOL, near R=0.475 m.
+  int num_species = 2;
   double AMU = 2.01410177811;
   double mi  = mp*AMU;   // Deuterium ions.
   double Te0 = 100*eV;
@@ -447,12 +442,15 @@ struct gk_app_ctx create_ctx(void)
 
   // Source parameters
   double num_sources = 2;
+  double P_exp = 0.34e6; // P_sol measured [W]
+  double vol_frac = 1.0/(2.*M_PI*r0/q0/Ly); // Volume fraction of the simulation box.
+  double P_inj = P_exp * vol_frac / num_species; // Injection power normalized to the volume fraction and per species [W]
   // Core source:
   // - Injects energy only in the core region (0.25MW per species).
   // - The particles injection is only the one that are lost through the inner radial boundary.
   bool adapt_energy_srcCORE = true; // The source will compensate the losses in energy according to given boundaries.
   bool adapt_particle_srcCORE = true; // The source will compensate the losses in particle according to given boundaries.
-  double energy_srcCORE = 0.25e6; // What the source must inject in energy [W]
+  double energy_srcCORE = P_inj; // What the source must inject in energy [W]
   double particle_srcCORE = 0.0;// What the source must inject in particle [1/s]
   double center_srcCORE[3] = {x_min, 0.0, -Lz/4}; // This is the position of the ion source,
   double sigma_srcCORE[3] = {0.03*Lx, 0.0, Lz/6}; //  the electron source will be at +Lz/2.
@@ -480,7 +478,7 @@ struct gk_app_ctx create_ctx(void)
   double mu_max_elc   = 1.*me*pow(4*vte,2)/(2*B0);
   double vpar_max_ion = 5.*vti;
   double mu_max_ion   = 1.*mi*pow(4*vti,2)/(2*B0);
-  double final_time = 1.e-7; // Should be reached in 13 steps
+  double final_time = 1.e-7; // Should be reached in 44 steps
   int num_frames = 1;
   double write_phase_freq = 1.0;
   int int_diag_calc_num = num_frames*100;
@@ -508,6 +506,7 @@ struct gk_app_ctx create_ctx(void)
     .z_min = z_min,  .z_max = z_max,
     .Bref = Bref,
     .x_LCFS = x_LCFS,
+    .num_species = num_species,
     .me = me,  .qe = qe,
     .mi = mi,  .qi = qi,
     .n0 = n0,  .Te0 = Te0,  .Ti0 = Ti0,
@@ -861,7 +860,7 @@ main(int argc, char **argv)
     .geometry = geometry,
     .num_periodic_dir = 1,
     .periodic_dirs = {1},
-    .num_species = 2,
+    .num_species = ctx.num_species,
     .species = { elc, ion },
     .field = field,
     .parallelism = parallelism
