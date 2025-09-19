@@ -1785,10 +1785,10 @@ gkyl_bc_twistshift_new(const struct gkyl_bc_twistshift_inp *inp)
   // Function defining the shift (and its context).
   if (shift_func_op == 0) {
     up->shift_func = ts_shift_dg_eval;
-    up->shift_dg_eval_ctx.shift_dg = up->shift_dg     ;
-    up->shift_dg_eval_ctx.shift_b = &up->shift_b      ;
+    up->shift_dg_eval_ctx.shift_dg = up->shift_dg;
+    up->shift_dg_eval_ctx.shift_b = &up->shift_b;
     up->shift_dg_eval_ctx.shear_grid = &up->shear_grid;
-    up->shift_dg_eval_ctx.shear_r = &up->shear_r      ;
+    up->shift_dg_eval_ctx.shear_r = &up->shear_r;
     up->shift_func_ctx = &up->shift_dg_eval_ctx;
   }
   else if (shift_func_op == 1) {
