@@ -995,7 +995,6 @@ test_bc_twistshift_3x_fig11_wcells(const int *cells, enum gkyl_edge_loc edge,
     .shift_func = shift_fig11,
     .shift_func_ctx = &proj_ctx,
     .use_gpu = use_gpu,
-    .shift_poly_order = 2,
   };
 
   struct gkyl_bc_twistshift *tsup = gkyl_bc_twistshift_new(&tsinp);

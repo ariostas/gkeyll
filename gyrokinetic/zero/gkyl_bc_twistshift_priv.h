@@ -69,15 +69,15 @@ static const twistshift_fullcell_kern_list ser_twistshift_fullcell_list_0v_yShp2
 
 static const twistshift_xlimdg_kern_list ser_twistshift_xlimdg_list_2v_yShp2[] = {
   {NULL, NULL, NULL,},
-  {NULL, twistshift_xlimdg_3x2v_ser_p1_yshift_p2, NULL,},
+  {NULL, NULL, NULL,},
 };
 static const twistshift_ylimdg_kern_list ser_twistshift_ylimdg_list_2v_yShp2[] = {
   {NULL, NULL, NULL,},
-  {NULL, twistshift_ylimdg_3x2v_ser_p1_yshift_p2, NULL,},
+  {NULL, NULL, NULL,},
 };
 static const twistshift_fullcell_kern_list ser_twistshift_fullcell_list_2v_yShp2[] = {
   {NULL, NULL, NULL,},
-  {NULL, twistshift_fullcell_3x2v_ser_p1_yshift_p2, NULL,},
+  {NULL, NULL, NULL,},
 };
 
 
@@ -172,6 +172,7 @@ gkyl_bc_twistshift_choose_kernels(struct gkyl_basis basis, int cdim, int shift_p
                                 : ser_twistshift_fullcell_list_2v_yShp1[cdim-2].kernels[poly_order];
       }
       else if (shift_poly_order == 2) {
+        assert(false); // MF 2025/09/20: removed 3x2v kernel because it's 8.5 MB.
         kers->xlimdg   = vdim==0? ser_twistshift_xlimdg_list_0v_yShp2[cdim-2].kernels[poly_order]
                                 : ser_twistshift_xlimdg_list_2v_yShp2[cdim-2].kernels[poly_order];
         kers->ylimdg   = vdim==0? ser_twistshift_ylimdg_list_0v_yShp2[cdim-2].kernels[poly_order]
