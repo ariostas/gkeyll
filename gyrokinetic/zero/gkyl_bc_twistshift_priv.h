@@ -27,31 +27,59 @@ typedef struct { twistshift_ylimdg_t kernels[3]; }   twistshift_ylimdg_kern_list
 typedef struct { twistshift_fullcell_t kernels[3]; } twistshift_fullcell_kern_list;  // For use in kernel tables.
 
 // Serendipity  kernels.
-static const twistshift_xlimdg_kern_list ser_twistshift_xlimdg_list_0v[] = {
+// p=1 representation of the shift:
+static const twistshift_xlimdg_kern_list ser_twistshift_xlimdg_list_0v_yShp1[] = {
   {NULL, twistshift_xlimdg_2x_ser_p1_yshift_p1, NULL,},
   {NULL, twistshift_xlimdg_3x_ser_p1_yshift_p1, NULL,},
 };
-static const twistshift_ylimdg_kern_list ser_twistshift_ylimdg_list_0v[] = {
+static const twistshift_ylimdg_kern_list ser_twistshift_ylimdg_list_0v_yShp1[] = {
   {NULL, twistshift_ylimdg_2x_ser_p1_yshift_p1, NULL,},
   {NULL, twistshift_ylimdg_3x_ser_p1_yshift_p1, NULL,},
 };
-static const twistshift_fullcell_kern_list ser_twistshift_fullcell_list_0v[] = {
+static const twistshift_fullcell_kern_list ser_twistshift_fullcell_list_0v_yShp1[] = {
   {NULL, twistshift_fullcell_2x_ser_p1_yshift_p1, NULL,},
   {NULL, twistshift_fullcell_3x_ser_p1_yshift_p1, NULL,},
 };
 
-static const twistshift_xlimdg_kern_list ser_twistshift_xlimdg_list_2v[] = {
+static const twistshift_xlimdg_kern_list ser_twistshift_xlimdg_list_2v_yShp1[] = {
   {NULL, NULL, NULL,},
   {NULL, twistshift_xlimdg_3x2v_ser_p1_yshift_p1, NULL,},
 };
-static const twistshift_ylimdg_kern_list ser_twistshift_ylimdg_list_2v[] = {
+static const twistshift_ylimdg_kern_list ser_twistshift_ylimdg_list_2v_yShp1[] = {
   {NULL, NULL, NULL,},
   {NULL, twistshift_ylimdg_3x2v_ser_p1_yshift_p1, NULL,},
 };
-static const twistshift_fullcell_kern_list ser_twistshift_fullcell_list_2v[] = {
+static const twistshift_fullcell_kern_list ser_twistshift_fullcell_list_2v_yShp1[] = {
   {NULL, NULL, NULL,},
   {NULL, twistshift_fullcell_3x2v_ser_p1_yshift_p1, NULL,},
 };
+// p=2 representation of the shift:
+static const twistshift_xlimdg_kern_list ser_twistshift_xlimdg_list_0v_yShp2[] = {
+  {NULL, twistshift_xlimdg_2x_ser_p1_yshift_p2, NULL,},
+  {NULL, twistshift_xlimdg_3x_ser_p1_yshift_p2, NULL,},
+};
+static const twistshift_ylimdg_kern_list ser_twistshift_ylimdg_list_0v_yShp2[] = {
+  {NULL, twistshift_ylimdg_2x_ser_p1_yshift_p2, NULL,},
+  {NULL, twistshift_ylimdg_3x_ser_p1_yshift_p2, NULL,},
+};
+static const twistshift_fullcell_kern_list ser_twistshift_fullcell_list_0v_yShp2[] = {
+  {NULL, twistshift_fullcell_2x_ser_p1_yshift_p2, NULL,},
+  {NULL, twistshift_fullcell_3x_ser_p1_yshift_p2, NULL,},
+};
+
+static const twistshift_xlimdg_kern_list ser_twistshift_xlimdg_list_2v_yShp2[] = {
+  {NULL, NULL, NULL,},
+  {NULL, twistshift_xlimdg_3x2v_ser_p1_yshift_p2, NULL,},
+};
+static const twistshift_ylimdg_kern_list ser_twistshift_ylimdg_list_2v_yShp2[] = {
+  {NULL, NULL, NULL,},
+  {NULL, twistshift_ylimdg_3x2v_ser_p1_yshift_p2, NULL,},
+};
+static const twistshift_fullcell_kern_list ser_twistshift_fullcell_list_2v_yShp2[] = {
+  {NULL, NULL, NULL,},
+  {NULL, twistshift_fullcell_3x2v_ser_p1_yshift_p2, NULL,},
+};
+
 
 struct gkyl_bc_twistshift_kernels {
   twistshift_xlimdg_t xlimdg;
@@ -125,7 +153,7 @@ struct gkyl_bc_twistshift {
 };
 
 void
-gkyl_bc_twistshift_choose_kernels(struct gkyl_basis basis, int cdim,
+gkyl_bc_twistshift_choose_kernels(struct gkyl_basis basis, int cdim, int shift_poly_order,
   struct gkyl_bc_twistshift_kernels *kers)
 {
   int dim = basis.ndim;
@@ -135,12 +163,22 @@ gkyl_bc_twistshift_choose_kernels(struct gkyl_basis basis, int cdim,
   switch (basis_type) {
     case GKYL_BASIS_MODAL_GKHYBRID:
     case GKYL_BASIS_MODAL_SERENDIPITY:
-      kers->xlimdg   = vdim==0? ser_twistshift_xlimdg_list_0v[cdim-2].kernels[poly_order]
-                              : ser_twistshift_xlimdg_list_2v[cdim-2].kernels[poly_order];
-      kers->ylimdg   = vdim==0? ser_twistshift_ylimdg_list_0v[cdim-2].kernels[poly_order]
-                              : ser_twistshift_ylimdg_list_2v[cdim-2].kernels[poly_order];
-      kers->fullcell = vdim==0? ser_twistshift_fullcell_list_0v[cdim-2].kernels[poly_order]
-                              : ser_twistshift_fullcell_list_2v[cdim-2].kernels[poly_order];
+      if (shift_poly_order == 1) {
+        kers->xlimdg   = vdim==0? ser_twistshift_xlimdg_list_0v_yShp1[cdim-2].kernels[poly_order]
+                                : ser_twistshift_xlimdg_list_2v_yShp1[cdim-2].kernels[poly_order];
+        kers->ylimdg   = vdim==0? ser_twistshift_ylimdg_list_0v_yShp1[cdim-2].kernels[poly_order]
+                                : ser_twistshift_ylimdg_list_2v_yShp1[cdim-2].kernels[poly_order];
+        kers->fullcell = vdim==0? ser_twistshift_fullcell_list_0v_yShp1[cdim-2].kernels[poly_order]
+                                : ser_twistshift_fullcell_list_2v_yShp1[cdim-2].kernels[poly_order];
+      }
+      else if (shift_poly_order == 2) {
+        kers->xlimdg   = vdim==0? ser_twistshift_xlimdg_list_0v_yShp2[cdim-2].kernels[poly_order]
+                                : ser_twistshift_xlimdg_list_2v_yShp2[cdim-2].kernels[poly_order];
+        kers->ylimdg   = vdim==0? ser_twistshift_ylimdg_list_0v_yShp2[cdim-2].kernels[poly_order]
+                                : ser_twistshift_ylimdg_list_2v_yShp2[cdim-2].kernels[poly_order];
+        kers->fullcell = vdim==0? ser_twistshift_fullcell_list_0v_yShp2[cdim-2].kernels[poly_order]
+                                : ser_twistshift_fullcell_list_2v_yShp2[cdim-2].kernels[poly_order];
+      }
       return;
     default:
       assert(false);

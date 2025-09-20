@@ -6,7 +6,6 @@
 #include <gkyl_util.h>
 #include <gkyl_eval_on_nodes.h>
 #include <gkyl_array_ops.h>
-#include <gkyl_proj_on_basis.h>
 
 // Notes:
 //   a) Hard-coded parameters:
@@ -123,8 +122,8 @@ ts_shift_dg_eval(double t, const double *coord, double *fout, void *ctx)
   gkyl_rect_grid_coord_idx(tsectx->shear_grid, coord, cell_idx);
   // Ensure that we do not go outside of the range 
   // (it does sometimes if x=x_max,x_min).
-  cell_idx[0] = fmin(cell_idx[0],tsectx->shear_r->upper[0]);
-  cell_idx[0] = fmax(cell_idx[0],tsectx->shear_r->lower[0]);
+  cell_idx[0] = fmin(cell_idx[0], tsectx->shear_r->upper[0]);
+  cell_idx[0] = fmax(cell_idx[0], tsectx->shear_r->lower[0]);
 
   double xc[GKYL_MAX_DIM];
   gkyl_rect_grid_cell_center(tsectx->shear_grid, cell_idx, xc);
@@ -1802,7 +1801,7 @@ gkyl_bc_twistshift_new(const struct gkyl_bc_twistshift_inp *inp)
 
   // Choose the kernels that do the subcell and full cell integrals
   up->kernels = gkyl_malloc(sizeof(struct gkyl_bc_twistshift_kernels));
-  gkyl_bc_twistshift_choose_kernels(inp->basis, inp->cdim, up->kernels);
+  gkyl_bc_twistshift_choose_kernels(inp->basis, inp->cdim, up->shift_poly_order, up->kernels);
 
   // The BC is applied as a set of matrix-matrix multiplications
   //   f_i = sum_{q}^{N_do(i)} A_q,i B_q,i

@@ -477,8 +477,10 @@ create_ctx(void)
   double R_axis    = 1.6;                // Magnetic axis major radius [m].
   double B_axis    = 2.0*R_axisTrue/R_axis; // Magnetic field at the magnetic axis [T].
   double R_LCFSmid = 2.17;               // Major radius of the LCFS at the outboard midplane [m].
-  double Rmid_min  = R_LCFSmid - 5*0.15/8;    // Minimum midplane major radius of simulation box [m].
-  double Rmid_max  = R_LCFSmid + 3*0.15/8;   // Maximum midplane major radius of simulation box [m].
+  double x_inner   = 5*0.15/8;               // Radial extent inside LCFS    
+  double x_outer   = 3*0.15/8;               // Radial extent outside LCFS
+  double Rmid_min  = R_LCFSmid - x_inner;      // Minimum midplane major radius of simulation box [m].
+  double Rmid_max  = R_LCFSmid + x_outer;      // Maximum midplane major radius of simulation box [m].
   double R0        = 0.5*(Rmid_min+Rmid_max);  // Major radius of the simulation box [m].
 
   // Minor radius at outboard midplane [m]. Redefine it with
@@ -511,7 +513,6 @@ create_ctx(void)
   double Lx        = Rmid_max-Rmid_min;   
   double x_min     = 0.;
   double x_max     = Lx;
-  double x_LCFS    = R_LCFSmid - Rmid_min; // Radial location of the last closed flux surface.
   // Domain size along magnetic field.
   double Lz        = 2.*M_PI-1e-10;
   double z_min     = -Lz/2.;
@@ -519,7 +520,7 @@ create_ctx(void)
   // Domain size along the binormal coordinate. (Adjusted to have integer toroidal mode number)
   // We need: 2*pi*Cy/Ly to be an integer (Cy = r0/q0)
   double Ly        = 150*rho_s; // this is a guess.
-  double q0        = qprofile(r_x(0.5*(x_min+x_max),a_mid,x_inner),R_axis);
+  double q0        = qprofile(r_x(0.5*(x_min+x_max),a_mid),R_axis);
   Ly = 2.*M_PI*r0/q0/round(2.*M_PI*r0/q0/Ly); 
   // Note: max|Ly^new/Ly^old| = 1/(2n-1) with n the original toroidal mode number.
   double y_min     = -Ly/2.;
