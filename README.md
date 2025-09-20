@@ -136,7 +136,7 @@ your machine. Also keep in mind that, on macOS, you should not need to do anythi
 to use LAPACK/BLAS, as these come pre-packaged as part of the Apple developer tools.
 
 At this stage, you can also download ADAS data for neutral interactions (useful for some
-gyrokinetic simulations) by adding the flag ```--use-adas=yes``` after the other
+gyrokinetic simulations) by adding the flag ```--build-adas=yes``` after the other
 dependencies to be installed.
 
 ### Configuring
