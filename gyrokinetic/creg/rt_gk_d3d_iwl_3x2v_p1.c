@@ -29,6 +29,7 @@ struct gk_app_ctx {
   double q0; // Magnetic safety factor in the center of domain.
 
   double x_LCFS; // Radial location of the last closed flux surface.
+  double x_inner; // Domain size inside the separatrix.
 
   // Plasma parameters.
   double me; double qe;
@@ -77,9 +78,9 @@ struct gk_app_ctx {
   int num_failures_max; // Maximum allowable number of consecutive small time-steps.
 };
 
-double r_x(double x, double a_mid)
+double r_x(double x, double a_mid, double x_inner)
 {
-  return x+a_mid-0.1;
+  return x+a_mid-x_inner;
 }
 
 double qprofile(double r, double R_axis) 
@@ -351,8 +352,9 @@ void mapc2p(double t, const double *xc, double* GKYL_RESTRICT xp, void *ctx)
   double r0 = app->r0;
   double q0 = app->q0;
   double a_mid = app->a_mid;
+  double x_inner = app->x_inner;
 
-  double r = r_x(x,a_mid);
+  double r = r_x(x,a_mid,x_inner);
 
   // Map to cylindrical (R, Z, phi) coordinates.
   double R   = R_rtheta(r, z, ctx);
@@ -411,8 +413,8 @@ void bfield_func(double t, const double *xc, double* GKYL_RESTRICT fout, void *c
   double a_mid = app->a_mid;
   double r0 = app->r0;
   double q0 = app->q0;
-
-  double r = r_x(x,a_mid);
+  double x_inner = app->x_inner;
+  double r = r_x(x,a_mid,x_inner);
   double Bt = Bphi(R_rtheta(r,z,ctx),ctx);
   double Bp = dPsidr(r,z,ctx)/R_rtheta(r,z,ctx)*gradr(r,z,ctx);
 
@@ -440,7 +442,8 @@ void bc_shift_func_lo(double t, const double *xc, double* GKYL_RESTRICT fout, vo
   double q0 = app->q0;
   double a_mid = app->a_mid;
   double Lz = app->Lz;
-  double r = r_x(x,a_mid);
+  double x_inner = app->x_inner;
+  double r = r_x(x,a_mid,x_inner);
 
   fout[0] = -r0/q0*alpha(r, -Lz/2, 0.0, ctx);
 }
@@ -454,7 +457,8 @@ void bc_shift_func_up(double t, const double *xc, double* GKYL_RESTRICT fout, vo
   double q0 = app->q0;
   double a_mid = app->a_mid;
   double Lz = app->Lz;
-  double r = r_x(x,a_mid);
+  double x_inner = app->x_inner;
+  double r = r_x(x,a_mid,x_inner);
 
   fout[0] = -r0/q0*alpha(r, Lz/2, 0.0, ctx);
 }
@@ -519,7 +523,7 @@ create_ctx(void)
   double z_min = -Lz/2.;
   double z_max = Lz/2.;
 
-  double q0 = qprofile(r_x(0.5*(x_min+x_max),a_mid),R_axis); // Magnetic safety factor in the center of domain.
+  double q0 = qprofile(r_x(0.5*(x_min+x_max),a_mid,x_inner),R_axis); // Magnetic safety factor in the center of domain.
 
   double nuFrac = 0.1;
   // Electron-electron collision freq.
@@ -558,7 +562,7 @@ create_ctx(void)
   double vpar_max_ion = 4.*vti;
   double mu_max_ion = mi*pow(4*vti,2)/(2*B0);
 
-  double t_end = 5.e-8;
+  double t_end = 1.e-7; // End time, should terminate in 20 steps.
   int num_frames = 1;
   double write_phase_freq = 0.2; // Frequency of writing phase-space diagnostics (as a fraction of num_frames).
   int int_diag_calc_num = num_frames*100;
@@ -572,6 +576,7 @@ create_ctx(void)
     .R_axis = R_axis,
     .R0 = R0,
     .a_mid = a_mid,
+    .x_inner = x_inner,
     .r0 = r0,
     .B0 = B0,
     .kappa = kappa,
