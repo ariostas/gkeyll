@@ -16,49 +16,49 @@ struct gk_app_ctx {
   int cdim, vdim; // Dimensionality.
   
   // Geometry and magnetic field.
-  double a_shift;   // Parameter in Shafranov shift.
-  double Z_axis;    // Magnetic axis height [m].
-  double R_axis;    // Magnetic axis major radius [m].
+  double a_shift; // Parameter in Shafranov shift.
+  double Z_axis; // Magnetic axis height [m].
+  double R_axis; // Magnetic axis major radius [m].
 
-  double R0;        // Major radius of the simulation box [m].
-  double a_mid;     // Minor radius at outboard midplane [m].
-  double r0;        // Minor radius of the simulation box [m].
-  double B0;        // Magnetic field magnitude in the simulation box [T].
-  double kappa;     // Elongation (=1 for no elongation).
-  double delta;     // Triangularity (=0 for no triangularity).
-  double q0;        // Magnetic safety factor in the center of domain.
+  double R0; // Major radius of the simulation box [m].
+  double a_mid; // Minor radius at outboard midplane [m].
+  double r0; // Minor radius of the simulation box [m].
+  double B0; // Magnetic field magnitude in the simulation box [T].
+  double kappa; // Elongation (=1 for no elongation).
+  double delta; // Triangularity (=0 for no triangularity).
+  double q0; // Magnetic safety factor in the center of domain.
 
-  double x_LCFS;    // Radial location of the last closed flux surface.
+  double x_LCFS; // Radial location of the last closed flux surface.
 
   // Plasma parameters.
-  double me;  double qe;
-  double mi;  double qi;
-  double n0;  double Te0;  double Ti0; 
+  double me; double qe;
+  double mi; double qi;
+  double n0; double Te0; double Ti0; 
 
   // Collisions.
-  double nuFrac;  double nuElc;  double nuIon;
+  double nuFrac; double nuElc; double nuIon;
 
   // Source parameters.
-  double n_srcOMP;        // Amplitude of the OMP source
-  double x_srcOMP;        // Radial location of the OMP source.
-  double Te_srcOMP;       // Te for the OMP source.
-  double Ti_srcOMP;       // Ti for the OMP source.
-  double sigma_srcOMP;    // Radial spread of the OMP source.
-  double n_srcGB;         // Amplitude of the grad-B source
-  double x_srcGB;         // Radial location of the grad-B source.
-  double sigma_srcGB;     // Radial spread of the grad-B source.
-  double bfac_srcGB;      // Field aligned spread of the grad-B source. 
-  double Te_srcGB;        // Te for the grad-B source.
-  double Ti_srcGB;        // Ti for the grad-B source.
-  double floor_src;       // Source floor.
+  double n_srcOMP; // Amplitude of the OMP source
+  double x_srcOMP; // Radial location of the OMP source.
+  double Te_srcOMP; // Te for the OMP source.
+  double Ti_srcOMP; // Ti for the OMP source.
+  double sigma_srcOMP; // Radial spread of the OMP source.
+  double n_srcGB; // Amplitude of the grad-B source
+  double x_srcGB; // Radial location of the grad-B source.
+  double sigma_srcGB; // Radial spread of the grad-B source.
+  double bfac_srcGB; // Field aligned spread of the grad-B source. 
+  double Te_srcGB; // Te for the grad-B source.
+  double Ti_srcGB; // Ti for the grad-B source.
+  double floor_src; // Source floor.
 
   // Grid parameters.
-  double Lx;        // Domain size in radial direction.
-  double Ly;        // Domain size in binormal direction.
-  double Lz;        // Domain size along magnetic field.
-  double x_min;  double x_max;
-  double y_min;  double y_max;
-  double z_min;  double z_max;
+  double Lx; // Domain size in radial direction.
+  double Ly; // Domain size in binormal direction.
+  double Lz; // Domain size along magnetic field.
+  double x_min; double x_max;
+  double y_min; double y_max;
+  double z_min; double z_max;
   int Nx;
   int Ny;
   int Nz;
@@ -66,8 +66,8 @@ struct gk_app_ctx {
   int Nmu;
   int cells[GKYL_MAX_DIM]; // Number of cells in all directions.
   int poly_order;
-  double vpar_max_elc;  double mu_max_elc;
-  double vpar_max_ion;  double mu_max_ion;
+  double vpar_max_elc; double mu_max_elc;
+  double vpar_max_ion; double mu_max_ion;
 
   double t_end; // End time.
   int num_frames; // Number of output frames.
@@ -471,61 +471,56 @@ create_ctx(void)
   double qe = -eV; // electron charge
 
   // Geometry and magnetic field.
-  double a_shift   = 0.0;                // Parameter in Shafranov shift.
-  double Z_axis    = 0.013055028;        // Magnetic axis height [m].
-  double R_axisTrue = 1.6486461;         // Change R_axis to fit geometry better.
-  double R_axis    = 1.6;                // Magnetic axis major radius [m].
-  double B_axis    = 2.0*R_axisTrue/R_axis; // Magnetic field at the magnetic axis [T].
-  double R_LCFSmid = 2.17;               // Major radius of the LCFS at the outboard midplane [m].
-  double x_inner   = 5*0.15/8;               // Radial extent inside LCFS    
-  double x_outer   = 3*0.15/8;               // Radial extent outside LCFS
-  double Rmid_min  = R_LCFSmid - x_inner;      // Minimum midplane major radius of simulation box [m].
-  double Rmid_max  = R_LCFSmid + x_outer;      // Maximum midplane major radius of simulation box [m].
-  double R0        = 0.5*(Rmid_min+Rmid_max);  // Major radius of the simulation box [m].
+  double a_shift = 0.0; // Parameter in Shafranov shift.
+  double Z_axis = 0.013055028; // Magnetic axis height [m].
+  double R_axisTrue = 1.6486461; // Change R_axis to fit geometry better.
+  double R_axis = 1.6; // Magnetic axis major radius [m].
+  double B_axis = 2.0*R_axisTrue/R_axis; // Magnetic field at the magnetic axis [T].
+  double R_LCFSmid = 2.17; // Major radius of the LCFS at the outboard midplane [m].
+  double x_inner = 5*0.15/8; // Radial extent inside LCFS    
+  double x_outer = 3*0.15/8; // Radial extent outside LCFS
+  double Rmid_min = R_LCFSmid - x_inner; // Minimum midplane major radius of simulation box [m].
+  double Rmid_max = R_LCFSmid + x_outer; // Maximum midplane major radius of simulation box [m].
+  double R0 = 0.5*(Rmid_min+Rmid_max); // Major radius of the simulation box [m].
 
   // Minor radius at outboard midplane [m]. Redefine it with
   // Shafranov shift, to ensure LCFS radial location.
   double a_mid = a_shift<1e-13? R_LCFSmid-R_axis :
     R_axis/a_shift - sqrt(R_axis*(R_axis - 2*a_shift*R_LCFSmid + 2*a_shift*R_axis))/a_shift;
 
-  double r0        = R0-R_axis;          // Minor radius of the simulation box [m].
-  double B0        = B_axis*(R_axis/R0); // Magnetic field magnitude in the simulation box [T].
-  double kappa     = 1.35;               // Elongation (=1 for no elongation).
-  double delta     = 0.4;                // Triangularity (=0 for no triangularity).
+  double r0 = R0-R_axis; // Minor radius of the simulation box [m].
+  double B0 = B_axis*(R_axis/R0); // Magnetic field magnitude in the simulation box [T].
+  double kappa = 1.35; // Elongation (=1 for no elongation).
+  double delta = 0.4; // Triangularity (=0 for no triangularity).
 
-  double x_LCFS    = R_LCFSmid - Rmid_min; // Radial location of the last closed flux surface.
+  double x_LCFS = R_LCFSmid - Rmid_min; // Radial location of the last closed flux surface.
 
   // Plasma parameters. Chosen based on the value of a cubic sline
   // between the last TS data inside the LCFS and the probe data in
   // in the far SOL, near R=0.475 m.
   double AMU = 2.01410177811;
-  double mi  = mp*AMU;   // Deuterium ions.
+  double mi = mp*AMU; // Deuterium ions.
   double Te0 = 100*eV;
   double Ti0 = 100*eV;
-  double n0  = 2.0e19;   // [1/m^3]
+  double n0 = 2.0e19; // [1/m^3]
 
   double vte = sqrt(Te0/me), vti = sqrt(Ti0/mi); // Thermal speeds.
   double c_s = sqrt(Te0/mi); // Sound speed.
   double omega_ci = fabs(qi*B0/mi); // Ion cyclotron frequency.
   double rho_s = c_s/omega_ci; // Ion sound gyroradius.
 
-  // Domain size along the radial direction.
-  double Lx        = Rmid_max-Rmid_min;   
-  double x_min     = 0.;
-  double x_max     = Lx;
-  // Domain size along magnetic field.
-  double Lz        = 2.*M_PI-1e-10;
-  double z_min     = -Lz/2.;
-  double z_max     =  Lz/2.;
-  // Domain size along the binormal coordinate. (Adjusted to have integer toroidal mode number)
-  // We need: 2*pi*Cy/Ly to be an integer (Cy = r0/q0)
-  double Ly        = 150*rho_s; // this is a guess.
-  double q0        = qprofile(r_x(0.5*(x_min+x_max),a_mid),R_axis);
-  Ly = 2.*M_PI*r0/q0/round(2.*M_PI*r0/q0/Ly); 
-  // Note: max|Ly^new/Ly^old| = 1/(2n-1) with n the original toroidal mode number.
-  double y_min     = -Ly/2.;
-  double y_max     =  Ly/2.;
-  
+  double Lx = Rmid_max-Rmid_min; // Domain size along x.
+  double Ly = 150*rho_s; // Domain size along y.
+  double Lz = 2.*M_PI-1e-10; // Domain size along magnetic field.
+  double x_min = 0.;
+  double x_max = Lx;
+  double y_min = -Ly/2.;
+  double y_max = Ly/2.;
+  double z_min = -Lz/2.;
+  double z_max = Lz/2.;
+
+  double q0 = qprofile(r_x(0.5*(x_min+x_max),a_mid),R_axis); // Magnetic safety factor in the center of domain.
+
   double nuFrac = 0.1;
   // Electron-electron collision freq.
   double logLambdaElc = 6.6 - 0.5 * log(n0/1e20) + 1.5 * log(Ti0/eV);
@@ -575,40 +570,40 @@ create_ctx(void)
     .vdim = vdim,
     .a_shift = a_shift,
     .R_axis = R_axis,
-    .R0     = R0    ,
-    .a_mid  = a_mid ,
-    .r0     = r0    ,
-    .B0     = B0    ,
-    .kappa  = kappa ,
-    .delta  = delta ,
-    .q0     = q0    ,
-    .Lx     = Lx    ,
-    .Ly     = Ly    ,
-    .Lz     = Lz    ,
-    .x_min = x_min,  .x_max = x_max,
-    .y_min = y_min,  .y_max = y_max,
-    .z_min = z_min,  .z_max = z_max,
+    .R0 = R0,
+    .a_mid = a_mid,
+    .r0 = r0,
+    .B0 = B0,
+    .kappa = kappa,
+    .delta = delta,
+    .q0 = q0,
+    .Lx = Lx,
+    .Ly = Ly,
+    .Lz = Lz,
+    .x_min = x_min, .x_max = x_max,
+    .y_min = y_min, .y_max = y_max,
+    .z_min = z_min, .z_max = z_max,
 
     .x_LCFS = x_LCFS,
   
-    .me = me,  .qe = qe,
-    .mi = mi,  .qi = qi,
-    .n0 = n0,  .Te0 = Te0,  .Ti0 = Ti0,
+    .me = me, .qe = qe,
+    .mi = mi, .qi = qi,
+    .n0 = n0, .Te0 = Te0, .Ti0 = Ti0,
   
-    .nuFrac = nuFrac,  .nuElc = nuElc,  .nuIon = nuIon,
+    .nuFrac = nuFrac, .nuElc = nuElc, .nuIon = nuIon,
   
-    .n_srcOMP     = n_srcOMP    ,
-    .x_srcOMP     = x_srcOMP    ,
-    .Te_srcOMP    = Te_srcOMP   ,
-    .Ti_srcOMP    = Ti_srcOMP   ,
+    .n_srcOMP = n_srcOMP,
+    .x_srcOMP = x_srcOMP,
+    .Te_srcOMP = Te_srcOMP,
+    .Ti_srcOMP = Ti_srcOMP,
     .sigma_srcOMP = sigma_srcOMP,
-    .n_srcGB      = n_srcGB     ,
-    .x_srcGB      = x_srcGB     ,
-    .sigma_srcGB  = sigma_srcGB ,
-    .bfac_srcGB   = bfac_srcGB  ,
-    .Te_srcGB     = Te_srcGB    ,
-    .Ti_srcGB     = Ti_srcGB    ,
-    .floor_src    = floor_src   ,
+    .n_srcGB = n_srcGB,
+    .x_srcGB = x_srcGB,
+    .sigma_srcGB = sigma_srcGB,
+    .bfac_srcGB = bfac_srcGB,
+    .Te_srcGB = Te_srcGB,
+    .Ti_srcGB = Ti_srcGB,
+    .floor_src = floor_src,
   
     .Nx = Nx,
     .Ny = Ny,
@@ -617,10 +612,10 @@ create_ctx(void)
     .Nmu = Nmu,
     .cells = {Nx, Ny, Nz, Nvpar, Nmu},
     .poly_order = poly_order,
-    .vpar_max_elc = vpar_max_elc,  .mu_max_elc = mu_max_elc,
-    .vpar_max_ion = vpar_max_ion,  .mu_max_ion = mu_max_ion,
+    .vpar_max_elc = vpar_max_elc, .mu_max_elc = mu_max_elc,
+    .vpar_max_ion = vpar_max_ion, .mu_max_ion = mu_max_ion,
 
-    .t_end = t_end,  .num_frames = num_frames,
+    .t_end = t_end, .num_frames = num_frames,
     .write_phase_freq = write_phase_freq,
     .int_diag_calc_num = int_diag_calc_num,
     .dt_failure_tol = dt_failure_tol,
