@@ -468,7 +468,7 @@ struct gk_app_ctx create_ctx(void)
 
   // Grid parameters (reduced resolution for the regression test, minimal recommended values in comments)
   int num_cell_x = 9; // (24) The LCFS is positionned at 1/3 of the domain -> the resolution must be divisible by 3.
-  int num_cell_y = 8; // (16)
+  int num_cell_y = 4; // (16)
   int num_cell_z = 8; // (12)
   int num_cell_vpar = 8; // (12)
   int num_cell_mu = 8; // (8)
@@ -478,7 +478,7 @@ struct gk_app_ctx create_ctx(void)
   double mu_max_elc   = 1.*me*pow(4*vte,2)/(2*B0);
   double vpar_max_ion = 5.*vti;
   double mu_max_ion   = 1.*mi*pow(4*vti,2)/(2*B0);
-  double final_time = 5.e-6; // Should be reached in 22 steps
+  double final_time = 1.e-7; // Should be reached in 44 steps
   int num_frames = 1;
   double write_phase_freq = 1.0;
   int int_diag_calc_num = num_frames*100;
