@@ -1681,6 +1681,41 @@ ts_calc_num_numcol_fidx_tar(struct gkyl_bc_twistshift *up)
   return num_numcol_fidx_tar;
 }
 
+void
+gkyl_bc_twistshift_choose_kernels(struct gkyl_basis basis, int cdim, int shift_poly_order,
+  struct gkyl_bc_twistshift_kernels *kers)
+{
+  int dim = basis.ndim;
+  int vdim = dim - cdim;
+  enum gkyl_basis_type basis_type = basis.b_type;
+  int poly_order = basis.poly_order;
+  switch (basis_type) {
+    case GKYL_BASIS_MODAL_GKHYBRID:
+    case GKYL_BASIS_MODAL_SERENDIPITY:
+      if (shift_poly_order == 1) {
+        kers->xlimdg   = vdim==0? ser_twistshift_xlimdg_list_0v_yShp1[cdim-2].kernels[poly_order]
+                                : ser_twistshift_xlimdg_list_2v_yShp1[cdim-2].kernels[poly_order];
+        kers->ylimdg   = vdim==0? ser_twistshift_ylimdg_list_0v_yShp1[cdim-2].kernels[poly_order]
+                                : ser_twistshift_ylimdg_list_2v_yShp1[cdim-2].kernels[poly_order];
+        kers->fullcell = vdim==0? ser_twistshift_fullcell_list_0v_yShp1[cdim-2].kernels[poly_order]
+                                : ser_twistshift_fullcell_list_2v_yShp1[cdim-2].kernels[poly_order];
+      }
+      else if (shift_poly_order == 2) {
+        assert(false); // MF 2025/09/20: removed 3x2v kernel because it's 8.5 MB.
+        kers->xlimdg   = vdim==0? ser_twistshift_xlimdg_list_0v_yShp2[cdim-2].kernels[poly_order]
+                                : ser_twistshift_xlimdg_list_2v_yShp2[cdim-2].kernels[poly_order];
+        kers->ylimdg   = vdim==0? ser_twistshift_ylimdg_list_0v_yShp2[cdim-2].kernels[poly_order]
+                                : ser_twistshift_ylimdg_list_2v_yShp2[cdim-2].kernels[poly_order];
+        kers->fullcell = vdim==0? ser_twistshift_fullcell_list_0v_yShp2[cdim-2].kernels[poly_order]
+                                : ser_twistshift_fullcell_list_2v_yShp2[cdim-2].kernels[poly_order];
+      }
+      return;
+    default:
+      assert(false);
+      break;
+  }
+}
+
 struct gkyl_bc_twistshift*
 gkyl_bc_twistshift_new(const struct gkyl_bc_twistshift_inp *inp)
 {
