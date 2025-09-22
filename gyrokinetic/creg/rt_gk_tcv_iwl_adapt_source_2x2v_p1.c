@@ -21,7 +21,7 @@ struct gk_app_ctx {
   // Collision parameters
   double nuFrac, nuElc, nuIon;
   // Source parameters
-  double num_sources;
+  int num_sources;
   bool adapt_energy_srcCORE, adapt_particle_srcCORE; 
   double center_srcCORE[2], sigma_srcCORE[2];
   double energy_srcCORE, particle_srcCORE;
@@ -414,7 +414,7 @@ struct gk_app_ctx create_ctx(void)
     (12 * pow(M_PI,3./2.) * pow(eps0,2) * sqrt(mi) * pow(Ti0,3./2.));
 
   // Source parameters
-  double num_sources = 2;
+  int num_sources = 2;
   double P_exp = 0.34e6; // P_sol measured [W]
   // Core source:
   // - Injects energy only in the core region (0.25MW per species).

@@ -22,7 +22,7 @@ struct gk_app_ctx {
     // Collision parameters
     double nuFrac, nuElc, nuIon;
     // Source parameters
-    double num_sources;
+    int num_sources;
     bool adapt_energy_srcCORE, adapt_particle_srcCORE; 
     double center_srcCORE[3], sigma_srcCORE[3];
     double energy_srcCORE, particle_srcCORE;
@@ -441,7 +441,7 @@ struct gk_app_ctx create_ctx(void)
     (12 * pow(M_PI,3./2.) * pow(eps0,2) * sqrt(mi) * pow(Ti0,3./2.));
 
   // Source parameters
-  double num_sources = 2;
+  int num_sources = 2;
   double P_exp = 0.34e6; // P_sol measured [W]
   double vol_frac = 1.0/(2.*M_PI*r0/q0/Ly); // Volume fraction of the simulation box.
   double P_inj = P_exp * vol_frac / num_species; // Injection power normalized to the volume fraction and per species [W]
