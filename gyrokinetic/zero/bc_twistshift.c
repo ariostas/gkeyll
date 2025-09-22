@@ -372,7 +372,6 @@ struct ts_shifted_coord_loss_func_ctx {
   double shiftCoordDo; // Donor coordinate in shift_dir.
   double shiftDirL; // Length of the domain in shift_dir.
   int periodicCopyIdx; // Used to search a periodic copy of the domain (signed).
-  int shear_dir; // Shear direction.
   evalf_t shift_func; // Function defining the shift.
   void *shift_func_ctx; // Context for shift_func.
 };
@@ -456,7 +455,6 @@ ts_find_intersect(struct gkyl_bc_twistshift *up, double shiftCoordTar, double sh
     .shiftCoordDo = shiftCoordDo,
     .shiftDirL = shiftDirL,
     .periodicCopyIdx = 0,
-    .shear_dir = up->shear_dir_in_ts_grid,
     .shift_func = up->shift_func,
     .shift_func_ctx = up->shift_func_ctx,
   };
