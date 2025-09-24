@@ -20,13 +20,21 @@ jobs:
     - name: Find dependency paths
       id: dependencies
       run: |
-        LAPACK_LIB=$(dpkg -L liblapacke-dev | grep ^\/.*\/liblapacke.a$ | head -n1)
-        LAPACK_INC=$(dpkg -L liblapacke-dev | grep ^\/.*\/lapacke.h$ | head -n1 | sed 's:[^/]*$::') 
+        OPENBLAS_LIB=$(dpkg -L libopenblas-pthread-dev | grep ^\/.*\/libopenblas.a$ | head -n1)
+        OPENBLAS_INC=$(dpkg -L libopenblas-pthread-dev | grep ^\/.*\/cblas.h$ | head -n1 | sed 's:[^/]*$::')
+        LAPACK_LIB=$(dpkg -L libopenblas-pthread-dev | grep ^\/.*\/liblapack.a$ | head -n1)
+        LAPACKE_LIB=$(dpkg -L liblapacke-dev | grep ^\/.*\/liblapacke.a$ | head -n1)
+        LAPACKE_INC=$(dpkg -L liblapacke-dev | grep ^\/.*\/lapacke.h$ | head -n1 | sed 's:[^/]*$::')
+        echo "openblas-lib=$OPENBLAS_LIB$" >> "$GITHUB_OUTPUT"
+        echo "openblas-inc=$OPENBLAS_INC$" >> "$GITHUB_OUTPUT"
+        echo "lapack-lib=$LAPACK_LIB$" >> "$GITHUB_OUTPUT"
+        echo "lapacke-lib=$LAPACKE_LIB$" >> "$GITHUB_OUTPUT"
+        echo "lapacke-inc=$LAPACKE_INC$" >> "$GITHUB_OUTPUT"
     - name: install-deps
       run: cd install-deps; ./mkdeps.sh --build-superlu=yes; cd ..
     - name: make
-      run: make CC=clang -j
+      run: make CC=clang -j LAPACK_INC="${{ steps.dependencies.openblas-inc }} ${{ steps.dependencies.lapacke-inc }}" LAPACK_LIB="${{ steps.dependencies.openblas-lib }} ${{ steps.dependencies.lapack-lib }} ${{ steps.dependencies.lapacke-lib }}"
     - name: make check
-      run: make CC=clang check -j
+      run: make CC=clang check -j LAPACK_INC="${{ steps.dependencies.openblas-inc }} ${{ steps.dependencies.lapacke-inc }}" LAPACK_LIB="${{ steps.dependencies.openblas-lib }} ${{ steps.dependencies.lapack-lib }} ${{ steps.dependencies.lapacke-lib }}"
     - name: make regression
       run: make -j regression
