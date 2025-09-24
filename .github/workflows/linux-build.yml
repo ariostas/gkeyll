@@ -25,11 +25,11 @@ jobs:
         LAPACK_LIB=$(dpkg -L libopenblas-pthread-dev | grep ^\/.*\/liblapack.a$ | head -n1)
         LAPACKE_LIB=$(dpkg -L liblapacke-dev | grep ^\/.*\/liblapacke.a$ | head -n1)
         LAPACKE_INC=$(dpkg -L liblapacke-dev | grep ^\/.*\/lapacke.h$ | head -n1 | sed 's:[^/]*$::')
-        echo "openblas-lib=$OPENBLAS_LIB$" >> "$GITHUB_OUTPUT"
-        echo "openblas-inc=$OPENBLAS_INC$" >> "$GITHUB_OUTPUT"
-        echo "lapack-lib=$LAPACK_LIB$" >> "$GITHUB_OUTPUT"
-        echo "lapacke-lib=$LAPACKE_LIB$" >> "$GITHUB_OUTPUT"
-        echo "lapacke-inc=$LAPACKE_INC$" >> "$GITHUB_OUTPUT"
+        echo "openblas-lib=$OPENBLAS_LIB" >> "$GITHUB_OUTPUT"
+        echo "openblas-inc=$OPENBLAS_INC" >> "$GITHUB_OUTPUT"
+        echo "lapack-lib=$LAPACK_LIB" >> "$GITHUB_OUTPUT"
+        echo "lapacke-lib=$LAPACKE_LIB" >> "$GITHUB_OUTPUT"
+        echo "lapacke-inc=$LAPACKE_INC" >> "$GITHUB_OUTPUT"
     - name: install-deps
       run: cd install-deps; ./mkdeps.sh --build-superlu=yes; cd ..
     - name: make
